@@ -24,19 +24,26 @@ $api.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
-      !originalRequest._isRetry &&
-      error.config
+      originalRequest &&
+      !(originalRequest as any)._isRetry &&
+      !originalRequest.url?.includes("/auth/login/access-token")
     ) {
-      originalRequest._isRetry = true;
+      (originalRequest as any)._isRetry = true;
       try {
         const response = await axios.post(
           `${process.env.NEXT_PUBLIC_SERVER_URL}/auth/login/access-token`,
           {},
           { withCredentials: true },
         );
+
+        const newAccessToken = response.data.access_token;
         useSessionStore
           .getState()
-          .setAuthData(response.data.user, response.data.accessToken);
+          .setAuthData(response.data.user, newAccessToken);
+
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        }
         return $api.request(originalRequest);
       } catch (e) {
         console.log("Не авторизован");

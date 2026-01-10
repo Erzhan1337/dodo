@@ -6,6 +6,7 @@ interface SessionState {
   user: any;
   accessToken: string | null;
   isAuthenticated: boolean;
+  _hasHydrated: boolean;
   setAuthData: (user: any, accessToken: string) => void;
   logout: () => void;
 }
@@ -15,6 +16,7 @@ export const useSessionStore = create<SessionState>()(
     (set) => ({
       user: null,
       accessToken: null,
+      _hasHydrated: false,
       isAuthenticated: false,
 
       setAuthData: (user, accessToken) => {
@@ -37,6 +39,9 @@ export const useSessionStore = create<SessionState>()(
         user: state.user,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (state) state._hasHydrated = true;
+      },
     },
   ),
 );
