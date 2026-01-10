@@ -14,7 +14,7 @@ const options = [
 export const AuthButton = () => {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
-  const { isAuthenticated, user, logout } = useSessionStore();
+  const { isAuthenticated, logout } = useSessionStore();
   const handleLogout = () => {
     logout();
   };
@@ -24,11 +24,13 @@ export const AuthButton = () => {
       {!isAuthenticated ? (
         <Button
           variant="outline"
-          size="lg"
-          className="hover:bg-primary hover:text-white transition-colors duration-500"
+          className="hover:bg-primary h-7 px-1 md:h-9 md:rounded-xl md:px-2  lg:rounded-2xl lg:px-3 lg:h-11 hover:text-white transition-colors duration-500"
         >
-          <Link href="/login" className="flex items-center gap-1">
-            <User2 className="size-4 stroke-2" />
+          <Link
+            href="/login"
+            className="flex items-center gap-0.5 md:gap-1 text-xs md:text-sm lg:text-base"
+          >
+            <User2 className="size-3 md:size-4 lg:size-5 stroke-2" />
             Войти
           </Link>
         </Button>
@@ -40,7 +42,7 @@ export const AuthButton = () => {
             variant="outline"
             onClick={() => setOpen((prev) => !prev)}
           >
-            <User2 />
+            <User2 className="size-5" />
             Профиль
           </Button>
           {open && (

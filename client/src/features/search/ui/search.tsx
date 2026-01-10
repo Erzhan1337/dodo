@@ -78,16 +78,16 @@ export const SearchBar = () => {
             : "opacity-0 invisible pointer-events-none",
         )}
       />
-      <div ref={ref} className="relative z-20">
+      <div ref={ref} className="relative z-20 flex-1">
         <div
           className={cn(
-            "flex items-center px-3 h-12 rounded-2xl shadow-sm transition-all duration-500",
+            "flex items-center px-3 md:h-10 lg:h-12 rounded-2xl shadow-sm transition-all duration-500",
             focused
               ? "bg-white ring-2 ring-orange-500 shadow-lg"
               : "bg-gray-100",
           )}
         >
-          <Search className="size-5 text-gray-500" />
+          <Search className="md:size-4 lg:size-5 text-gray-500" />
           <input
             onFocus={() => setFocused(true)}
             onChange={(event) => setQuery(event.target.value)}
@@ -97,7 +97,7 @@ export const SearchBar = () => {
             placeholder="Поиск пиццы..."
             maxLength={30}
             spellCheck={false}
-            className="outline-0 w-full pl-2 bg-transparent"
+            className="outline-0 w-full pl-2 bg-transparent lg:text-base md:text-sm"
           />
         </div>
         {/*Dropdown*/}

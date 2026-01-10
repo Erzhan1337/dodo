@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { LoginForm } from "@/features/auth";
+import { ArrowLeft } from "lucide-react";
 
 export const LoginCard = () => {
   return (
-    <div className="w-[30vw] py-10 shadow-xl rounded-2xl bg-white">
-      <h3 className="uppercase text-center text-4xl font-black text-primary tracking-wider mb-8">
+    <div className="relative w-[85vw] md:w-[60vw] lg:w-[50vw] xl:w-[35vw] py-8 lg:py-10 shadow-xl rounded-2xl bg-white">
+      <Link href="/" className="absolute top-6 left-4 text-primary/60 hover:text-primary transition-colors duration-300">
+        <ArrowLeft className="size-5" />
+      </Link>
+      <h3 className="uppercase text-center text-2xl lg:text-4xl font-black text-primary tracking-wider mb-5 lg:mb-8">
         Login
       </h3>
-      <div className="">
+      <div>
         <div className="w-full flex flex-col items-center">
           <LoginForm />
         </div>
