@@ -8,9 +8,11 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useRegisterMutation } from "@/features/auth/api/use-register";
+import { useSessionStore } from "@/entities/session/model/store";
 
 export const RegisterForm = () => {
   const router = useRouter();
+  const setAuthData = useSessionStore((state) => state.setAuthData);
   const { mutate, isPending } = useRegisterMutation();
   const {
     register,
@@ -22,7 +24,8 @@ export const RegisterForm = () => {
 
   const onSubmit = (data: RegisterFormValues) => {
     mutate(data, {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        setAuthData(response.user, response.accessToken);
         router.push("/");
       },
     });

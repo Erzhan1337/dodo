@@ -7,9 +7,6 @@ export const loginSchema = z.object({
     .string()
     .transform((val) => val.replace(/\s|\(|\)|-/g, ""))
     .refine((val) => val.length > 0, { message: "Введите номер телефона" })
-    .refine((val) => val.length > 0, {
-      message: "Введите номера телефона",
-    })
     .refine((val) => regexPhone.test(val), {
       message: "Некорректный номер телефона",
     }),

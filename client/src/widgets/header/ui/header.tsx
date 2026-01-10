@@ -7,7 +7,7 @@ import { CartButton } from "@/features/cart";
 
 export const Header = () => {
   return (
-    <header className="py-5 border-b border-gray-200">
+    <header className="py-3 md:py-5 border-b border-gray-200">
       <Container className="flex items-center justify-between">
         {/*Left Side*/}
         <Link href="/" className="flex gap-1 md:gap-2 lg:gap-3 items-center">
