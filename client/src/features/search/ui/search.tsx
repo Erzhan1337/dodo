@@ -72,13 +72,13 @@ export const SearchBar = () => {
       {/*Overlay*/}
       <div
         className={cn(
-          "fixed inset-0 bg-black/50 backdrop-blur-[2px] z-10 transition-all duration-500",
+          "fixed inset-0 bg-black/50 backdrop-blur-[2px] z-50 transition-all duration-500",
           focused
             ? "opacity-100 visible"
             : "opacity-0 invisible pointer-events-none",
         )}
       />
-      <div ref={ref} className="relative z-20 flex-1">
+      <div ref={ref} className="relative z-60 flex-1">
         <div
           className={cn(
             "flex items-center px-3 md:h-10 lg:h-12 rounded-2xl shadow-sm transition-all duration-500",
@@ -103,7 +103,7 @@ export const SearchBar = () => {
         {/*Dropdown*/}
         <div
           className={cn(
-            "absolute z-20 mt-3 w-full bg-white shadow-2xl rounded-2xl py-3 max-h-73 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-all duration-500",
+            "absolute z-60 mt-3 w-full bg-white shadow-2xl rounded-2xl py-3 max-h-73 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-all duration-500",
             focused
               ? "opacity-100 translate-y-0 visible"
               : "opacity-0 translate-y-5 invisible pointer-events-none",

@@ -46,7 +46,7 @@ export const AuthButton = () => {
             Профиль
           </Button>
           {open && (
-            <div className="absolute z-10 bg-white mt-1 w-full shadow-xl border border-primary flex flex-col gap-2 rounded-xl py-2">
+            <div className="absolute z-70 bg-white mt-1 w-full shadow-xl border border-primary flex flex-col gap-1 rounded-xl py-2">
               {options.map((option) => (
                 <Link
                   key={option.label}

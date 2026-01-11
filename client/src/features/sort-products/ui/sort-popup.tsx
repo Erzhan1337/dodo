@@ -44,7 +44,7 @@ export const SortPopup = ({ className }: Props) => {
         </div>
       </div>
       {isOpen && (
-        <div className="border border-gray-300 rounded-2xl w-full absolute z-10 top-full mt-1 md:mt-2 flex flex-col py-1 md:py-3 right-0 shadow-md bg-gray-50">
+        <div className="border border-gray-300 rounded-2xl w-full absolute z-20 top-full mt-1 md:mt-2 flex flex-col py-1 md:py-3 right-0 shadow-md bg-gray-50">
           {options.map((option) => (
             <button
               className={cn(
