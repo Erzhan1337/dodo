@@ -4,8 +4,9 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ProductModule } from './product/product.module';
+import { CategoriesModule } from './categories/categories.module';
 
 @Module({
-  imports: [PrismaModule,ConfigModule.forRoot(), AuthModule, UserModule, ProductModule],
+  imports: [PrismaModule,ConfigModule.forRoot(), AuthModule, UserModule, ProductModule, CategoriesModule],
 })
 export class AppModule {}

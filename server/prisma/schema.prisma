@@ -24,8 +24,8 @@ model User {
 }
 
 model Category {
-  id   String @id @default(cuid())
-  name String
+  id   Int    @id @default(autoincrement())
+  name String @unique
 
   products Product[]
 
@@ -42,11 +42,10 @@ model Product {
   description String
 
   category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String   @map("category_id")
+  categoryId Int      @map("category_id")
 
   ingredients Ingredient[]
-
-  items ProductItem[]
+  items       ProductItem[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -58,13 +57,14 @@ model ProductItem {
   id        String @id @default(cuid())
   price     Int
   size      Int?
-  pizzaType Int?
+  pizzaType Int?   @map("pizza_type")
   imageUrl  String
 
   product   Product @relation(fields: [productId], references: [id])
   productId String  @map("product_id")
 
-  cartItems CartItem[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -78,8 +78,9 @@ model Ingredient {
   price    Int
   imageUrl String
 
-  products  Product[]
-  cartItems CartItem[]
+  products   Product[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -89,13 +90,14 @@ model Ingredient {
 
 model Order {
   id         String @id @default(cuid())
-  totalPrice Int
+  totalPrice Int    @default(0) @map("total_price")
   status     STATUS
-  items      Json
   token      String
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @map("user_id")
+
+  items OrderItem[]
 
   name    String
   phone   String
@@ -109,9 +111,29 @@ model Order {
   @@map("orders")
 }
 
+model OrderItem {
+  id String @id @default(cuid())
+
+  productItem   ProductItem @relation(fields: [productItemId], references: [id])
+  productItemId String      @map("product_item_id")
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String @map("order_id")
+
+  quantity Int
+  price    Int
+
+  ingredients Ingredient[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("order_items")
+}
+
 model Cart {
   id         String @id @default(cuid())
-  totalPrice Int    @default(0)
+  totalPrice Int    @default(0) @map("total_price")
   token      String
 
   user   User?   @relation(fields: [userId], references: [id])
@@ -127,12 +149,12 @@ model Cart {
 
 model CartItem {
   id       String @id @default(cuid())
-  quantity Int
+  quantity Int    @default(1)
 
   productItem   ProductItem @relation(fields: [productItemId], references: [id])
   productItemId String      @map("product_item_id")
 
-  cart   Cart   @relation(fields: [cartId], references: [id])
+  cart   Cart   @relation(fields: [cartId], references: [id], onDelete: Cascade)
   cartId String @map("cart_id")
 
   ingredients Ingredient[]

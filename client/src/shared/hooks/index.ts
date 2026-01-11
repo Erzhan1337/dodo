@@ -1,4 +1,5 @@
-export { useClickOutside } from "./useClickOutside";
-export { useEscape } from "./useEscape";
-export { useScroll } from "./useScroll";
-export { useDebounce } from "./useDebounce";
+export { useClickOutside } from "./use-click-outside";
+export { useEscape } from "./use-escape";
+export { useScroll } from "./use-scroll";
+export { useDebounce } from "./use-debounce";
+export {useQueryParam} from "./use-query-param";

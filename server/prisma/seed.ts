@@ -5,12 +5,10 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Starting');
 
-  // Сначала зависимые таблицы
   await prisma.cartItem.deleteMany();
   await prisma.order.deleteMany();
   await prisma.productItem.deleteMany();
 
-  // Потом основные
   await prisma.product.deleteMany();
   await prisma.cart.deleteMany();
   await prisma.ingredient.deleteMany();
