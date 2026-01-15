@@ -11,10 +11,12 @@ interface Props {
 export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: ingredients = [] } = useIngredients();
+  const { data: ingredients = [], isLoading } = useIngredients();
   const items = useMemo(() => {
     const filtered = ingredients.filter((ing: any) =>
-      ing.name.toLowerCase().includes(searchTerm.toLowerCase().replace(/\s/g, "")),
+      ing.name
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase().replace(/\s/g, "")),
     );
     return [...filtered].sort((a, b) => {
       const isASelected = selectedIngs.has(a.name);
@@ -37,6 +39,13 @@ export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
             placeholder="Поиск..."
             className="outline-0 pl-3 py-1"
           />
+        </div>
+      )}
+      {isLoading && (
+        <div className="mt-3 flex flex-col gap-2 h-46 w-full">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div className="w-full rounded-[8px] h-6 bg-gray-200" key={i} />
+          ))}
         </div>
       )}
       <div className="mt-3 flex flex-col gap-2 h-46 max-h-46 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
