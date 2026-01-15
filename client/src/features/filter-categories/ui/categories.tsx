@@ -70,7 +70,9 @@ export const Categories = ({ className }: Props) => {
             />
           )}
 
-          <span className="relative text-[12px] md:text-sm">{cat.name}</span>
+          <span className="relative text-[12px] md:text-sm xl:text-base">
+            {cat.name}
+          </span>
         </button>
       ))}
     </div>

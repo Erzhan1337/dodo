@@ -35,9 +35,9 @@ export const SortPopup = ({ className }: Props) => {
         onClick={() => setIsOpen((prev) => !prev)}
       >
         <ArrowUpDown className="size-3 md:size-4" />
-        <div className="flex items-center">
+        <div className="flex items-center text-xs md:text-sm xl:text-base">
           <span className="mr-1">Сортировка:</span>
-          <div className="text-primary flex items-center gap-1 [&_svg]:size-3 md:[&_svg]:size-4">
+          <div className="text-primary flex items-center gap-1 [&_svg]:size-3 xl:[&_svg]:size-4">
             {selectedOption.name}
             {selectedOption.icon}
           </div>
@@ -48,7 +48,7 @@ export const SortPopup = ({ className }: Props) => {
           {options.map((option) => (
             <button
               className={cn(
-                "text-xs md:text-base flex items-center gap-1 [&_svg]:size-4 cursor-pointer hover:bg-orange-50 hover:text-primary px-5 py-1",
+                "text-xs md:text-sm flex items-center gap-1 [&_svg]:size-4 cursor-pointer hover:bg-orange-50 hover:text-primary px-5 py-1",
                 currentSortValue === option.value ? "text-primary" : "",
               )}
               key={option.value}

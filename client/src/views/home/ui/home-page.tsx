@@ -1,5 +1,6 @@
 import { Container, Title } from "@/shared/ui";
 import { TopBar } from "@/widgets/topbar";
+import { SidebarFilter } from "@/widgets/sidebar-filter";
 
 export const HomePage = () => {
   return (
@@ -8,7 +9,9 @@ export const HomePage = () => {
         <Title text="Все Пиццы" className="mb-2 text-2xl lg:text-3xl" />
       </Container>
       <TopBar />
-      <div className="h-[2000px] w-full bg-orange-300"></div>
+      <Container>
+        <SidebarFilter />
+      </Container>
     </>
   );
 };

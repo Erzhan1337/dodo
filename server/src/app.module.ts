@@ -5,8 +5,9 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ProductModule } from './product/product.module';
 import { CategoriesModule } from './categories/categories.module';
+import { IngredientsModule } from './ingredients/ingredients.module';
 
 @Module({
-  imports: [PrismaModule,ConfigModule.forRoot(), AuthModule, UserModule, ProductModule, CategoriesModule],
+  imports: [PrismaModule,ConfigModule.forRoot(), AuthModule, UserModule, ProductModule, CategoriesModule, IngredientsModule],
 })
 export class AppModule {}

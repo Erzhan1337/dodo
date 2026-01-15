@@ -17,7 +17,8 @@ const TopBar = ({ className }: Props) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScroll(window.scrollY > 50);
+      if (window.scrollY > 50 && !isScroll) setIsScroll(true);
+      if (window.scrollY <= 50 && isScroll) setIsScroll(false);
     };
 
     window.addEventListener("scroll", handleScroll);
