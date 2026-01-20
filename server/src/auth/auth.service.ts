@@ -10,6 +10,7 @@ import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { verify } from 'argon2';
 
 @Injectable()
 export class AuthService {
@@ -25,8 +26,9 @@ export class AuthService {
   async login(dto: LoginDto) {
     const user = await this.validateUser(dto);
     const tokens = this.issueTokes(user.id);
+    const { password, ...userWithoutPassword } = user;
     return {
-      user,
+      userWithoutPassword,
       ...tokens,
     };
   }
@@ -38,8 +40,9 @@ export class AuthService {
     }
     const user = await this.userService.createUser(dto);
     const tokens = this.issueTokes(user.id);
+    const { password, ...userWithoutPassword } = user;
     return {
-      user,
+      userWithoutPassword,
       ...tokens,
     };
   }
@@ -54,8 +57,9 @@ export class AuthService {
     const user = await this.userService.getUserById(data.id);
     if (!user) throw new UnauthorizedException('User not found');
     const tokens = this.issueTokes(user.id);
+    const { password, ...userWithoutPassword } = user;
     return {
-      user,
+      userWithoutPassword,
       ...tokens,
     };
   }
@@ -78,6 +82,8 @@ export class AuthService {
   private async validateUser(dto: LoginDto) {
     const user = await this.userService.getUserByPhone(dto.phone);
     if (!user) throw new NotFoundException('User not found');
+    const isValidPassword = await verify(user.password, dto.password);
+    if (!isValidPassword) throw new NotFoundException('User not found');
 
     return user;
   }

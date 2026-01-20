@@ -37,12 +37,11 @@ export const AuthButton = () => {
       ) : (
         <div className="relative" ref={ref as RefObject<HTMLDivElement>}>
           <Button
-            className="gap-1"
-            size="lg"
+            className="gap-0.5 px-1 text-xs h-7 md:h-9 md:rounded-xl md:text-sm lg:text-base md:px-2 lg:rounded-2xl lg:h-11"
             variant="outline"
             onClick={() => setOpen((prev) => !prev)}
           >
-            <User2 className="size-5" />
+            <User2 className="size-4 lg:size-5 stroke-2" />
             Профиль
           </Button>
           {open && (

@@ -1,3 +1,4 @@
+"use client";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export const useQueryParam = (key: string) => {

@@ -4,52 +4,7 @@ import { useSearch } from "@/features/search/model/use-search";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/shared/lib/utils";
-import { useMemo } from "react";
-
-const products = [
-  {
-    id: 1,
-    name: "Пицца Пепперони",
-    price: 1900,
-    imageUrl:
-      "https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%87%D0%B8%D0%BA%D0%B5%D0%BD_%D0%B1%D0%BE%D0%BC%D0%B1%D0%BE%D0%BD%D0%B8_uzisyl.avif",
-  },
-  {
-    id: 2,
-    name: "Пицца Маргарита",
-    price: 2450,
-    imageUrl:
-      "https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%82%D0%B5%D1%80%D0%B8%D1%8F%D0%BA%D0%B8_mfiuwj.avif",
-  },
-  {
-    id: 3,
-    name: "Пицца 4 сыра",
-    price: 3600,
-    imageUrl:
-      "https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%81%D1%8B%D1%80%D0%BD%D0%B0%D1%8F_fuxdfh.avif",
-  },
-  {
-    id: 4,
-    name: "Пицца Пепперони",
-    price: 1900,
-    imageUrl:
-      "https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%87%D0%B8%D0%BA%D0%B5%D0%BD_%D0%B1%D0%BE%D0%BC%D0%B1%D0%BE%D0%BD%D0%B8_uzisyl.avif",
-  },
-  {
-    id: 5,
-    name: "Пицца Маргарита",
-    price: 2450,
-    imageUrl:
-      "https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%82%D0%B5%D1%80%D0%B8%D1%8F%D0%BA%D0%B8_mfiuwj.avif",
-  },
-  {
-    id: 6,
-    name: "Пицца 4 сыра",
-    price: 3600,
-    imageUrl:
-      "https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%81%D1%8B%D1%80%D0%BD%D0%B0%D1%8F_fuxdfh.avif",
-  },
-];
+import { useSearchProducts } from "@/features/search/api/use-search-products";
 
 export const SearchBar = () => {
   const {
@@ -61,12 +16,8 @@ export const SearchBar = () => {
     setQuery,
     debouncedQuery,
   } = useSearch();
-  const filteredProducts = useMemo(() => {
-    if (!debouncedQuery) return products;
-    return products.filter((product) =>
-      product.name.toLowerCase().includes(debouncedQuery.toLowerCase()),
-    );
-  }, [debouncedQuery]);
+  const { data: products, isLoading } = useSearchProducts(debouncedQuery);
+
   return (
     <>
       {/*Overlay*/}
@@ -109,9 +60,11 @@ export const SearchBar = () => {
               : "opacity-0 translate-y-5 invisible pointer-events-none",
           )}
         >
-          {filteredProducts.length > 0 ? (
-            filteredProducts.map((product) => (
-              <Link href="/product" key={product.id} className="">
+          {isLoading ? (
+            <div>Ищем пиццу</div>
+          ) : products && products.length > 0 ? (
+            products.map((product) => (
+              <Link href={`/product/${product.id}`} key={product.id}>
                 <div className="px-5 py-2 hover:bg-orange-50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="relative h-9 w-9 shrink-0">
@@ -125,7 +78,9 @@ export const SearchBar = () => {
                     <span>{product.name}</span>
                   </div>
                   <div>
-                    <span className="font-bold">{product.price} ₸</span>
+                    <span className="font-bold">
+                      {product.items[0].price} ₸
+                    </span>
                   </div>
                 </div>
               </Link>

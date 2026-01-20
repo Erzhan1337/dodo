@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import {
   useClickOutside,
@@ -6,39 +7,29 @@ import {
   useEscape,
   useScroll,
 } from "@/shared/hooks";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export const useSearch = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const [focused, setFocused] = useState(false);
-  const [query, setQuery] = useState(searchParams?.get("query") || "");
+  const [query, setQuery] = useState(""); // Локальный стейт, не зависим от URL при вводе
   const inputRef = useRef<HTMLInputElement>(null);
+  const pathname = usePathname(); // Следим за путем страницы
 
+  // Дебаунс только для API запроса, а не для URL
   const debouncedQuery = useDebounce(query, 500);
 
+  // 1. Очистка при навигации (Самое важное!)
+  // Как только путь меняется (например, перешли на /product/1), мы очищаем поиск.
   useEffect(() => {
-    const currentQuery = searchParams?.get("query") || "";
-    if (currentQuery === debouncedQuery) return;
-    const params = new URLSearchParams(searchParams?.toString());
-    if (debouncedQuery) {
-      params.set("query", debouncedQuery);
-    } else {
-      params.delete("query");
-    }
-    router.replace(`?${params.toString()}`, { scroll: false });
-  }, [debouncedQuery, router, searchParams]);
-
-  useEffect(() => {
-    const urlQuery = searchParams?.get("query") || "";
-    if (urlQuery !== query && !focused) {
-      setQuery(urlQuery);
-    }
-  }, [searchParams, query, focused]);
-
-  const closeSearch = () => {
     setQuery("");
     setFocused(false);
+  }, [pathname]);
+
+  const closeSearch = () => {
+    setFocused(false);
+    // Не очищаем query здесь, чтобы при случайном клике мимо текст не пропадал,
+    // но если хочешь очищать — раскомментируй:
+    // setQuery("");
     inputRef.current?.blur();
   };
 

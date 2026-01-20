@@ -44,11 +44,11 @@ export const SortPopup = ({ className }: Props) => {
         </div>
       </div>
       {isOpen && (
-        <div className="border border-gray-300 rounded-2xl w-full absolute z-20 top-full mt-1 md:mt-2 flex flex-col py-1 md:py-3 right-0 shadow-md bg-gray-50">
+        <div className="border border-gray-300 rounded-2xl w-full absolute z-20 top-full mt-1 md:mt-2 flex flex-col py-1 md:py-3 right-0 shadow-md backdrop-blur-2xl bg-white/50">
           {options.map((option) => (
             <button
               className={cn(
-                "text-xs md:text-sm flex items-center gap-1 [&_svg]:size-4 cursor-pointer hover:bg-orange-50 hover:text-primary px-5 py-1",
+                "text-xs md:text-sm flex items-center gap-1 [&_svg]:size-4 cursor-pointer hover:bg-orange-100 hover:text-primary px-5 py-1",
                 currentSortValue === option.value ? "text-primary" : "",
               )}
               key={option.value}

@@ -19,14 +19,19 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: ReactNode;
+  modal: ReactNode;
 }>) {
   return (
     <html lang="ru">
       <body className={`${nunito.className} antialiased`}>
         <QueryProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            {children}
+            {modal}
+          </AuthProvider>
           <Toaster position="top-center" toastOptions={{ duration: 2000 }} />
         </QueryProvider>
       </body>

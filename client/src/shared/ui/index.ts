@@ -6,3 +6,4 @@ export { Skeleton } from "./skeleton";
 export { FilterCheckbox } from "./checkbox";
 export { FilterInput } from "./filter-input";
 export { RangeSlider } from "./range-slider";
+export { Modal } from "./modal";

@@ -14,7 +14,7 @@ export const SidebarFilter = () => {
     toggleIngredients,
   } = useFilters();
   return (
-    <div className="mt-3 max-w-62">
+    <div className="hidden lg:block lg:max-w-62">
       <h4 className="text-lg font-bold mb-8">Фильтрация</h4>
       <div>
         <FilterByPrice

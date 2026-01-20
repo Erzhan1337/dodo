@@ -1,13 +1,14 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware"; // 1. Импортируем middleware
 import { $api } from "@/shared/api";
+import type { User } from "@/entities/session/model/types";
 
 interface SessionState {
-  user: any;
+  user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
   _hasHydrated: boolean;
-  setAuthData: (user: any, accessToken: string) => void;
+  setAuthData: (user: User, accessToken: string) => void;
   logout: () => void;
 }
 
