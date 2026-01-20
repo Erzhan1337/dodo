@@ -20,4 +20,8 @@ export class ProductDto {
   @IsOptional()
   @IsString()
   query?: string;
+  @IsOptional()
+  page?: string;
+  @IsOptional()
+  limit?: string;
 }

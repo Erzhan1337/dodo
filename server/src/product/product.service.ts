@@ -20,6 +20,9 @@ export class ProductService {
 
   async getAllProducts(dto: ProductDto) {
     const { ingredients, from, to, category, sort, query } = dto;
+    const page = Number(dto.page) || 1;
+    const limit = Number(dto.limit) || 6;
+    const skip = (page - 1) * limit;
 
     const where: Prisma.ProductWhereInput = {
       ingredients: ingredients
@@ -82,6 +85,16 @@ export class ProductService {
       });
     }
 
-    return products;
+    const paginatedProducts = products.slice(skip, skip + limit);
+
+    return {
+      data: paginatedProducts,
+      meta: {
+        total: products.length,
+        page,
+        limit,
+        totalPages: Math.ceil(products.length / limit),
+      },
+    };
   }
 }

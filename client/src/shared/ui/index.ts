@@ -7,3 +7,4 @@ export { FilterCheckbox } from "./checkbox";
 export { FilterInput } from "./filter-input";
 export { RangeSlider } from "./range-slider";
 export { Modal } from "./modal";
+export { Pagination } from "./pagination";

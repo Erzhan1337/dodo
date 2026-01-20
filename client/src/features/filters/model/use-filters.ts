@@ -55,6 +55,8 @@ export const useFilters = () => {
       params.set("ing", Array.from(selectedIngredients).join(","));
     } else params.delete("ing");
 
+    params.delete("page");
+
     router.push(`?${params.toString()}`, { scroll: false });
   }, [searchParams, selectedIngredients, pricesRange]);
 

@@ -13,6 +13,11 @@ export const useQueryParam = (key: string) => {
     } else {
       params.set(key, newValue);
     }
+
+    if (key !== "page") {
+      params.delete("page");
+    }
+
     router.replace(`?${params.toString()}`, { scroll: false });
   };
   return { value, setQueryParam };

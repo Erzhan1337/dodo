@@ -5,15 +5,21 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Starting');
 
-  await prisma.cartItem.deleteMany();
-  await prisma.order.deleteMany();
-  await prisma.productItem.deleteMany();
-
-  await prisma.product.deleteMany();
-  await prisma.cart.deleteMany();
-  await prisma.ingredient.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.user.deleteMany();
+  const tableNames = [
+    'cart_items',
+    'orders',
+    'product_items',
+    'products',
+    'carts',
+    'ingredients',
+    'categories',
+    'users',
+  ];
+  for (const tableName of tableNames) {
+    await prisma.$executeRawUnsafe(
+      `TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE;`,
+    );
+  }
 
   console.log('All data is deleted');
 
@@ -452,6 +458,112 @@ async function main() {
             pizzaType: 2,
             imageUrl:
               'https://res.cloudinary.com/dgtya5crt/image/upload/v1767594750/meat_35_ton_uhw4mr.png',
+          },
+        ],
+      },
+    },
+  });
+
+  const chill_grill = await prisma.product.create({
+    data: {
+      name: 'Чилл Грилл',
+      description:
+        'Двойная порция цыпленка, соленые огурчики, красный лук, соус гриль тейсти, моцарелла, чеснок, фирменный соус альфредо',
+      imageUrl:
+        'https://res.cloudinary.com/dgtya5crt/image/upload/v1768912582/chill_grill_zv9qax.avif',
+      ingredients: {
+        connect: [
+          { id: chick.id },
+          { id: pickled_cucumbers.id },
+          { id: red_onion.id },
+          { id: mozzarella.id },
+          { id: italian_herbs.id },
+        ],
+      },
+      categoryId: categoryChicken.id,
+      items: {
+        create: [
+          {
+            size: 25,
+            price: 2950,
+            pizzaType: 1,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913124/chill_25_tr_tj3ftb.png',
+          },
+          {
+            size: 30,
+            price: 4150,
+            pizzaType: 1,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913124/chill_30_tr_hbvwfn.png',
+          },
+          {
+            size: 30,
+            price: 4250,
+            pizzaType: 2,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913124/chill_30_ton_tmc0ve.png',
+          },
+        ],
+      },
+    },
+  });
+
+  const dodo = await prisma.product.create({
+    data: {
+      name: 'Додо',
+      description:
+        'Ветчина из цыпленка, сочные митболы, пепперони из цыпленка, томаты, шампиньоны, сладкий перец, красный лук',
+      imageUrl:
+        'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913662/dodo_gm2gy5.avif',
+      ingredients: {
+        connect: [
+          { id: chicken_ham.id },
+          { id: meatballs.id },
+          { id: chicken_pepperoni.id },
+          { id: tomatoes.id },
+          { id: champignons.id },
+          { id: red_onion.id },
+          { id: mozzarella.id },
+        ],
+      },
+      categoryId: categoryVegetarian.id,
+      items: {
+        create: [
+          {
+            size: 25,
+            price: 3450,
+            pizzaType: 1,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913655/dodo_25_tr_vp0hcs.png',
+          },
+          {
+            size: 30,
+            price: 5050,
+            pizzaType: 1,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913656/dodo_30_tr_fybn6e.png',
+          },
+          {
+            size: 30,
+            price: 5150,
+            pizzaType: 2,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913656/dodo_30_ton_ezdfgt.png',
+          },
+          {
+            size: 35,
+            price: 6290,
+            pizzaType: 1,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913656/dodo_35_tr_e8efwk.png',
+          },
+          {
+            size: 35,
+            price: 6400,
+            pizzaType: 2,
+            imageUrl:
+              'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913657/dodo_35_ton_viws22.png',
           },
         ],
       },

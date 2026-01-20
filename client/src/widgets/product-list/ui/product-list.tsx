@@ -1,8 +1,19 @@
 "use client";
 import { Product, ProductCard, useProducts } from "@/entities/product";
+import { useQueryParam } from "@/shared/hooks";
+import { Pagination } from "@/shared/ui";
 
 export const ProductList = () => {
-  const { data: products, isLoading } = useProducts();
+  const { data: response, isLoading } = useProducts();
+  const products = response?.data;
+  const meta = response?.meta;
+  const { setQueryParam } = useQueryParam("page");
+  console.log(products, meta);
+
+  const onPageChange = (page: number) => {
+    setQueryParam(String(page));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
   if (isLoading) {
     return (
       <div className="flex justify-center items-center w-full text-primary">
@@ -25,6 +36,15 @@ export const ProductList = () => {
           <ProductCard key={product.id} product={product} />
         ))}
       </div>
+      {meta && (
+        <div className="flex justify-center mt-15">
+          <Pagination
+            currentPage={meta.page}
+            totalPages={meta.totalPages}
+            onPageChange={onPageChange}
+          />
+        </div>
+      )}
     </div>
   );
 };
