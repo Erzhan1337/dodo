@@ -31,7 +31,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
     currentImage,
     totalPrice,
     currentItemId, // Убедись, что useProductForm возвращает currentItemId (ID выбранной вариации)
-  } = useProductForm(product, ingredients);
+  } = useProductForm(product, ingredients || []);
 
   const { mutate: addToCart, isPending } = useAddToCart(); // 2. Инициализация мутации
 
