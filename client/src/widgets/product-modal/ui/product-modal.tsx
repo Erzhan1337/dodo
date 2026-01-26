@@ -25,7 +25,7 @@ export const ProductModal = ({ id }: Props) => {
   }
   return (
     <Modal isOpen={true} onClose={handleClose}>
-      <ProductForm product={product} />
+      <ProductForm product={product} onSubmit={handleClose}/>
     </Modal>
   );
 };

@@ -11,7 +11,7 @@ export const useSearchProducts = (query: string) => {
           query,
         },
       });
-      return data;
+      return data.data;
     },
     enabled: !!query,
   });

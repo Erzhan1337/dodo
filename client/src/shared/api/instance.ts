@@ -7,7 +7,7 @@ export const $api = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-$api.interceptors.response.use((config) => {
+$api.interceptors.request.use((config) => {
   const accessToken = useSessionStore.getState().accessToken;
 
   if (config.headers && accessToken) {

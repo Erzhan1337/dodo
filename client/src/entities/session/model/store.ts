@@ -39,6 +39,7 @@ export const useSessionStore = create<SessionState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        accessToken: state.accessToken,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) state._hasHydrated = true;

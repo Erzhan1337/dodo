@@ -11,6 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { verify } from 'argon2';
+import { CartService } from '../cart/cart.service';
 
 @Injectable()
 export class AuthService {
@@ -21,10 +22,14 @@ export class AuthService {
     private configService: ConfigService,
     private jwt: JwtService,
     private userService: UserService,
+    private cartService: CartService,
   ) {}
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, guestToken?: string) {
     const user = await this.validateUser(dto);
+    if (guestToken) {
+      await this.cartService.mergeCarts(user.id, guestToken);
+    }
     const tokens = this.issueTokes(user.id);
     const { password, ...userWithoutPassword } = user;
     return {
@@ -33,12 +38,15 @@ export class AuthService {
     };
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, guestToken?: string) {
     const existingUser = await this.userService.getUserByPhone(dto.phone);
     if (existingUser) {
       throw new BadRequestException('User already exists');
     }
     const user = await this.userService.createUser(dto);
+    if (guestToken) {
+      await this.cartService.mergeCarts(user.id, guestToken);
+    }
     const tokens = this.issueTokes(user.id);
     const { password, ...userWithoutPassword } = user;
     return {

@@ -1,69 +1,60 @@
 import { useState } from "react";
-import type { Ingredient, Product } from "@/entities/product";
+import { Ingredient, Product } from "@/entities/product";
 
-export const useProductForm = (
-  product: Product,
-  ingredients: Ingredient[] = [],
-) => {
-  const [size, setSize] = useState(product.items[0].size || 25);
-  const [type, setType] = useState(product.items[0].pizzaType || 1);
-  const [selectedIngredients, setSelectedIngredients] = useState(new Set());
+export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
+  // Дефолтные значения (первый размер и первый тип из доступных у товара)
+  const [size, setSize] = useState<number>(product.items[0].size);
+  const [type, setType] = useState<number>(product.items[0].pizzaType);
 
-  const currentVariation = product.items.find(
-    (item) => item.size === size && item.pizzaType === type,
+  const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(
+    new Set(),
   );
 
-  const currentImage = currentVariation?.imageUrl || product.imageUrl;
-
-  const availablePizzas = product.items;
-
-  const isAvailable = Boolean(currentVariation);
-
-  const updateSize = (newSize: number) => {
-    const isAvailableVariation = availablePizzas.some(
-      (i) => i.size === newSize && i.pizzaType === type,
-    );
-
-    if (!isAvailableVariation) {
-      const availableVariation = availablePizzas.find(
-        (i) => i.size === newSize,
-      );
-      if (availableVariation) {
-        setType(availableVariation.pizzaType);
-      }
-    }
-    setSize(newSize);
-  };
+  // Вычисляем ID текущей вариации (ProductItem)
+  // Это критически важно для корзины!
+  const currentItemId = product.items.find(
+    (item) => item.size === size && item.pizzaType === type,
+  )?.id;
 
   const toggleIngredient = (id: string) => {
-    setSelectedIngredients((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) newSet.delete(id);
-      else newSet.add(id);
-      return newSet;
-    });
+    const newIngredients = new Set(selectedIngredients);
+    if (newIngredients.has(id)) {
+      newIngredients.delete(id);
+    } else {
+      newIngredients.add(id);
+    }
+    setSelectedIngredients(newIngredients);
   };
 
+  // Считаем итоговую цену
   const totalPrice = () => {
-    const pizzaPrice = currentVariation?.price || 0;
+    const productItem = product.items.find(
+      (item) => item.size === size && item.pizzaType === type,
+    );
+
+    if (!productItem) return { total: 0 };
+
     const ingredientsPrice = ingredients
       .filter((ing) => selectedIngredients.has(ing.id))
       .reduce((acc, ing) => acc + ing.price, 0);
-    const total = pizzaPrice + ingredientsPrice;
 
-    return { total, pizzaPrice, ingredientsPrice };
+    return { total: productItem.price + ingredientsPrice };
   };
+
+  // Проверка доступности (если комбинация размера/теста существует)
+  // ВАЖНО: isAvailable должен быть true, если товар МОЖНО купить
+  const isAvailable = Boolean(currentItemId);
 
   return {
     size,
     type,
     selectedIngredients,
-    setSize: updateSize,
+    setSize,
     setType,
-    setSelectedIngredients,
     toggleIngredient,
-    currentImage,
+    currentImage: product.imageUrl,
     totalPrice,
-    isAvailable,
+    currentItemId, // <--- НЕ ЗАБУДЬ ВЕРНУТЬ ЭТО
+    isAvailable, // <--- И ЭТО
   };
 };
