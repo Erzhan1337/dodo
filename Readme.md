@@ -225,5 +225,4 @@ dodo/
         └── seed.ts         # Database seeding script
 ```
 
-
 **Built with ❤️ using Next.js and NestJS**
