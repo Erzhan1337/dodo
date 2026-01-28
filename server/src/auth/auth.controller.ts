@@ -24,17 +24,9 @@ export class AuthController {
   async login(
     @Body() dto: LoginDto,
     @Res({ passthrough: true }) res: Response,
-    @Req() req: Request,
   ) {
-    const guestToken = req.cookies['token'];
-    const { refreshToken, ...response } = await this.authService.login(
-      dto,
-      guestToken,
-    );
+    const { refreshToken, ...response } = await this.authService.login(dto);
     this.authService.addRefreshTokenToResponse(res, refreshToken);
-    if (guestToken) {
-      res.clearCookie('token');
-    }
     return response;
   }
 
@@ -44,17 +36,9 @@ export class AuthController {
   async register(
     @Body() dto: RegisterDto,
     @Res({ passthrough: true }) res: Response,
-    @Req() req: Request,
   ) {
-    const guestToken = req.cookies['cart'];
-    const { refreshToken, ...response } = await this.authService.register(
-      dto,
-      guestToken,
-    );
+    const { refreshToken, ...response } = await this.authService.register(dto);
     this.authService.addRefreshTokenToResponse(res, refreshToken);
-    if (guestToken) {
-      res.clearCookie('token');
-    }
     return response;
   }
 

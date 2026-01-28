@@ -9,6 +9,15 @@ import { IngredientsModule } from './ingredients/ingredients.module';
 import { CartModule } from './cart/cart.module';
 
 @Module({
-  imports: [PrismaModule,ConfigModule.forRoot(), AuthModule, UserModule, ProductModule, CategoriesModule, IngredientsModule, CartModule],
+  imports: [
+    PrismaModule,
+    ConfigModule.forRoot(),
+    AuthModule,
+    UserModule,
+    ProductModule,
+    CategoriesModule,
+    IngredientsModule,
+    CartModule,
+  ],
 })
 export class AppModule {}
