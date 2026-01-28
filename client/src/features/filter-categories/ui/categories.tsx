@@ -33,12 +33,12 @@ export const Categories = ({ className }: Props) => {
     return (
       <div
         className={cn(
-          "w-full flex md:inline-flex items-center gap-1 p-1 rounded-2xl bg-gray-50 shadow-md",
+          "w-[60%] flex md:inline-flex items-center gap-1 p-1 rounded-2xl bg-gray-50 shadow-md",
           className,
         )}
       >
         {[...Array(6)].map((_, index) => (
-          <Skeleton key={index} className="h-10 w-24" />
+          <Skeleton key={index} className="h-10 w-24 rounded-xl" />
         ))}
       </div>
     );

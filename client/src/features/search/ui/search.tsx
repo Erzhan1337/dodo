@@ -61,7 +61,9 @@ export const SearchBar = () => {
           )}
         >
           {isLoading ? (
-            <div>Ищем пиццу</div>
+            <div className="w-full flex items-center justify-center mt-3">
+              Ищем пиццу
+            </div>
           ) : products && products.length > 0 ? (
             products.map((product) => (
               <Link href={`/product/${product.id}`} key={product.id}>
