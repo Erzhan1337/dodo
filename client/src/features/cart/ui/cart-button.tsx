@@ -3,14 +3,18 @@ import { Button } from "@/shared/ui";
 import Link from "next/link";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/features/cart/api/use-cart";
+import { useSessionStore } from "@/entities/session/model/store";
 
 export const CartButton = () => {
-  const { data: cart, isLoading } = useCart();
-  const totalAmount = cart?.totalAmount || 0;
+  const isAuth = useSessionStore((state) => state.isAuthenticated);
+  const href = isAuth ? "/cart" : "/login";
+  const { data: cart } = useCart();
+  console.log(cart);
+  const totalAmount = cart?.totalPrice || 0;
   const itemsCount =
     cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;
   return (
-    <Link href="/cart" className="group relative">
+    <Link href={href} className="group relative">
       <Button className="lg:h-11 lg:py-3 lg:rounded-2xl md:h-9 md:rounded-xl md:py-2 h-7 py-1.5 px-2 relative overflow-hidden">
         <span className="text-xs md:text-base">{totalAmount} ₸</span>
         <div className="w-px h-full bg-white/70 mx-1 md:mx-2" />

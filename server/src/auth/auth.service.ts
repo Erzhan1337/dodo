@@ -96,7 +96,7 @@ export class AuthService {
       domain: this.configService.getOrThrow('SERVER_DOMAIN'),
       expires: expiresIn,
       secure: this.configService.getOrThrow("PRODUCTION"),
-      sameSite: 'lax',
+      sameSite: 'none',
     });
   }
 
@@ -106,7 +106,7 @@ export class AuthService {
       domain: this.configService.getOrThrow('SERVER_DOMAIN'),
       expires: new Date(0),
       secure: this.configService.getOrThrow('PRODUCTION'),
-      sameSite: 'lax',
+      sameSite: 'none',
     });
   }
 }

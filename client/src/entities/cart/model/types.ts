@@ -30,7 +30,7 @@ export interface CartItem {
 
 export interface CartResponse {
   id: string;
-  totalAmount: number;
+  totalPrice: number;
   items: CartItem[];
   token?: string;
 }

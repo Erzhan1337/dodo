@@ -15,15 +15,13 @@ const error = (error: AxiosError<{ message: string }>) => {
   toast.error(errorMessage);
 };
 
-// В use-login.ts
 export const useLoginMutation = () => {
   const setAuthData = useSessionStore((state) => state.setAuthData); // Достаем экшен
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      setAuthData(data.userWithoutPassword, data.accessToken); // Сохраняем юзера и токен
-      const queryClient = useQueryClient();
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      console.log(data);
+      setAuthData(data.user, data.accessToken);
     },
     onError: error,
   });

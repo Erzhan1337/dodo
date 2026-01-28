@@ -4,14 +4,18 @@ import {
   CartResponse,
   CreateCartItemValues,
 } from "@/entities/cart/model/types";
+import { useSessionStore } from "@/entities/session/model/store";
 
 export const useCart = () => {
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+
   return useQuery<CartResponse>({
     queryKey: ["cart"],
     queryFn: async () => {
       const { data } = await $api.get<CartResponse>("/cart");
       return data;
     },
+    enabled: isAuthenticated,
   });
 };
 
@@ -28,8 +32,6 @@ export const useAddToCart = () => {
   });
 };
 
-// --- ВОТ ЭТОГО НЕ ХВАТАЛО ---
-
 export const useUpdateItemQuantity = () => {
   const queryClient = useQueryClient();
 
@@ -38,7 +40,6 @@ export const useUpdateItemQuantity = () => {
       return $api.patch<CartResponse>("/cart/" + id, { quantity });
     },
     onSuccess: (response) => {
-      // Обновляем кеш новыми данными с бэкенда
       queryClient.setQueryData(["cart"], response.data);
     },
   });
@@ -52,7 +53,6 @@ export const useRemoveCartItem = () => {
       return $api.delete<CartResponse>("/cart/" + id);
     },
     onSuccess: (response) => {
-      // Обновляем кеш
       queryClient.setQueryData(["cart"], response.data);
     },
   });

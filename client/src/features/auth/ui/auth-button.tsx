@@ -18,8 +18,8 @@ export const AuthButton = () => {
   const { isAuthenticated, logout } = useSessionStore();
   const queryClient = useQueryClient();
   const handleLogout = () => {
-    logout();
     setOpen(false);
+    logout();
     queryClient.removeQueries({ queryKey: ["cart"] });
   };
 
