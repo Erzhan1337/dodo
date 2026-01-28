@@ -11,13 +11,11 @@ interface Props {
 export const ProductCard = ({ product }: Props) => {
   return (
     <div className="">
-      {/*Photo*/}
       <div className="h-50 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
         <div className="relative w-45 h-45 md:w-54 md:h-54 hover:scale-105 transition-transform duration-300">
           <Image src={product.imageUrl} alt={product.name} fill />
         </div>
       </div>
-      {/*Details*/}
       <div className="mt-4">
         <h3 className="font-bold text-xl">{product.name}</h3>
         <p className="text-sm text-gray-400 h-15 overflow-y-auto">

@@ -16,7 +16,7 @@ const error = (error: AxiosError<{ message: string }>) => {
 };
 
 export const useLoginMutation = () => {
-  const setAuthData = useSessionStore((state) => state.setAuthData); // Достаем экшен
+  const setAuthData = useSessionStore((state) => state.setAuthData);
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {

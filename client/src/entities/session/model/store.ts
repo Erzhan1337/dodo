@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware"; // 1. Импортируем middleware
+import { persist, createJSONStorage } from "zustand/middleware";
 import { $api } from "@/shared/api";
 import type { User } from "@/entities/session/model/types";
 

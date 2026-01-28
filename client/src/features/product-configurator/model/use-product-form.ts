@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Ingredient, Product } from "@/entities/product";
 
 export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
-  // Дефолтные значения (первый размер и первый тип из доступных у товара)
   const [size, setSize] = useState<number>(product.items[0].size);
   const [type, setType] = useState<number>(product.items[0].pizzaType);
 
@@ -10,8 +9,6 @@ export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
     new Set(),
   );
 
-  // Вычисляем ID текущей вариации (ProductItem)
-  // Это критически важно для корзины!
   const currentItemId = product.items.find(
     (item) => item.size === size && item.pizzaType === type,
   )?.id;
@@ -26,7 +23,6 @@ export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
     setSelectedIngredients(newIngredients);
   };
 
-  // Считаем итоговую цену
   const totalPrice = () => {
     const productItem = product.items.find(
       (item) => item.size === size && item.pizzaType === type,
@@ -40,11 +36,7 @@ export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
 
     return { total: productItem.price + ingredientsPrice };
   };
-
-  // Проверка доступности (если комбинация размера/теста существует)
-  // ВАЖНО: isAvailable должен быть true, если товар МОЖНО купить
   const isAvailable = Boolean(currentItemId);
-
   return {
     size,
     type,
@@ -54,7 +46,7 @@ export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
     toggleIngredient,
     currentImage: product.imageUrl,
     totalPrice,
-    currentItemId, // <--- НЕ ЗАБУДЬ ВЕРНУТЬ ЭТО
-    isAvailable, // <--- И ЭТО
+    currentItemId,
+    isAvailable,
   };
 };

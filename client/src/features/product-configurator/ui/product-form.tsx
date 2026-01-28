@@ -80,7 +80,6 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
         </div>
       </div>
 
-      {/* Правая часть */}
       <div className="bg-[#F4F1EE] w-full lg:w-[50%] lg:rounded-tr-3xl lg:rounded-br-3xl py-5 px-10">
         <div>
           <h2 className="text-2xl font-bold">{product.name}</h2>

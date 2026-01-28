@@ -1,4 +1,3 @@
-// НИКАКИХ ИМПОРТОВ ИЗ ДРУГИХ СЛАЙСОВ
 export interface CartProduct {
   id: string;
   name: string;
