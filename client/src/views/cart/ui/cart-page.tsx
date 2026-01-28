@@ -50,8 +50,9 @@ export const CartPage = () => {
 
   return (
     <Container className="mt-10 pb-20">
-      <Title text={`Корзина`} size="xl" className="font-extrabold mb-8" />
-
+      <div className="text-xl md:text-2xl lg:text-3xl mb-10 font-bold">
+        Корзина
+      </div>
       <div className="flex gap-10">
         <div className="flex flex-col gap-5 flex-1">
           {cart.items.map((item) => (
@@ -63,28 +64,35 @@ export const CartPage = () => {
             />
           ))}
         </div>
-
-        <div className="w-112.5">
+        <div className="hidden lg:block md:w-110">
           <div className="p-8 bg-white rounded-[30px] shadow-lg sticky top-10">
             <div className="flex flex-col gap-1">
               <span className="text-xl text-gray-500">Итого:</span>
               <span className="text-[34px] font-extrabold">
                 {cart.totalPrice} ₸
               </span>
+
+              <div className="border-b border-gray-100 my-5" />
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full text-base font-bold h-14"
+              >
+                Оформить заказ
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
             </div>
-
-            <div className="border-b border-gray-100 my-5" />
-
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full text-base font-bold h-14"
-            >
-              Оформить заказ
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </Button>
           </div>
         </div>
+      </div>
+      <div className="block md:hidden mt-10 w-full text-white px-4">
+        <button
+          type="button"
+          className="bg-primary py-3 px-4 w-full rounded-xl cursor-pointer"
+        >
+          {`Оформить заказ на ${cart.totalPrice} ₸`}
+        </button>
       </div>
     </Container>
   );
