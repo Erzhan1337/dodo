@@ -22,7 +22,7 @@ export const Header = () => {
           </div>
           <div>
             <h1 className="uppercase font-black text-sm md:text-base lg:text-xl">
-              додо пицца
+              404 Pizza
             </h1>
             <p className="text-gray-500 text-[10px] text-xs lg:text-sm leading-2 md:leading-2.5 lg:leading-3.5 tracking-wider">
               вкусней уже некуда
