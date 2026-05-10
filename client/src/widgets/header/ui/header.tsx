@@ -17,6 +17,7 @@ export const Header = () => {
               fill
               alt="logo"
               priority
+              sizes="(max-width: 768px) 32px, (max-width: 1024px) 36px, 44px"
               className="object-contain"
             />
           </div>

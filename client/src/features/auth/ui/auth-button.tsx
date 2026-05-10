@@ -15,7 +15,8 @@ const options = [
 export const AuthButton = () => {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
-  const { isAuthenticated, logout } = useSessionStore();
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const logout = useSessionStore((state) => state.logout);
   const queryClient = useQueryClient();
   const handleLogout = () => {
     setOpen(false);

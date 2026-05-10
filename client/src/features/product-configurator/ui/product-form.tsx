@@ -75,6 +75,8 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
             src={currentImage}
             alt={product.name}
             fill
+            priority
+            sizes="(max-width: 1024px) 280px, 340px"
             className="object-contain"
           />
         </div>

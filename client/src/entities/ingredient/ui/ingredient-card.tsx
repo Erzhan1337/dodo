@@ -25,6 +25,7 @@ export const IngredientCard = ({ ingredient, active, onClick }: Props) => {
             src={ingredient.imageUrl}
             alt={ingredient.name}
             fill
+            sizes="(max-width: 768px) 80px, 80px"
             className="object-contain"
           />
         </div>

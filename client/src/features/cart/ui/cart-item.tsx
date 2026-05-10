@@ -26,6 +26,7 @@ export const CartItem: React.FC<Props> = ({
             src={item.productItem.product.imageUrl}
             alt={item.productItem.product.name}
             fill
+            sizes="(max-width: 768px) 40px, 60px"
             className="object-contain"
           />
         </div>

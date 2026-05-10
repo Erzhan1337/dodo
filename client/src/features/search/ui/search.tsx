@@ -78,6 +78,7 @@ export const SearchBar = () => {
                         src={product.imageUrl}
                         alt={product.name}
                         fill
+                        sizes="36px"
                         className="object-cover"
                       />
                     </div>

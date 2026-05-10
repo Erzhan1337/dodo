@@ -13,7 +13,12 @@ export const ProductCard = ({ product }: Props) => {
     <div className="">
       <div className="h-50 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
         <div className="relative w-45 h-45 md:w-54 md:h-54 hover:scale-105 transition-transform duration-300">
-          <Image src={product.imageUrl} alt={product.name} fill />
+          <Image
+            src={product.imageUrl}
+            alt={product.name}
+            fill
+            sizes="(max-width: 768px) 180px, 216px"
+          />
         </div>
       </div>
       <div className="mt-4">
