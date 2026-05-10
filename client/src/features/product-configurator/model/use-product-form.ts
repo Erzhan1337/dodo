@@ -2,12 +2,40 @@ import { useState } from "react";
 import { Ingredient, Product } from "@/entities/product";
 
 export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
-  const [size, setSize] = useState<number>(product.items[0].size);
-  const [type, setType] = useState<number>(product.items[0].pizzaType);
+  const [size, setSizeState] = useState<number>(product.items[0].size);
+  const [type, setTypeState] = useState<number>(product.items[0].pizzaType);
 
   const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(
     new Set(),
   );
+
+  const setSize = (newSize: number) => {
+    setSizeState(newSize);
+    const isAvailable = product.items.some(
+      (item) => item.size === newSize && item.pizzaType === type,
+    );
+    if (!isAvailable) {
+      const availableItem = product.items.find((item) => item.size === newSize);
+      if (availableItem) {
+        setTypeState(availableItem.pizzaType);
+      }
+    }
+  };
+
+  const setType = (newType: number) => {
+    setTypeState(newType);
+    const isAvailable = product.items.some(
+      (item) => item.size === size && item.pizzaType === newType,
+    );
+    if (!isAvailable) {
+      const availableItem = product.items.find(
+        (item) => item.pizzaType === newType,
+      );
+      if (availableItem) {
+        setSizeState(availableItem.size);
+      }
+    }
+  };
 
   const currentItem = product.items.find(
     (item) => item.size === size && item.pizzaType === type,
