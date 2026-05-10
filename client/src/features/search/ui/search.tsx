@@ -4,6 +4,7 @@ import { useSearch } from "@/features/search/model/use-search";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/shared/lib/utils";
+import { Skeleton } from "@/shared/ui";
 import { useSearchProducts } from "@/features/search/api/use-search-products";
 
 export const SearchBar = () => {
@@ -61,8 +62,19 @@ export const SearchBar = () => {
           )}
         >
           {isLoading ? (
-            <div className="w-full flex items-center justify-center mt-3">
-              Ищем пиццу
+            <div className="w-full flex flex-col gap-2 mt-2">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="px-5 py-2 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                  <Skeleton className="h-4 w-12" />
+                </div>
+              ))}
             </div>
           ) : products && products.length > 0 ? (
             products.map((product) => (

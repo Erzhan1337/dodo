@@ -3,6 +3,7 @@ import { useProductForm } from "@/features/product-configurator/model/use-produc
 import { Product } from "@/entities/product";
 import { cn } from "@/shared/lib/utils";
 import Image from "next/image";
+import { Skeleton } from "@/shared/ui";
 import { GroupVariants } from "@/features/product-configurator/ui/group-variants";
 import {
   PIZZA_SIZES,
