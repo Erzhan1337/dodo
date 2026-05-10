@@ -9,9 +9,13 @@ export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
     new Set(),
   );
 
-  const currentItemId = product.items.find(
+  const currentItem = product.items.find(
     (item) => item.size === size && item.pizzaType === type,
-  )?.id;
+  );
+
+  const currentItemId = currentItem?.id;
+
+  const currentImage = currentItem?.imageUrl || product.imageUrl;
 
   const toggleIngredient = (id: string) => {
     const newIngredients = new Set(selectedIngredients);
@@ -44,7 +48,7 @@ export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
     setSize,
     setType,
     toggleIngredient,
-    currentImage: product.imageUrl,
+    currentImage,
     totalPrice,
     currentItemId,
     isAvailable,
