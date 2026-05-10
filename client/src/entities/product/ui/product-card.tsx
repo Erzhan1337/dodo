@@ -25,7 +25,7 @@ export const ProductCard = ({ product }: Props) => {
           <p className="text-lg">
             от <span className="font-bold">{product.items[0].price} ₸</span>
           </p>
-          <Link href={`/product/${product.id}`}>
+          <Link href={`/product/${product.id}`} scroll={false}>
             <Button
               type="button"
               variant="secondary"

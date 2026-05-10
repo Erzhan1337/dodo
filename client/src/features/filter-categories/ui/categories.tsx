@@ -1,14 +1,12 @@
 "use client";
 
 import { useCategories } from "@/entities/category";
-
 import { cn } from "@/shared/lib/utils";
-
-import { motion } from "framer-motion";
-
+import { LazyMotion, m } from "framer-motion";
 import { useQueryParam } from "@/shared/hooks";
-
 import { Skeleton } from "@/shared/ui";
+
+const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
 
 interface Props {
   className?: string;
@@ -45,36 +43,37 @@ export const Categories = ({ className }: Props) => {
   }
 
   return (
-    <div
-      className={cn(
-        "w-full flex justify-between md:justify-start md:w-auto md:inline-flex items-center md:gap-1 p-1 rounded-2xl bg-gray-50 shadow-md transition-all duration-500",
-        className,
-      )}
-    >
-      {listCategories.map((cat) => (
-        <button
-          key={cat.id}
-          onClick={() => handleSelectCategory(cat.id)}
-          className={cn(
-            "relative p-1 md:px-3 md:py-2 z-10 cursor-pointer",
+    <LazyMotion features={loadFeatures}>
+      <div
+        className={cn(
+          "w-full flex justify-between md:justify-start md:w-auto md:inline-flex items-center md:gap-1 p-1 rounded-2xl bg-gray-50 shadow-md transition-all duration-500",
+          className,
+        )}
+      >
+        {listCategories.map((cat) => (
+          <button
+            key={cat.id}
+            onClick={() => handleSelectCategory(cat.id)}
+            className={cn(
+              "relative p-1 md:px-3 md:py-2 z-10 cursor-pointer",
+              activeCategory === cat.id ? "text-primary" : "hover:text-primary",
+            )}
+          >
+            {activeCategory === cat.id && (
+              <m.div
+                layoutId="activeCategory"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                style={{ zIndex: -1 }}
+                className="absolute inset-0 bg-white rounded-xl md:rounded-2xl shadow-md"
+              />
+            )}
 
-            activeCategory === cat.id ? "text-primary" : "hover:text-primary",
-          )}
-        >
-          {activeCategory === cat.id && (
-            <motion.div
-              layoutId="activeCategory"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              style={{ zIndex: -1 }}
-              className="absolute inset-0 bg-white rounded-xl md:rounded-2xl shadow-md"
-            />
-          )}
-
-          <span className="relative text-[12px] md:text-sm xl:text-base">
-            {cat.name}
-          </span>
-        </button>
-      ))}
-    </div>
+            <span className="relative text-[12px] md:text-sm xl:text-base">
+              {cat.name}
+            </span>
+          </button>
+        ))}
+      </div>
+    </LazyMotion>
   );
 };

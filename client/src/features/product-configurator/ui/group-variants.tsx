@@ -1,6 +1,8 @@
 import { cn } from "@/shared/lib/utils";
-import { motion } from "framer-motion";
+import { LazyMotion, m } from "framer-motion";
 import { useId } from "react";
+
+const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
 
 type Variant = {
   name: string;
@@ -18,33 +20,35 @@ interface Props {
 export const GroupVariants = ({ items, onClick, className, value }: Props) => {
   const uniqueId = useId();
   return (
-    <div
-      className={cn(
-        "flex items-center justify-between rounded-2xl p-1 select-none bg-[#ECECEC] shadow",
-        className,
-      )}
-    >
-      {items.map((item) => (
-        <button
-          key={item.name}
-          type="button"
-          onClick={() => onClick?.(item.value)}
-          className={cn(
-            "text-sm w-full py-2 cursor-pointer rounded-2xl relative",
-            item.value === value && "bg-white",
-            item.disabled && "opacity-75 pointer-events-none",
-          )}
-        >
-          {item.value === value && (
-            <motion.div
-              layoutId={uniqueId}
-              className="absolute inset-0 bg-white shadow-md rounded-2xl"
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            />
-          )}
-          <span className="relative z-10">{item.name}</span>
-        </button>
-      ))}
-    </div>
+    <LazyMotion features={loadFeatures}>
+      <div
+        className={cn(
+          "flex items-center justify-between rounded-2xl p-1 select-none bg-[#ECECEC] shadow",
+          className,
+        )}
+      >
+        {items.map((item) => (
+          <button
+            key={item.name}
+            type="button"
+            onClick={() => onClick?.(item.value)}
+            className={cn(
+              "text-sm w-full py-2 cursor-pointer rounded-2xl relative",
+              item.value === value && "bg-white",
+              item.disabled && "opacity-75 pointer-events-none",
+            )}
+          >
+            {item.value === value && (
+              <m.div
+                layoutId={uniqueId}
+                className="absolute inset-0 bg-white shadow-md rounded-2xl"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{item.name}</span>
+          </button>
+        ))}
+      </div>
+    </LazyMotion>
   );
 };

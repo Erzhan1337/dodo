@@ -66,7 +66,11 @@ export const SearchBar = () => {
             </div>
           ) : products && products.length > 0 ? (
             products.map((product) => (
-              <Link href={`/product/${product.id}`} key={product.id}>
+              <Link
+                href={`/product/${product.id}`}
+                key={product.id}
+                scroll={false}
+              >
                 <div className="px-5 py-2 hover:bg-orange-50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="relative h-9 w-9 shrink-0">
