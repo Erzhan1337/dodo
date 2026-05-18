@@ -25,7 +25,7 @@ export const SortPopup = ({ className }: Props) => {
   return (
     <div
       className={cn(
-        "hidden md:block relative bg-gray-50 px-2 py-3 md:py-3 md:px-2 rounded-2xl shadow-md transition-all duration-300",
+        "hidden md:block relative bg-zinc-50 px-2 py-3 md:py-3 md:px-2 rounded-2xl shadow-md transition-all duration-300",
         className,
       )}
       ref={ref}
@@ -33,6 +33,9 @@ export const SortPopup = ({ className }: Props) => {
       <div
         className="flex items-center gap-1 cursor-pointer text-xs md:text-base"
         onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={(e) => e.key === "Enter" && setIsOpen((prev) => !prev)}
+        role="button"
+        tabIndex={0}
       >
         <ArrowUpDown className="size-3 md:size-4" />
         <div className="flex items-center text-xs md:text-sm xl:text-base">
@@ -44,7 +47,7 @@ export const SortPopup = ({ className }: Props) => {
         </div>
       </div>
       {isOpen && (
-        <div className="border border-gray-300 rounded-2xl w-full absolute z-20 top-full mt-1 md:mt-2 flex flex-col py-1 md:py-3 right-0 shadow-md backdrop-blur-2xl bg-white/50">
+        <div className="border border-zinc-300 rounded-2xl w-full absolute z-20 top-full mt-1 md:mt-2 flex flex-col py-1 md:py-3 right-0 shadow-md backdrop-blur-2xl bg-white/50">
           {options.map((option) => (
             <button
               className={cn(

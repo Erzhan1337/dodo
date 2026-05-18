@@ -13,11 +13,10 @@ export const useScrollLock = (enabled: boolean = true) => {
     const scrollbarWidth =
       window.innerWidth - document.documentElement.clientWidth;
 
-    document.body.style.overflow = "hidden";
-
-    if (scrollbarWidth > 0) {
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
+    Object.assign(document.body.style, {
+      overflow: "hidden",
+      paddingRight: scrollbarWidth > 0 ? `${scrollbarWidth}px` : ""
+    });
 
     scrollBlocked.current = true;
   }, []);
@@ -25,8 +24,10 @@ export const useScrollLock = (enabled: boolean = true) => {
   const unlockScroll = useCallback(() => {
     if (!scrollBlocked.current) return;
 
-    document.body.style.overflow = originalStyles.current;
-    document.body.style.paddingRight = "";
+    Object.assign(document.body.style, {
+      overflow: originalStyles.current,
+      paddingRight: ""
+    });
     scrollBlocked.current = false;
   }, []);
 

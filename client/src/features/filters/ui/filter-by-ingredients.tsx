@@ -18,7 +18,7 @@ export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
         .toLowerCase()
         .includes(searchTerm.toLowerCase().replace(/\s/g, "")),
     );
-    return [...filtered].sort((a, b) => {
+    return filtered.toSorted((a: any, b: any) => {
       const isASelected = selectedIngs.has(a.name);
       const isBSelected = selectedIngs.has(b.name);
       if (isASelected === isBSelected) return 0;
@@ -31,7 +31,7 @@ export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
   return (
     <div className="mt-5">
       {showAll && (
-        <div className="border border-gray-200 rounded-lg">
+        <div className="border border-zinc-200 rounded-lg">
           <input
             type="text"
             value={searchTerm}
@@ -43,8 +43,8 @@ export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
       )}
       {isLoading && (
         <div className="mt-3 flex flex-col gap-2 h-46 w-full">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div className="w-full rounded-[8px] h-6 bg-gray-200" key={i} />
+          {[1, 2, 3, 4, 5, 6].map((id) => (
+            <div className="w-full rounded-[8px] h-6 bg-zinc-200" key={id} />
           ))}
         </div>
       )}

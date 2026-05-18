@@ -25,8 +25,8 @@ export const ProductList = () => {
     return (
       <div className="flex-1">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex flex-col gap-4">
+          {[1, 2, 3, 4, 5, 6].map((id) => (
+            <div key={id} className="flex flex-col gap-4">
               <div className="h-44 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
                 <Skeleton className="w-36 h-36 md:w-54 md:h-54 rounded-full" />
               </div>

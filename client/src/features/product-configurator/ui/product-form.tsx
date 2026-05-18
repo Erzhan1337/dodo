@@ -86,7 +86,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
 
       <div className="bg-[#F4F1EE] w-full lg:w-[50%] lg:rounded-tr-3xl lg:rounded-br-3xl py-5 px-10">
         <div>
-          <h2 className="text-2xl font-bold">{product.name}</h2>
+          <h2 className="text-2xl font-semibold">{product.name}</h2>
         </div>
         <div className="flex flex-col gap-3 mt-3">
           <GroupVariants

@@ -5,7 +5,7 @@ export type Ingredient = {
   imageUrl: string;
 };
 
-export type ProductItem = {
+type ProductItem = {
   id: string;
   price: number;
   name: string;

@@ -11,13 +11,13 @@ interface Props {
 
 export const ProductModal = ({ id }: Props) => {
   const { data: product, isLoading } = useProduct(id);
-  const router = useRouter();
+  const { back } = useRouter();
   const [isOpen, setIsOpen] = useState(true);
 
   const handleClose = () => {
     setIsOpen(false);
     setTimeout(() => {
-      router.back();
+      back();
     }, 300); // Wait for Framer Motion exit animation
   };
 
@@ -35,9 +35,9 @@ export const ProductModal = ({ id }: Props) => {
 
             <Skeleton className="h-6 w-1/2 mb-3" />
             <div className="gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 h-45 lg:h-90 overflow-hidden">
-              {[...Array(6)].map((_, i) => (
+              {[1, 2, 3, 4, 5, 6].map((id) => (
                 <Skeleton
-                  key={i}
+                  key={id}
                   className="h-28 w-full rounded-2xl shrink-0"
                 />
               ))}

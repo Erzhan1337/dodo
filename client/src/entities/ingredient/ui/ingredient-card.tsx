@@ -20,7 +20,7 @@ export const IngredientCard = ({ ingredient, active, onClick }: Props) => {
         {active && (
           <CircleCheck className="size-6 text-primary absolute top-2 right-2 z-5 " />
         )}
-        <div className="relative w-20 h-20">
+        <div className="relative size-20">
           <Image
             src={ingredient.imageUrl}
             alt={ingredient.name}

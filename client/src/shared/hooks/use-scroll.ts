@@ -15,7 +15,7 @@ export const useScroll = (callback: () => void, isActive: boolean) => {
     const handleScroll = () => {
       savedCallback.current();
     };
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);

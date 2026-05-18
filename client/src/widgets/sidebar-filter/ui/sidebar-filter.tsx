@@ -15,7 +15,7 @@ export const SidebarFilter = () => {
   } = useFilters();
   return (
     <div className="hidden lg:block lg:max-w-62">
-      <h4 className="text-lg font-bold mb-8">Фильтрация</h4>
+      <h4 className="text-lg font-semibold mb-8">Фильтрация</h4>
       <div>
         <FilterByPrice
           priceFrom={pricesRange.priceFrom}
@@ -23,7 +23,7 @@ export const SidebarFilter = () => {
           onChange={updatePrices}
           onChangeInput={setPrices}
         />
-        <div className="w-full h-px bg-gray-300 my-5" />
+        <div className="w-full h-px bg-zinc-300 my-5" />
         <FilterByIngredients
           selectedIngs={selectedIngredients}
           onChange={toggleIngredients}

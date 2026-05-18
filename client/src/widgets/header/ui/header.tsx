@@ -7,7 +7,7 @@ import { CartButton } from "@/features/cart";
 
 export const Header = () => {
   return (
-    <header className="py-3 md:py-5 border-b border-gray-200">
+    <header className="py-3 md:py-5 border-b border-zinc-200">
       <Container className="flex items-center justify-between">
         {/*Left Side*/}
         <Link href="/" className="flex gap-1 md:gap-2 lg:gap-3 items-center">
@@ -22,10 +22,10 @@ export const Header = () => {
             />
           </div>
           <div>
-            <h1 className="uppercase font-black text-sm md:text-base lg:text-xl">
+            <h1 className="uppercase font-semibold text-sm md:text-base lg:text-xl">
               404 Pizza
             </h1>
-            <p className="text-gray-500 text-[10px] text-xs lg:text-sm leading-2 md:leading-2.5 lg:leading-3.5 tracking-wider">
+            <p className="text-zinc-500 text-[10px] text-xs lg:text-sm leading-2 md:leading-2.5 lg:leading-3.5 tracking-wider">
               вкусней уже некуда
             </p>
           </div>

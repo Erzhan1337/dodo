@@ -30,9 +30,7 @@ export const Modal = ({
     return () => setMounted(false);
   }, []);
 
-  if (!mounted) return null;
-
-  return createPortal(
+  return mounted ? createPortal(
     <LazyMotion features={loadMotionFeatures}>
       <AnimatePresence>
         {isOpen && (

@@ -1,5 +1,5 @@
 "use client";
-import { ReactNode, useEffect, useState } from "react";
+import React, { ReactNode, useEffect } from "react";
 import { useSessionStore, AUTH_CHANNEL } from "@/entities/session/model/store";
 import { $api } from "@/shared/api";
 import Image from "next/image";
@@ -10,19 +10,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useSessionStore((state) => state.logout);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const accessToken = useSessionStore((state) => state.accessToken);
-  const [isLoading, setIsLoading] = useState(true);
+  const isLoading = React.useRef(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       if (!_hasHydrated) return;
       if (!isAuthenticated) {
-        setIsLoading(false);
+        isLoading.current = false;
         return;
       }
 
       // If we already have the token in memory (e.g. just logged in), skip refresh
       if (accessToken) {
-        setIsLoading(false);
+        isLoading.current = false;
         return;
       }
 
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch {
         logout();
       } finally {
-        setIsLoading(false);
+        isLoading.current = false;
       }
     };
     void checkAuth();
@@ -52,14 +52,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => channel.close();
   }, []);
 
-  if (isLoading || !_hasHydrated) {
+  if (isLoading.current || !_hasHydrated) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <div className="relative w-10 h-10">
+        <div className="relative size-10">
           <Image
             src="https://res.cloudinary.com/dgtya5crt/image/upload/v1767594112/%D0%BA%D0%BE%D0%BB%D0%B1%D0%B0%D1%81%D0%BA%D0%B8_%D0%B1%D0%B0%D1%80%D0%B1%D0%B5%D0%BA%D1%8E_o8so4w.avif"
             alt="loader"
             fill
+            sizes="40px"
             priority
             className="object-contain animate-spin"
           />

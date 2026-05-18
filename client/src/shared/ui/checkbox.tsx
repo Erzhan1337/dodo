@@ -16,13 +16,17 @@ export const FilterCheckbox: React.FC<FilterCheckboxProps> = ({
   checked,
 }) => {
   return (
-    <div className="flex items-center space-x-2">
+    <div className="flex items-center gap-x-2">
       <div
         className={cn(
           "group flex h-6 w-6 items-center justify-center rounded-[8px] border-none cursor-pointer transition-all duration-300 bg-secondary hover:bg-orange-100",
           checked && "bg-primary",
         )}
         onClick={() => onCheckedChange?.(!checked)}
+        onKeyDown={(e) => e.key === "Enter" && onCheckedChange?.(!checked)}
+        role="checkbox"
+        tabIndex={0}
+        aria-checked={checked}
       >
         <Check
           className={cn(
@@ -33,6 +37,9 @@ export const FilterCheckbox: React.FC<FilterCheckboxProps> = ({
       </div>
       <label
         onClick={() => onCheckedChange?.(!checked)}
+        onKeyDown={(e) => e.key === "Enter" && onCheckedChange?.(!checked)}
+        role="button"
+        tabIndex={0}
         className="leading-none cursor-pointer flex-1"
       >
         {text}

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import getQueryClient from "@/shared/lib/get-query-client";
 import {
@@ -22,7 +23,9 @@ export default async function Home({ searchParams }: PageProps) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <HomePage />
+      <Suspense fallback={<div />}>
+        <HomePage />
+      </Suspense>
     </HydrationBoundary>
   );
 }

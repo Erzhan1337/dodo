@@ -37,10 +37,10 @@ export const SearchBar = () => {
             "flex items-center px-3 md:h-10 lg:h-12 rounded-2xl shadow-sm transition-all duration-500",
             focused
               ? "bg-white ring-2 ring-orange-500 shadow-lg"
-              : "bg-gray-100",
+              : "bg-zinc-100",
           )}
         >
-          <Search className="md:size-4 lg:size-5 text-gray-500" />
+          <Search className="md:size-4 lg:size-5 text-zinc-500" />
           <input
             onFocus={() => setFocused(true)}
             onChange={(event) => setQuery(event.target.value)}
@@ -70,7 +70,7 @@ export const SearchBar = () => {
                   className="px-5 py-2 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3 w-full">
-                    <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+                    <Skeleton className="size-9 rounded-full shrink-0" />
                     <Skeleton className="h-4 w-32" />
                   </div>
                   <Skeleton className="h-4 w-12" />
@@ -86,7 +86,7 @@ export const SearchBar = () => {
               >
                 <div className="px-5 py-2 hover:bg-orange-50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="relative h-9 w-9 shrink-0">
+                    <div className="relative size-9 shrink-0">
                       <Image
                         src={product.imageUrl}
                         alt={product.name}
