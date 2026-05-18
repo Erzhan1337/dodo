@@ -1,6 +1,6 @@
 "use client";
 import { ReactNode, useEffect, useState } from "react";
-import { useSessionStore } from "@/entities/session/model/store";
+import { useSessionStore, AUTH_CHANNEL } from "@/entities/session/model/store";
 import { $api } from "@/shared/api";
 import Image from "next/image";
 
@@ -10,11 +10,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useSessionStore((state) => state.logout);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
     const checkAuth = async () => {
-      if (!_hasHydrated) {
-        return;
-      }
+      if (!_hasHydrated) return;
       if (!isAuthenticated) {
         setIsLoading(false);
         return;
@@ -23,8 +22,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const { data } = await $api.post("auth/login/access-token");
         setAuthData(data.user, data.accessToken);
-      } catch (e) {
-        console.log("User is not authenticated");
+      } catch {
         logout();
       } finally {
         setIsLoading(false);
@@ -32,6 +30,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
     void checkAuth();
   }, [setAuthData, isAuthenticated, logout, _hasHydrated]);
+
+  useEffect(() => {
+    const channel = new BroadcastChannel(AUTH_CHANNEL);
+    channel.onmessage = (e: MessageEvent<string>) => {
+      if (e.data === "logout") {
+        useSessionStore.setState({
+          user: null,
+          accessToken: null,
+          isAuthenticated: false,
+        });
+      }
+    };
+    return () => channel.close();
+  }, []);
+
   if (isLoading || !_hasHydrated) {
     return (
       <div className="w-full h-screen flex items-center justify-center">

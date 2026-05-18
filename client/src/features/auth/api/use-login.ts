@@ -1,8 +1,6 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { LoginFormValues } from "@/features/auth/model/login-schema";
 import { $api } from "@/shared/api";
-import toast from "react-hot-toast";
-import { AxiosError } from "axios";
 import { useSessionStore } from "@/entities/session/model/store";
 
 const login = async (data: LoginFormValues) => {
@@ -10,19 +8,12 @@ const login = async (data: LoginFormValues) => {
   return response.data;
 };
 
-const error = (error: AxiosError<{ message: string }>) => {
-  const errorMessage = error.response?.data?.message || "Ошибка авторизации";
-  toast.error(errorMessage);
-};
-
 export const useLoginMutation = () => {
   const setAuthData = useSessionStore((state) => state.setAuthData);
   return useMutation({
     mutationFn: login,
     onSuccess: (data) => {
-      console.log(data);
       setAuthData(data.user, data.accessToken);
     },
-    onError: error,
   });
 };

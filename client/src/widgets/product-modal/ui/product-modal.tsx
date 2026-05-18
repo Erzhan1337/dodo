@@ -1,7 +1,7 @@
 "use client";
 import { Modal, Skeleton } from "@/shared/ui";
 import { ProductForm } from "@/features/product-configurator/ui/product-form";
-import { getProduct } from "@/entities/product";
+import { useProduct } from "@/entities/product";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const ProductModal = ({ id }: Props) => {
-  const { data: product, isLoading } = getProduct(id);
+  const { data: product, isLoading } = useProduct(id);
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
 

@@ -9,12 +9,10 @@ import {
 } from "@/features/auth/model/login-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLoginMutation } from "@/features/auth/api/use-login";
-import { useSessionStore } from "@/entities/session/model/store";
 
 export const LoginForm = () => {
   const router = useRouter();
   const { mutate, isPending } = useLoginMutation();
-  const setAuthData = useSessionStore((state) => state.setAuthData);
   const {
     register,
     handleSubmit,
@@ -25,8 +23,7 @@ export const LoginForm = () => {
 
   const onSubmit = (data: LoginFormValues) => {
     mutate(data, {
-      onSuccess: (responseData) => {
-        setAuthData(responseData.user, responseData.accessToken);
+      onSuccess: () => {
         router.push("/");
       },
     });

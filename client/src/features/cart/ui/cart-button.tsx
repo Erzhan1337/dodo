@@ -9,7 +9,6 @@ export const CartButton = () => {
   const isAuth = useSessionStore((state) => state.isAuthenticated);
   const href = isAuth ? "/cart" : "/login";
   const { data: cart } = useCart();
-  console.log(cart);
   const totalAmount = cart?.totalPrice || 0;
   const itemsCount =
     cart?.items?.reduce((acc, item) => acc + item.quantity, 0) || 0;

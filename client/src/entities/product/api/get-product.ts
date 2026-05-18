@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Product } from "@/entities/product";
 import { $api } from "@/shared/api";
 
-export const getProduct = (id: string) => {
+export const useProduct = (id: string) => {
   return useQuery({
     queryKey: ["pizza", id],
     queryFn: async (): Promise<Product> => {

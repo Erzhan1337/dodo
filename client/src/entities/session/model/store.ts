@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { $api } from "@/shared/api";
 import type { User } from "@/entities/session/model/types";
 
+export const AUTH_CHANNEL = "auth";
+
 interface SessionState {
   user: User | null;
   accessToken: string | null;
@@ -24,13 +26,10 @@ export const useSessionStore = create<SessionState>()(
         set({ user, accessToken, isAuthenticated: true });
       },
 
-      logout: async () => {
+      logout: () => {
         set({ user: null, accessToken: null, isAuthenticated: false });
-        try {
-          await $api.post("auth/logout");
-        } catch (error) {
-          console.error("Logout failed:", error);
-        }
+        void $api.post("auth/logout");
+        new BroadcastChannel(AUTH_CHANNEL).postMessage("logout");
       },
     }),
     {
@@ -39,7 +38,6 @@ export const useSessionStore = create<SessionState>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
-        accessToken: state.accessToken,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) state._hasHydrated = true;

@@ -1,5 +1,5 @@
 "use client";
-import { getProduct } from "@/entities/product";
+import { useProduct } from "@/entities/product";
 import { Container, Skeleton } from "@/shared/ui";
 import { ProductForm } from "@/features/product-configurator/ui/product-form";
 
@@ -8,7 +8,7 @@ interface Props {
 }
 
 export const ProductPage = ({ id }: Props) => {
-  const { data: product, isLoading, isError } = getProduct(id);
+  const { data: product, isLoading, isError } = useProduct(id);
 
   if (!product || isError) {
     return <div>Not found</div>
@@ -47,7 +47,7 @@ export const ProductPage = ({ id }: Props) => {
   }
   return (
     <Container className="flex flex-col my-10">
-      <ProductForm product={product} onSubmit={() => console.log("success")} />
+      <ProductForm product={product} />
     </Container>
   );
 };

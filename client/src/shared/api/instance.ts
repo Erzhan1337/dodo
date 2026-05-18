@@ -36,7 +36,7 @@ $api.interceptors.response.use(
           { withCredentials: true },
         );
 
-        const newAccessToken = response.data.access_token;
+        const newAccessToken = response.data.accessToken;
         useSessionStore
           .getState()
           .setAuthData(response.data.user, newAccessToken);
@@ -45,8 +45,7 @@ $api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         }
         return $api.request(originalRequest);
-      } catch (e) {
-        console.log("Не авторизован");
+      } catch {
         useSessionStore.getState().logout();
       }
     }
