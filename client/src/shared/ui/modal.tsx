@@ -1,12 +1,12 @@
 "use client";
 import { createPortal } from "react-dom";
 import { AnimatePresence, LazyMotion, m } from "framer-motion";
+import { loadMotionFeatures } from "@/shared/lib/motion";
 import { ReactNode, useEffect, useState } from "react";
 import { useEscape, useScrollLock } from "@/shared/hooks";
 import { X } from "lucide-react";
 import { cn } from "@/shared/lib/utils";
 
-const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
 
 interface Props {
   className?: string;
@@ -33,7 +33,7 @@ export const Modal = ({
   if (!mounted) return null;
 
   return createPortal(
-    <LazyMotion features={loadFeatures}>
+    <LazyMotion features={loadMotionFeatures}>
       <AnimatePresence>
         {isOpen && (
           <div className="fixed inset-0 z-60 flex items-center justify-center">

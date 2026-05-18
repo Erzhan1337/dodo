@@ -91,22 +91,24 @@ export class AuthService {
   addRefreshTokenToResponse(res: Response, refreshToken: string) {
     const expiresIn = new Date();
     expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_REFRESH_TOKEN);
+    const isProduction = this.configService.getOrThrow('PRODUCTION') === 'true';
     res.cookie(this.REFRESH_TOKEN_NAME, refreshToken, {
       httpOnly: true,
-      domain: this.configService.getOrThrow('SERVER_DOMAIN'),
+      domain: isProduction ? this.configService.getOrThrow('SERVER_DOMAIN') : undefined,
       expires: expiresIn,
-      secure: this.configService.getOrThrow("PRODUCTION"),
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
   }
 
   removeRefreshTokenFromResponse(res: Response) {
+    const isProduction = this.configService.getOrThrow('PRODUCTION') === 'true';
     res.cookie(this.REFRESH_TOKEN_NAME, '', {
       httpOnly: true,
-      domain: this.configService.getOrThrow('SERVER_DOMAIN'),
+      domain: isProduction ? this.configService.getOrThrow('SERVER_DOMAIN') : undefined,
       expires: new Date(0),
-      secure: this.configService.getOrThrow('PRODUCTION'),
-      sameSite: 'none',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
     });
   }
 }

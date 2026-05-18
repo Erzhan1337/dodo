@@ -9,12 +9,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const logout = useSessionStore((state) => state.logout);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
+  const accessToken = useSessionStore((state) => state.accessToken);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       if (!_hasHydrated) return;
       if (!isAuthenticated) {
+        setIsLoading(false);
+        return;
+      }
+
+      // If we already have the token in memory (e.g. just logged in), skip refresh
+      if (accessToken) {
         setIsLoading(false);
         return;
       }
@@ -29,7 +36,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     };
     void checkAuth();
-  }, [setAuthData, isAuthenticated, logout, _hasHydrated]);
+  }, [setAuthData, isAuthenticated, logout, _hasHydrated, accessToken]);
 
   useEffect(() => {
     const channel = new BroadcastChannel(AUTH_CHANNEL);

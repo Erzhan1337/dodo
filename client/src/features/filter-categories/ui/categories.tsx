@@ -1,12 +1,11 @@
 "use client";
 
-import { useCategories } from "@/entities/category";
+import { Category, useCategories } from "@/entities/category";
 import { cn } from "@/shared/lib/utils";
 import { LazyMotion, m } from "framer-motion";
 import { useQueryParam } from "@/shared/hooks";
 import { Skeleton } from "@/shared/ui";
-
-const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
+import { loadMotionFeatures } from "@/shared/lib/motion";
 
 interface Props {
   className?: string;
@@ -19,7 +18,7 @@ export const Categories = ({ className }: Props) => {
 
   const activeCategory = Number(value) || 0;
 
-  const listCategories = categories
+  const listCategories: Category[] = categories
     ? [{ id: 0, name: "Все" }, ...categories]
     : [];
 
@@ -43,7 +42,7 @@ export const Categories = ({ className }: Props) => {
   }
 
   return (
-    <LazyMotion features={loadFeatures}>
+    <LazyMotion features={loadMotionFeatures}>
       <div
         className={cn(
           "w-full flex justify-between md:justify-start md:w-auto md:inline-flex items-center md:gap-1 p-1 rounded-2xl bg-gray-50 shadow-md transition-all duration-500",
@@ -70,6 +69,11 @@ export const Categories = ({ className }: Props) => {
 
             <span className="relative text-[12px] md:text-sm xl:text-base">
               {cat.name}
+              {cat._count?.products != null && (
+                <span className="ml-1 text-[10px] text-gray-400">
+                  ({cat._count.products})
+                </span>
+              )}
             </span>
           </button>
         ))}

@@ -1,8 +1,7 @@
 import { cn } from "@/shared/lib/utils";
 import { LazyMotion, m } from "framer-motion";
+import { loadMotionFeatures } from "@/shared/lib/motion";
 import { useId } from "react";
-
-const loadFeatures = () => import("framer-motion").then((res) => res.domMax);
 
 type Variant = {
   name: string;
@@ -20,7 +19,7 @@ interface Props {
 export const GroupVariants = ({ items, onClick, className, value }: Props) => {
   const uniqueId = useId();
   return (
-    <LazyMotion features={loadFeatures}>
+    <LazyMotion features={loadMotionFeatures}>
       <div
         className={cn(
           "flex items-center justify-between rounded-2xl p-1 select-none bg-[#ECECEC] shadow",

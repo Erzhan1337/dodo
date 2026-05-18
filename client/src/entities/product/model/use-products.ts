@@ -3,6 +3,7 @@ import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { $api } from "@/shared/api";
 import { Product } from "@/entities/product/model/types";
+import { useMemo } from "react";
 
 interface Response {
   data: Product[];
@@ -17,15 +18,18 @@ interface Response {
 export const useProducts = () => {
   const searchParams = useSearchParams();
 
-  const params = {
-    from: searchParams.get("from"),
-    to: searchParams.get("to"),
-    ingredients: searchParams.get("ing"),
-    category: searchParams.get("category"),
-    sort: searchParams.get("sort"),
-    page: searchParams.get("page"),
-    limit: searchParams.get("limit"),
-  };
+  const from = searchParams.get("from");
+  const to = searchParams.get("to");
+  const ingredients = searchParams.get("ing");
+  const category = searchParams.get("category");
+  const sort = searchParams.get("sort");
+  const page = searchParams.get("page");
+  const limit = searchParams.get("limit");
+
+  const params = useMemo(
+    () => ({ from, to, ingredients, category, sort, page, limit }),
+    [from, to, ingredients, category, sort, page, limit],
+  );
 
   return useQuery({
     queryKey: ["pizzas", params],

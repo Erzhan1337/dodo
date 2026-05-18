@@ -1,4 +1,5 @@
 import { cn } from "@/shared/lib/utils";
+import { formatPrice } from "@/shared/lib/format-price";
 import { X } from "lucide-react";
 import { CartItem as CartItemType } from "@/entities/cart/model/types";
 import { Button } from "@/shared/ui/button";
@@ -47,10 +48,11 @@ export const CartItem: React.FC<Props> = ({
 
       <div>
         <div className="font-bold">
-          {(item.productItem.price +
-            item.ingredients.reduce((acc, i) => acc + i.price, 0)) *
-            item.quantity}{" "}
-          ₸
+          {formatPrice(
+            (item.productItem.price +
+              item.ingredients.reduce((acc, i) => acc + i.price, 0)) *
+              item.quantity,
+          )}
         </div>
       </div>
       <div className="flex items-center gap-3 ml-20">

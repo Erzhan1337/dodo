@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { useCart } from "@/features/cart/api/use-cart";
 import { useSessionStore } from "@/entities/session/model/store";
+import { formatPrice } from "@/shared/lib/format-price";
 
 export const CartButton = () => {
   const isAuth = useSessionStore((state) => state.isAuthenticated);
@@ -15,7 +16,7 @@ export const CartButton = () => {
   return (
     <Link href={href} className="group relative">
       <Button className="lg:h-11 lg:py-3 lg:rounded-2xl md:h-9 md:rounded-xl md:py-2 h-7 py-1.5 px-2 relative overflow-hidden">
-        <span className="text-xs md:text-base">{totalAmount} ₸</span>
+        <span className="text-xs md:text-base">{formatPrice(totalAmount)}</span>
         <div className="w-px h-full bg-white/70 mx-1 md:mx-2" />
         <div className="flex items-center gap-1 transition-all duration-500 group-hover:opacity-0">
           <ShoppingCart className="size-3 md:size-4 relative" strokeWidth={2} />

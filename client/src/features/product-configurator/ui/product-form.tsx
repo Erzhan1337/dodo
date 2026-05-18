@@ -13,6 +13,8 @@ import { IngredientCard, useIngredients } from "@/entities/ingredient";
 import { useAddToCart } from "@/features/cart/api/use-cart";
 import toast from "react-hot-toast";
 import { useSessionStore } from "@/entities/session/model/store";
+import { formatPrice } from "@/shared/lib/format-price";
+import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 
 interface Props {
   product: Product;
@@ -59,9 +61,6 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
           toast.success(`${product.name} добавлена в корзину!`);
           onSubmit?.();
         },
-        onError: () => {
-          toast.error("Не удалось добавить товар");
-        },
       },
     );
   };
@@ -78,6 +77,8 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
             fill
             priority
             sizes="(max-width: 1024px) 280px, 340px"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
             className="object-contain"
           />
         </div>
@@ -135,7 +136,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
             (!isAvailable || isPending) && "opacity-50 cursor-not-allowed",
           )}
         >
-          {isPending ? "Добавляем..." : `Добавить в корзину за ${total} ₸`}
+          {isPending ? "Добавляем..." : `Добавить в корзину за ${formatPrice(total)}`}
         </button>
       </div>
     </div>

@@ -3,12 +3,15 @@ import { Button } from "@/shared/ui";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/entities/product/model/types";
+import { formatPrice } from "@/shared/lib/format-price";
+import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
+import { memo } from "react";
 
 interface Props {
   product: Product;
 }
 
-export const ProductCard = ({ product }: Props) => {
+export const ProductCard = memo(({ product }: Props) => {
   return (
     <div className="">
       <div className="h-50 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
@@ -18,6 +21,8 @@ export const ProductCard = ({ product }: Props) => {
             alt={product.name}
             fill
             sizes="(max-width: 768px) 180px, 216px"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
           />
         </div>
       </div>
@@ -28,7 +33,7 @@ export const ProductCard = ({ product }: Props) => {
         </p>
         <div className="mt-5 flex items-center justify-between">
           <p className="text-lg">
-            от <span className="font-bold">{product.items[0].price} ₸</span>
+            от <span className="font-bold">{formatPrice(product.items[0].price)}</span>
           </p>
           <Link href={`/product/${product.id}`} scroll={false}>
             <Button
@@ -44,4 +49,6 @@ export const ProductCard = ({ product }: Props) => {
       </div>
     </div>
   );
-};
+});
+
+ProductCard.displayName = "ProductCard";

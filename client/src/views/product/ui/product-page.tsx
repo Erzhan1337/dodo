@@ -1,6 +1,6 @@
 "use client";
 import { useProduct } from "@/entities/product";
-import { Container, Skeleton } from "@/shared/ui";
+import { Breadcrumbs, Container, Skeleton } from "@/shared/ui";
 import { ProductForm } from "@/features/product-configurator/ui/product-form";
 
 interface Props {
@@ -47,6 +47,13 @@ export const ProductPage = ({ id }: Props) => {
   }
   return (
     <Container className="flex flex-col my-10">
+      <Breadcrumbs
+        items={[
+          { label: "Главная", href: "/" },
+          { label: product.name },
+        ]}
+        className="mb-5"
+      />
       <ProductForm product={product} />
     </Container>
   );

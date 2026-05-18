@@ -4,7 +4,8 @@ import {
   useRemoveCartItem,
   useUpdateItemQuantity,
 } from "@/features/cart/api/use-cart";
-import { Button, Container, Skeleton, Title } from "@/shared/ui";
+import { Button, Breadcrumbs, Container, Skeleton, Title } from "@/shared/ui";
+import { formatPrice } from "@/shared/lib/format-price";
 import Link from "next/link";
 import { CartItem } from "@/features/cart/ui/cart-item";
 import { ArrowRight } from "lucide-react";
@@ -50,6 +51,13 @@ export const CartPage = () => {
 
   return (
     <Container className="mt-10 pb-20">
+      <Breadcrumbs
+        items={[
+          { label: "Главная", href: "/" },
+          { label: "Корзина" },
+        ]}
+        className="mb-5"
+      />
       <div className="text-xl md:text-2xl lg:text-3xl mb-10 font-bold">
         Корзина
       </div>
@@ -69,7 +77,7 @@ export const CartPage = () => {
             <div className="flex flex-col gap-1">
               <span className="text-xl text-gray-500">Итого:</span>
               <span className="text-[34px] font-extrabold">
-                {cart.totalPrice} ₸
+                {formatPrice(cart.totalPrice)}
               </span>
 
               <div className="border-b border-gray-100 my-5" />
@@ -91,7 +99,7 @@ export const CartPage = () => {
           type="button"
           className="bg-primary py-3 px-4 w-full rounded-xl cursor-pointer"
         >
-          {`Оформить заказ на ${cart.totalPrice} ₸`}
+          {`Оформить заказ на ${formatPrice(cart.totalPrice)}`}
         </button>
       </div>
     </Container>

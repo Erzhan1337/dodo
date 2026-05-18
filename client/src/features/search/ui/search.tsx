@@ -6,6 +6,7 @@ import Image from "next/image";
 import { cn } from "@/shared/lib/utils";
 import { Skeleton } from "@/shared/ui";
 import { useSearchProducts } from "@/features/search/api/use-search-products";
+import { formatPrice } from "@/shared/lib/format-price";
 
 export const SearchBar = () => {
   const {
@@ -98,7 +99,7 @@ export const SearchBar = () => {
                   </div>
                   <div>
                     <span className="font-bold">
-                      {product.items[0].price} ₸
+                      {formatPrice(product.items[0].price)}
                     </span>
                   </div>
                 </div>
