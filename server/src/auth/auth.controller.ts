@@ -13,20 +13,30 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import type { Response, Request } from 'express';
+import { CartService, GUEST_CART_TOKEN_COOKIE } from '../cart/cart.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly cartService: CartService,
+  ) {}
 
   @HttpCode(200)
   @UsePipes(new ValidationPipe())
   @Post('login')
   async login(
     @Body() dto: LoginDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { refreshToken, ...response } = await this.authService.login(dto);
+    const guestCartToken = this.getGuestCartToken(req);
+    const { refreshToken, ...response } = await this.authService.login(
+      dto,
+      guestCartToken,
+    );
     this.authService.addRefreshTokenToResponse(res, refreshToken);
+    if (guestCartToken) this.cartService.removeGuestCartTokenFromResponse(res);
     return response;
   }
 
@@ -35,10 +45,16 @@ export class AuthController {
   @Post('register')
   async register(
     @Body() dto: RegisterDto,
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { refreshToken, ...response } = await this.authService.register(dto);
+    const guestCartToken = this.getGuestCartToken(req);
+    const { refreshToken, ...response } = await this.authService.register(
+      dto,
+      guestCartToken,
+    );
     this.authService.addRefreshTokenToResponse(res, refreshToken);
+    if (guestCartToken) this.cartService.removeGuestCartTokenFromResponse(res);
     return response;
   }
 
@@ -71,5 +87,9 @@ export class AuthController {
     await this.authService.logout(refreshTokenFromCookie);
     this.authService.removeRefreshTokenFromResponse(res);
     return { message: 'Logged out successfully' };
+  }
+
+  private getGuestCartToken(req: Request) {
+    return req.cookies?.[GUEST_CART_TOKEN_COOKIE];
   }
 }

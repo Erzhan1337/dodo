@@ -5,8 +5,8 @@ import {
   CreateCartItemValues,
 } from "@/entities/cart/model/types";
 import { useSessionStore } from "@/entities/session/model/store";
+import { CART_QUERY_KEY } from "@/entities/cart/model/query-key";
 
-const CART_QUERY_KEY = ["cart"] as const;
 const ANONYMOUS_CART_QUERY_KEY = "anonymous";
 
 const getCartQueryKey = (userId: string | null | undefined) => [
@@ -21,14 +21,14 @@ const setCurrentUserCartQueryData = (
   userId: string | null,
   cart: CartResponse,
 ) => {
-  if (!userId || getCurrentUserId() !== userId) return;
+  if (getCurrentUserId() !== userId) return;
 
   queryClient.setQueryData(getCartQueryKey(userId), cart);
 };
 
 export const useCart = () => {
-  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const userId = useSessionStore((state) => state.user?.id);
+  const _hasHydrated = useSessionStore((state) => state._hasHydrated);
 
   return useQuery<CartResponse>({
     queryKey: getCartQueryKey(userId),
@@ -36,7 +36,7 @@ export const useCart = () => {
       const { data } = await $api.get<CartResponse>("/cart");
       return data;
     },
-    enabled: isAuthenticated && Boolean(userId),
+    enabled: _hasHydrated,
   });
 };
 

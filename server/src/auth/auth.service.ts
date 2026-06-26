@@ -16,6 +16,7 @@ import {
   getJwtAccessSecret,
   getJwtRefreshSecret,
 } from '../../config/jwt.config';
+import { CartService } from '../cart/cart.service';
 
 type AuthTokenType = 'access' | 'refresh';
 
@@ -38,19 +39,25 @@ export class AuthService {
     private configService: ConfigService,
     private jwt: JwtService,
     private userService: UserService,
+    private cartService: CartService,
   ) {}
 
-  async login(dto: LoginDto) {
+  async login(dto: LoginDto, guestCartToken?: string) {
     const user = await this.validateUser(dto);
     const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
+
+    if (guestCartToken) {
+      await this.cartService.mergeGuestCartIntoUser(user.id, guestCartToken);
+    }
+
     return {
       user: this.sanitizeUser(user),
       ...tokens,
     };
   }
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto, guestCartToken?: string) {
     const existingUser = await this.userService.getUserByPhone(dto.phone);
     if (existingUser) {
       throw new BadRequestException('Phone already exists');
@@ -61,9 +68,7 @@ export class AuthService {
       user = await this.userService.createUser(dto);
     } catch (error) {
       if (this.isUniqueConstraintError(error)) {
-        throw new BadRequestException(
-          this.getUniqueConstraintMessage(error),
-        );
+        throw new BadRequestException(this.getUniqueConstraintMessage(error));
       }
 
       throw error;
@@ -71,6 +76,11 @@ export class AuthService {
 
     const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
+
+    if (guestCartToken) {
+      await this.cartService.mergeGuestCartIntoUser(user.id, guestCartToken);
+    }
+
     return {
       user,
       ...tokens,

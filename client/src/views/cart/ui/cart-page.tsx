@@ -1,6 +1,4 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import {
   useCart,
   useRemoveCartItem,
@@ -14,18 +12,10 @@ import { ArrowRight } from "lucide-react";
 import { useSessionStore } from "@/entities/session/model/store";
 
 export const CartPage = () => {
-  const router = useRouter();
-  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const { data: cart, isLoading } = useCart();
   const updateQuantity = useUpdateItemQuantity();
   const removeCartItem = useRemoveCartItem();
-
-  useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
-      router.replace("/login");
-    }
-  }, [_hasHydrated, isAuthenticated, router]);
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     updateQuantity.mutate({ id, quantity });
@@ -35,7 +25,7 @@ export const CartPage = () => {
     removeCartItem.mutate(id);
   };
 
-  if (!_hasHydrated || !isAuthenticated || isLoading) {
+  if (!_hasHydrated || isLoading) {
     return (
       <Container className="mt-10">
         <div className="flex flex-col gap-4">
@@ -64,10 +54,7 @@ export const CartPage = () => {
   return (
     <Container className="mt-10 pb-20">
       <Breadcrumbs
-        items={[
-          { label: "Главная", href: "/" },
-          { label: "Корзина" },
-        ]}
+        items={[{ label: "Главная", href: "/" }, { label: "Корзина" }]}
         className="mb-5"
       />
       <div className="text-xl md:text-2xl lg:text-3xl mb-10 font-bold">

@@ -12,7 +12,6 @@ import {
 import { IngredientCard, useIngredients } from "@/entities/ingredient";
 import { useAddToCart } from "@/features/cart/api/use-cart";
 import toast from "react-hot-toast";
-import { useSessionStore } from "@/entities/session/model/store";
 import { formatPrice } from "@/shared/lib/format-price";
 import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 
@@ -37,7 +36,6 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
     totalPrice,
     currentItemId,
   } = useProductForm(product, ingredients || []);
-  const isAuth = useSessionStore((state) => state.isAuthenticated);
 
   const { mutate: addToCart, isPending } = useAddToCart();
 
@@ -45,12 +43,6 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
 
   const handleSubmit = () => {
     if (!hasProductItems) return;
-
-    if (!isAuth) {
-      toast.error("Войдите, чтобы добавить товар");
-      onSubmit?.();
-      return;
-    }
 
     if (!currentItemId) return;
 

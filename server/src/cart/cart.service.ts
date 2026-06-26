@@ -3,10 +3,20 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+
+export const GUEST_CART_TOKEN_COOKIE = 'guestCartToken';
+
+type CartIdentity = {
+  userId?: string | null;
+  guestCartToken?: string | null;
+};
 
 const cartResponseSelect = {
   id: true,
@@ -45,18 +55,45 @@ const cartTotalSelect = {
 
 @Injectable()
 export class CartService {
-  constructor(private prisma: PrismaService) {}
+  private readonly EXPIRE_DAY_GUEST_CART_TOKEN = 30;
 
-  async getCart(userId: string) {
-    const cart = await this.getOrCreateCart(userId);
-    return this.toCartResponse(cart);
+  constructor(
+    private prisma: PrismaService,
+    private configService: ConfigService,
+  ) {}
+
+  async getCart(identity: CartIdentity) {
+    if (identity.userId) {
+      return this.getAuthenticatedCart(
+        identity.userId,
+        identity.guestCartToken,
+      );
+    }
+
+    if (!identity.guestCartToken) {
+      return { cart: this.createEmptyCartResponse() };
+    }
+
+    const cart = await this.prisma.cart.findUnique({
+      where: { guestToken: identity.guestCartToken },
+      select: cartResponseSelect,
+    });
+
+    if (!cart || cart.userId) {
+      return {
+        cart: this.createEmptyCartResponse(),
+        clearGuestCartToken: true,
+      };
+    }
+
+    return { cart: this.toCartResponse(cart) };
   }
 
-  async addToCart(userId: string, dto: AddCartItemDto) {
-    const cart = await this.getOrCreateCart(userId);
+  async addToCart(identity: CartIdentity, dto: AddCartItemDto) {
+    const resolvedCart = await this.getOrCreateMutableCart(identity);
 
-    return this.prisma.$transaction(async (tx) => {
-      await this.lockCart(cart.id, tx);
+    const cart = await this.prisma.$transaction(async (tx) => {
+      await this.lockCart(resolvedCart.cart.id, tx);
 
       const ingredientIds = await this.validateCartItemInput(dto, tx);
       const ingredientsKey = this.createIngredientsKey(ingredientIds);
@@ -64,7 +101,7 @@ export class CartService {
       await tx.cartItem.upsert({
         where: {
           cartId_productItemId_ingredientsKey: {
-            cartId: cart.id,
+            cartId: resolvedCart.cart.id,
             productItemId: dto.productItemId,
             ingredientsKey,
           },
@@ -73,7 +110,7 @@ export class CartService {
           quantity: { increment: 1 },
         },
         create: {
-          cartId: cart.id,
+          cartId: resolvedCart.cart.id,
           productItemId: dto.productItemId,
           ingredientsKey,
           quantity: 1,
@@ -83,22 +120,24 @@ export class CartService {
         },
       });
 
-      return this.updateCartTotalAmount(cart.id, tx);
+      return this.updateCartTotalAmount(resolvedCart.cart.id, tx);
     });
+
+    return { ...resolvedCart, cart };
   }
 
   async updateItemQuantity(
-    userId: string,
+    identity: CartIdentity,
     itemId: string,
     dto: UpdateCartItemDto,
   ) {
-    const cart = await this.getOrCreateCart(userId);
+    const resolvedCart = await this.getMutableCart(identity);
 
-    return this.prisma.$transaction(async (tx) => {
-      await this.lockCart(cart.id, tx);
+    const cart = await this.prisma.$transaction(async (tx) => {
+      await this.lockCart(resolvedCart.cart.id, tx);
 
       const cartItem = await tx.cartItem.findFirst({
-        where: { id: itemId, cartId: cart.id },
+        where: { id: itemId, cartId: resolvedCart.cart.id },
         select: { id: true },
       });
 
@@ -111,29 +150,175 @@ export class CartService {
         data: { quantity: dto.quantity },
       });
 
-      return this.updateCartTotalAmount(cart.id, tx);
+      return this.updateCartTotalAmount(resolvedCart.cart.id, tx);
     });
+
+    return { ...resolvedCart, cart };
   }
 
-  async removeCartItem(userId: string, itemId: string) {
-    const cart = await this.getOrCreateCart(userId);
+  async removeCartItem(identity: CartIdentity, itemId: string) {
+    const resolvedCart = await this.getMutableCart(identity);
 
-    return this.prisma.$transaction(async (tx) => {
-      await this.lockCart(cart.id, tx);
+    const cart = await this.prisma.$transaction(async (tx) => {
+      await this.lockCart(resolvedCart.cart.id, tx);
 
       const result = await tx.cartItem.deleteMany({
-        where: { id: itemId, cartId: cart.id },
+        where: { id: itemId, cartId: resolvedCart.cart.id },
       });
 
       if (result.count === 0) {
         throw new NotFoundException('Cart item not found');
       }
 
-      return this.updateCartTotalAmount(cart.id, tx);
+      return this.updateCartTotalAmount(resolvedCart.cart.id, tx);
+    });
+
+    return { ...resolvedCart, cart };
+  }
+
+  async mergeGuestCartIntoUser(userId: string, guestCartToken: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const guestCart = await tx.cart.findUnique({
+        where: { guestToken: guestCartToken },
+        select: cartResponseSelect,
+      });
+
+      if (!guestCart || guestCart.userId === userId) {
+        const userCart = await this.getOrCreateUserCart(userId, tx);
+        return this.toCartResponse(userCart);
+      }
+
+      if (guestCart.userId) {
+        const userCart = await this.getOrCreateUserCart(userId, tx);
+        return this.toCartResponse(userCart);
+      }
+
+      const userCart = await tx.cart.findUnique({
+        where: { userId },
+        select: cartResponseSelect,
+      });
+
+      if (!userCart) {
+        const assignedCart = await tx.cart.update({
+          where: { id: guestCart.id },
+          data: { userId, guestToken: null },
+          select: cartResponseSelect,
+        });
+
+        return this.toCartResponse(assignedCart);
+      }
+
+      await this.lockCarts([userCart.id, guestCart.id], tx);
+
+      const guestItems = await tx.cartItem.findMany({
+        where: { cartId: guestCart.id },
+        select: {
+          quantity: true,
+          productItemId: true,
+          ingredientsKey: true,
+          ingredients: { select: { id: true } },
+        },
+      });
+
+      for (const item of guestItems) {
+        await tx.cartItem.upsert({
+          where: {
+            cartId_productItemId_ingredientsKey: {
+              cartId: userCart.id,
+              productItemId: item.productItemId,
+              ingredientsKey: item.ingredientsKey,
+            },
+          },
+          update: {
+            quantity: { increment: item.quantity },
+          },
+          create: {
+            cartId: userCart.id,
+            productItemId: item.productItemId,
+            ingredientsKey: item.ingredientsKey,
+            quantity: item.quantity,
+            ingredients: {
+              connect: item.ingredients.map(({ id }) => ({ id })),
+            },
+          },
+        });
+      }
+
+      await tx.cart.delete({ where: { id: guestCart.id } });
+
+      const updatedCart = await this.updateCartTotalAmount(userCart.id, tx);
+      return updatedCart ?? this.toCartResponse(userCart);
     });
   }
 
-  private async getOrCreateCart(
+  addGuestCartTokenToResponse(res: Response, guestCartToken: string) {
+    const expiresIn = new Date();
+    expiresIn.setDate(expiresIn.getDate() + this.EXPIRE_DAY_GUEST_CART_TOKEN);
+
+    res.cookie(
+      GUEST_CART_TOKEN_COOKIE,
+      guestCartToken,
+      this.getCookieOptions(expiresIn),
+    );
+  }
+
+  removeGuestCartTokenFromResponse(res: Response) {
+    res.cookie(GUEST_CART_TOKEN_COOKIE, '', this.getCookieOptions(new Date(0)));
+  }
+
+  private async getAuthenticatedCart(
+    userId: string,
+    guestCartToken?: string | null,
+  ) {
+    if (guestCartToken) {
+      const cart = await this.mergeGuestCartIntoUser(userId, guestCartToken);
+
+      return {
+        cart,
+        clearGuestCartToken: true,
+      };
+    }
+
+    const cart = await this.getOrCreateUserCart(userId);
+    return { cart: this.toCartResponse(cart) };
+  }
+
+  private async getOrCreateMutableCart(identity: CartIdentity) {
+    if (identity.userId) {
+      return this.getAuthenticatedCart(
+        identity.userId,
+        identity.guestCartToken,
+      );
+    }
+
+    return this.getOrCreateGuestCart(identity.guestCartToken);
+  }
+
+  private async getMutableCart(identity: CartIdentity) {
+    if (identity.userId) {
+      return this.getAuthenticatedCart(
+        identity.userId,
+        identity.guestCartToken,
+      );
+    }
+
+    if (!identity.guestCartToken) {
+      throw new NotFoundException('Cart not found');
+    }
+
+    const cart = await this.prisma.cart.findUnique({
+      where: { guestToken: identity.guestCartToken },
+      select: cartResponseSelect,
+    });
+
+    if (!cart || cart.userId) {
+      throw new NotFoundException('Cart not found');
+    }
+
+    return { cart: this.toCartResponse(cart) };
+  }
+
+  private async getOrCreateUserCart(
     userId: string,
     client: Prisma.TransactionClient = this.prisma,
   ) {
@@ -156,6 +341,49 @@ export class CartService {
 
       return cart;
     }
+  }
+
+  private async getOrCreateGuestCart(guestCartToken?: string | null) {
+    if (guestCartToken) {
+      const cart = await this.prisma.cart.findUnique({
+        where: { guestToken: guestCartToken },
+        select: cartResponseSelect,
+      });
+
+      if (cart && !cart.userId) {
+        return { cart: this.toCartResponse(cart) };
+      }
+    }
+
+    const { cart, guestCartToken: newGuestCartToken } =
+      await this.createGuestCart();
+
+    return {
+      cart,
+      guestCartToken: newGuestCartToken,
+    };
+  }
+
+  private async createGuestCart() {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const guestCartToken = randomUUID();
+
+      try {
+        const cart = await this.prisma.cart.create({
+          data: { guestToken: guestCartToken },
+          select: cartResponseSelect,
+        });
+
+        return {
+          cart: this.toCartResponse(cart),
+          guestCartToken,
+        };
+      } catch (error) {
+        if (!this.isUniqueConstraintError(error)) throw error;
+      }
+    }
+
+    throw new BadRequestException('Failed to create guest cart');
   }
 
   private async updateCartTotalAmount(
@@ -187,10 +415,18 @@ export class CartService {
   }
 
   private async lockCart(cartId: string, tx: Prisma.TransactionClient) {
+    await this.lockCarts([cartId], tx);
+  }
+
+  private async lockCarts(cartIds: string[], tx: Prisma.TransactionClient) {
+    const uniqueCartIds = [...new Set(cartIds)].sort();
+    if (!uniqueCartIds.length) return;
+
     await tx.$queryRaw`
       SELECT "id"
       FROM "carts"
-      WHERE "id" = ${cartId}
+      WHERE "id" IN (${Prisma.join(uniqueCartIds)})
+      ORDER BY "id"
       FOR UPDATE
     `;
   }
@@ -232,7 +468,9 @@ export class CartService {
     if (!ingredientIds?.length) return [];
 
     const normalizedIngredientIds = [...ingredientIds].sort();
-    if (new Set(normalizedIngredientIds).size !== normalizedIngredientIds.length) {
+    if (
+      new Set(normalizedIngredientIds).size !== normalizedIngredientIds.length
+    ) {
       throw new BadRequestException('Invalid ingredients');
     }
 
@@ -243,8 +481,32 @@ export class CartService {
     return ingredientIds.join(',');
   }
 
+  private createEmptyCartResponse() {
+    return {
+      id: '',
+      totalPrice: 0,
+      totalAmount: 0,
+      userId: null,
+      items: [],
+    };
+  }
+
   private toCartResponse<T extends { totalPrice: number }>(cart: T) {
     return { ...cart, totalAmount: cart.totalPrice };
+  }
+
+  private getCookieOptions(expires: Date) {
+    const isProduction = this.configService.getOrThrow('PRODUCTION') === 'true';
+
+    return {
+      httpOnly: true,
+      domain: isProduction
+        ? this.configService.getOrThrow('SERVER_DOMAIN')
+        : undefined,
+      expires,
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
+    } as const;
   }
 
   private isUniqueConstraintError(error: unknown) {
