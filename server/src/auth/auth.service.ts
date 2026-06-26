@@ -12,6 +12,17 @@ import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { hash, verify } from 'argon2';
 import { User } from '@prisma/client';
+import {
+  getJwtAccessSecret,
+  getJwtRefreshSecret,
+} from '../../config/jwt.config';
+
+type AuthTokenType = 'access' | 'refresh';
+
+type AuthTokenPayload = {
+  id: string;
+  type: AuthTokenType;
+};
 
 @Injectable()
 export class AuthService {
@@ -26,7 +37,7 @@ export class AuthService {
 
   async login(dto: LoginDto) {
     const user = await this.validateUser(dto);
-    const tokens = this.issueTokes(user.id);
+    const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
     return {
       user: this.sanitizeUser(user),
@@ -40,7 +51,7 @@ export class AuthService {
       throw new BadRequestException('User already exists');
     }
     const user = await this.userService.createUser(dto);
-    const tokens = this.issueTokes(user.id);
+    const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
     return {
       user: this.sanitizeUser(user),
@@ -49,9 +60,9 @@ export class AuthService {
   }
 
   async getNewTokens(refreshToken: string) {
-    let data: { id: string };
+    let data: AuthTokenPayload;
     try {
-      data = await this.jwt.verifyAsync(refreshToken);
+      data = await this.verifyRefreshToken(refreshToken);
     } catch (e) {
       throw new UnauthorizedException('Invalid refresh token');
     }
@@ -66,7 +77,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const tokens = this.issueTokes(user.id);
+    const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
     return {
       user: this.sanitizeUser(user),
@@ -78,23 +89,30 @@ export class AuthService {
     if (!refreshToken) return;
 
     try {
-      const data = await this.jwt.verifyAsync<{ id: string }>(refreshToken);
+      const data = await this.verifyRefreshToken(refreshToken);
       await this.userService.updateRefreshToken(data.id, null);
     } catch {
       return;
     }
   }
 
-  issueTokes(userId: string) {
-    const payload = {
+  issueTokens(userId: string) {
+    const accessTokenPayload: AuthTokenPayload = {
       id: userId,
+      type: 'access',
     };
-    const accessToken = this.jwt.sign(payload, {
+    const refreshTokenPayload: AuthTokenPayload = {
+      id: userId,
+      type: 'refresh',
+    };
+    const accessToken = this.jwt.sign(accessTokenPayload, {
       expiresIn: '1d',
+      secret: getJwtAccessSecret(this.configService),
     });
 
-    const refreshToken = this.jwt.sign(payload, {
+    const refreshToken = this.jwt.sign(refreshTokenPayload, {
       expiresIn: '30d',
+      secret: getJwtRefreshSecret(this.configService),
     });
 
     return { accessToken, refreshToken };
@@ -107,6 +125,18 @@ export class AuthService {
     if (!isValidPassword) throw new NotFoundException('User not found');
 
     return user;
+  }
+
+  private async verifyRefreshToken(refreshToken: string) {
+    const payload = await this.jwt.verifyAsync<AuthTokenPayload>(refreshToken, {
+      secret: getJwtRefreshSecret(this.configService),
+    });
+
+    if (payload.type !== 'refresh') {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    return payload;
   }
 
   private async saveRefreshToken(userId: string, refreshToken: string) {
