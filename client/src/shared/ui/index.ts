@@ -9,3 +9,4 @@ export { RangeSlider } from "./range-slider";
 export { Modal } from "./modal";
 export { Pagination } from "./pagination";
 export { Breadcrumbs } from "./breadcrumbs";
+export { QueryErrorState } from "./query-error-state";

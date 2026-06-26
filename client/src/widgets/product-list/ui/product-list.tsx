@@ -1,7 +1,7 @@
 "use client";
 import { Product, ProductCard, useProducts } from "@/entities/product";
 import { useQueryParam } from "@/shared/hooks";
-import { Pagination, Skeleton } from "@/shared/ui";
+import { Pagination, QueryErrorState, Skeleton } from "@/shared/ui";
 import { LazyMotion, m } from "framer-motion";
 import { loadMotionFeatures } from "@/shared/lib/motion";
 
@@ -11,7 +11,8 @@ const itemVariants = {
 };
 
 export const ProductList = () => {
-  const { data: response, isLoading } = useProducts();
+  const { data: response, isError, isFetching, isLoading, refetch } =
+    useProducts();
   const products = response?.data;
   const meta = response?.meta;
   const { setQueryParam } = useQueryParam("page");
@@ -43,6 +44,19 @@ export const ProductList = () => {
     );
   }
 
+  if (isError) {
+    return (
+      <QueryErrorState
+        className="flex-1"
+        title="Не удалось загрузить пиццы"
+        description="Проверьте подключение к серверу или попробуйте обновить список."
+        actionLabel={isFetching ? "Загрузка..." : "Повторить"}
+        actionDisabled={isFetching}
+        onAction={() => void refetch()}
+      />
+    );
+  }
+
   if (!products || products.length === 0) {
     return (
       <div className="flex justify-center items-center w-full text-primary text-xl">
@@ -61,7 +75,11 @@ export const ProductList = () => {
           transition={{ staggerChildren: 0.07 }}
         >
           {products.map((product: Product) => (
-            <m.div key={product.id} variants={itemVariants} transition={{ duration: 0.35 }}>
+            <m.div
+              key={product.id}
+              variants={itemVariants}
+              transition={{ duration: 0.35 }}
+            >
               <ProductCard product={product} />
             </m.div>
           ))}

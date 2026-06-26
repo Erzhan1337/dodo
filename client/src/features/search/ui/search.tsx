@@ -4,7 +4,7 @@ import { useSearch } from "@/features/search/model/use-search";
 import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/shared/lib/utils";
-import { Skeleton } from "@/shared/ui";
+import { QueryErrorState, Skeleton } from "@/shared/ui";
 import { useSearchProducts } from "@/features/search/api/use-search-products";
 import { formatPrice } from "@/shared/lib/format-price";
 
@@ -18,7 +18,8 @@ export const SearchBar = () => {
     setQuery,
     debouncedQuery,
   } = useSearch();
-  const { data: products, isLoading } = useSearchProducts(debouncedQuery);
+  const { data: products, isError, isFetching, isLoading, refetch } =
+    useSearchProducts(debouncedQuery);
 
   return (
     <>
@@ -77,6 +78,15 @@ export const SearchBar = () => {
                 </div>
               ))}
             </div>
+          ) : isError ? (
+            <QueryErrorState
+              compact
+              title="Не удалось выполнить поиск"
+              description="Проверьте подключение и попробуйте ещё раз."
+              actionLabel={isFetching ? "Загрузка..." : "Повторить"}
+              actionDisabled={isFetching}
+              onAction={() => void refetch()}
+            />
           ) : products && products.length > 0 ? (
             products.map((product) => (
               <Link
