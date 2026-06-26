@@ -28,6 +28,11 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    return this.userService.getUserById(id);
+    const user = await this.userService.getSafeUserById(id);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    return user;
   }
 }

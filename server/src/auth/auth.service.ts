@@ -5,13 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { UserService } from '../user/user.service';
+import { type SafeUser, UserService } from '../user/user.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { hash, verify } from 'argon2';
-import { Prisma, User } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import {
   getJwtAccessSecret,
   getJwtRefreshSecret,
@@ -22,6 +22,11 @@ type AuthTokenType = 'access' | 'refresh';
 type AuthTokenPayload = {
   id: string;
   type: AuthTokenType;
+};
+
+type SensitiveUserFields = {
+  password?: string;
+  refreshToken?: string | null;
 };
 
 @Injectable()
@@ -51,7 +56,7 @@ export class AuthService {
       throw new BadRequestException('Phone already exists');
     }
 
-    let user: User;
+    let user: SafeUser;
     try {
       user = await this.userService.createUser(dto);
     } catch (error) {
@@ -67,7 +72,7 @@ export class AuthService {
     const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
     return {
-      user: this.sanitizeUser(user),
+      user,
       ...tokens,
     };
   }
@@ -79,7 +84,7 @@ export class AuthService {
     } catch (e) {
       throw new UnauthorizedException('Invalid refresh token');
     }
-    const user = await this.userService.getUserById(data.id);
+    const user = await this.userService.getUserWithRefreshTokenById(data.id);
     if (!user) throw new UnauthorizedException('User not found');
     if (!user.refreshToken) {
       throw new UnauthorizedException('Invalid refresh token');
@@ -132,7 +137,7 @@ export class AuthService {
   }
 
   private async validateUser(dto: LoginDto) {
-    const user = await this.userService.getUserByPhone(dto.phone);
+    const user = await this.userService.getUserWithPasswordByPhone(dto.phone);
     if (!user) throw new NotFoundException('User not found');
     const isValidPassword = await verify(user.password, dto.password);
     if (!isValidPassword) throw new NotFoundException('User not found');
@@ -157,7 +162,7 @@ export class AuthService {
     await this.userService.updateRefreshToken(userId, hashedRefreshToken);
   }
 
-  private sanitizeUser(user: User) {
+  private sanitizeUser<T extends SensitiveUserFields>(user: T) {
     const { password, refreshToken, ...userWithoutSensitiveData } = user;
     return userWithoutSensitiveData;
   }
