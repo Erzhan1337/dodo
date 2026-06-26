@@ -1,5 +1,6 @@
 "use client";
-import { useProduct } from "@/entities/product";
+import Link from "next/link";
+import { isProductNotFoundError, useProduct } from "@/entities/product";
 import { Breadcrumbs, Container, Skeleton } from "@/shared/ui";
 import { ProductForm } from "@/features/product-configurator/ui/product-form";
 
@@ -8,7 +9,7 @@ interface Props {
 }
 
 export const ProductPage = ({ id }: Props) => {
-  const { data: product, isLoading, isError } = useProduct(id);
+  const { data: product, error, isLoading, isError } = useProduct(id);
 
   if (isLoading) {
     return (
@@ -42,8 +43,27 @@ export const ProductPage = ({ id }: Props) => {
     );
   }
 
-  if (!product || isError) {
-    return <div>Not found</div>;
+  if (isError || !product) {
+    const isNotFound = isError ? isProductNotFoundError(error) : !product;
+
+    return (
+      <Container className="my-10 flex min-h-100 flex-col items-center justify-center text-center">
+        <h1 className="text-3xl font-extrabold">
+          {isNotFound ? "Продукт не найден" : "Не удалось загрузить продукт"}
+        </h1>
+        <p className="mt-3 max-w-md text-muted-foreground">
+          {isNotFound
+            ? "Возможно, он был удалён или ссылка устарела."
+            : "Попробуйте обновить страницу или вернуться к меню."}
+        </p>
+        <Link
+          href="/"
+          className="mt-6 rounded-xl bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary/90"
+        >
+          Вернуться к меню
+        </Link>
+      </Container>
+    );
   }
 
   return (

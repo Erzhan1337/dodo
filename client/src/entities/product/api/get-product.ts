@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Product } from "@/entities/product";
 import { $api } from "@/shared/api";
+import { isAxiosError } from "axios";
 
 export const useProduct = (id: string) => {
   return useQuery({
@@ -12,4 +13,8 @@ export const useProduct = (id: string) => {
     staleTime: 60 * 100 * 5,
     enabled: !!id,
   });
+};
+
+export const isProductNotFoundError = (error: unknown) => {
+  return isAxiosError(error) && error.response?.status === 404;
 };

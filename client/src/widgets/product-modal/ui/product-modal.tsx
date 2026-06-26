@@ -1,7 +1,7 @@
 "use client";
-import { Modal, Skeleton } from "@/shared/ui";
+import { Button, Modal, Skeleton } from "@/shared/ui";
 import { ProductForm } from "@/features/product-configurator/ui/product-form";
-import { useProduct } from "@/entities/product";
+import { isProductNotFoundError, useProduct } from "@/entities/product";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const ProductModal = ({ id }: Props) => {
-  const { data: product, isLoading } = useProduct(id);
+  const { data: product, error, isLoading, isError } = useProduct(id);
   const { back } = useRouter();
   const [isOpen, setIsOpen] = useState(true);
 
@@ -50,9 +50,28 @@ export const ProductModal = ({ id }: Props) => {
     );
   }
 
-  if (!product) {
-    return <div>product not found</div>;
+  if (isError || !product) {
+    const isNotFound = isError ? isProductNotFoundError(error) : !product;
+
+    return (
+      <Modal isOpen={isOpen} onClose={handleClose} className="max-w-xl">
+        <div className="bg-white px-10 py-12 text-center">
+          <h2 className="text-2xl font-extrabold">
+            {isNotFound ? "Продукт не найден" : "Не удалось загрузить продукт"}
+          </h2>
+          <p className="mx-auto mt-3 max-w-sm text-muted-foreground">
+            {isNotFound
+              ? "Возможно, он был удалён или ссылка устарела."
+              : "Закройте окно и попробуйте открыть продукт ещё раз."}
+          </p>
+          <Button className="mt-6 px-6" size="lg" onClick={handleClose}>
+            Закрыть
+          </Button>
+        </div>
+      </Modal>
+    );
   }
+
   return (
     <Modal isOpen={isOpen} onClose={handleClose}>
       <ProductForm product={product} onSubmit={handleClose} />
