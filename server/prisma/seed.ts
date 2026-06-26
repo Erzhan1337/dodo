@@ -1,8 +1,66 @@
 import { PrismaClient } from '@prisma/client';
 
-const prisma = new PrismaClient();
+const ALLOW_DESTRUCTIVE_SEED = 'ALLOW_DESTRUCTIVE_SEED';
+const ALLOW_NON_LOCAL_DESTRUCTIVE_SEED = 'ALLOW_NON_LOCAL_DESTRUCTIVE_SEED';
+const LOCAL_DATABASE_HOSTS = new Set(['localhost', '127.0.0.1', '::1']);
+
+let prisma: PrismaClient | undefined;
+
+function isEnabled(value: string | undefined) {
+  return value === 'true';
+}
+
+function getDatabaseTarget() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is required to run the seed script.');
+  }
+
+  try {
+    const url = new URL(databaseUrl);
+    return {
+      host: url.hostname,
+      database: url.pathname.replace(/^\//, ''),
+    };
+  } catch {
+    throw new Error('DATABASE_URL must be a valid PostgreSQL connection URL.');
+  }
+}
+
+function assertSafeToSeed() {
+  const isProductionLike =
+    isEnabled(process.env.PRODUCTION) || process.env.NODE_ENV === 'production';
+
+  if (isProductionLike) {
+    throw new Error(
+      'Refusing to run destructive seed in a production-like environment.',
+    );
+  }
+
+  if (!isEnabled(process.env[ALLOW_DESTRUCTIVE_SEED])) {
+    throw new Error(
+      `Refusing to run destructive seed. Set ${ALLOW_DESTRUCTIVE_SEED}=true for a disposable development database.`,
+    );
+  }
+
+  const target = getDatabaseTarget();
+  const isLocalDatabase = LOCAL_DATABASE_HOSTS.has(target.host);
+  if (
+    !isLocalDatabase &&
+    !isEnabled(process.env[ALLOW_NON_LOCAL_DESTRUCTIVE_SEED])
+  ) {
+    throw new Error(
+      `Refusing to run destructive seed against non-local database host "${target.host}". Set ${ALLOW_NON_LOCAL_DESTRUCTIVE_SEED}=true only for a disposable development database.`,
+    );
+  }
+
+  console.log(`Seeding database "${target.database}" at "${target.host}"`);
+}
 
 async function main() {
+  assertSafeToSeed();
+  prisma = new PrismaClient();
+
   console.log('Starting');
 
   const tableNames = [
@@ -577,5 +635,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await prisma?.$disconnect();
   });
