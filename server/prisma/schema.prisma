@@ -148,8 +148,9 @@ model Cart {
 }
 
 model CartItem {
-  id       String @id @default(cuid())
-  quantity Int    @default(1)
+  id             String @id @default(cuid())
+  quantity       Int    @default(1)
+  ingredientsKey String @default("") @map("ingredients_key")
 
   productItem   ProductItem @relation(fields: [productItemId], references: [id])
   productItemId String      @map("product_item_id")
@@ -162,6 +163,7 @@ model CartItem {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@unique([cartId, productItemId, ingredientsKey])
   @@map("cart_items")
 }
 
