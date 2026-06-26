@@ -11,7 +11,7 @@ import { RegisterDto } from './dto/register.dto';
 import type { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { hash, verify } from 'argon2';
-import { User } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import {
   getJwtAccessSecret,
   getJwtRefreshSecret,
@@ -48,9 +48,22 @@ export class AuthService {
   async register(dto: RegisterDto) {
     const existingUser = await this.userService.getUserByPhone(dto.phone);
     if (existingUser) {
-      throw new BadRequestException('User already exists');
+      throw new BadRequestException('Phone already exists');
     }
-    const user = await this.userService.createUser(dto);
+
+    let user: User;
+    try {
+      user = await this.userService.createUser(dto);
+    } catch (error) {
+      if (this.isUniqueConstraintError(error)) {
+        throw new BadRequestException(
+          this.getUniqueConstraintMessage(error),
+        );
+      }
+
+      throw error;
+    }
+
     const tokens = this.issueTokens(user.id);
     await this.saveRefreshToken(user.id, tokens.refreshToken);
     return {
@@ -147,6 +160,49 @@ export class AuthService {
   private sanitizeUser(user: User) {
     const { password, refreshToken, ...userWithoutSensitiveData } = user;
     return userWithoutSensitiveData;
+  }
+
+  private isUniqueConstraintError(
+    error: unknown,
+  ): error is Prisma.PrismaClientKnownRequestError {
+    return (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === 'P2002'
+    );
+  }
+
+  private getUniqueConstraintMessage(
+    error: Prisma.PrismaClientKnownRequestError,
+  ) {
+    const fields = this.getUniqueConstraintFields(error);
+
+    if (fields.some((field) => field.includes('email'))) {
+      return 'Email already exists';
+    }
+
+    if (fields.some((field) => field.includes('phone'))) {
+      return 'Phone already exists';
+    }
+
+    return 'User already exists';
+  }
+
+  private getUniqueConstraintFields(
+    error: Prisma.PrismaClientKnownRequestError,
+  ) {
+    const target = error.meta?.target;
+
+    if (Array.isArray(target)) {
+      return target
+        .filter((field): field is string => typeof field === 'string')
+        .map((field) => field.toLowerCase());
+    }
+
+    if (typeof target === 'string') {
+      return [target.toLowerCase()];
+    }
+
+    return [];
   }
 
   addRefreshTokenToResponse(res: Response, refreshToken: string) {
