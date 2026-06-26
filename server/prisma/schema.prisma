@@ -51,6 +51,7 @@ model Product {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([categoryId])
   @@map("products")
 }
 
@@ -70,6 +71,8 @@ model ProductItem {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([productId, size, price])
+  @@index([price])
   @@map("product_items")
 }
 
@@ -109,6 +112,7 @@ model Order {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([userId])
   @@map("orders")
 }
 
@@ -129,6 +133,8 @@ model OrderItem {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([orderId])
+  @@index([productItemId])
   @@map("order_items")
 }
 
@@ -164,6 +170,8 @@ model CartItem {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([cartId, productItemId, ingredientsKey])
+  @@index([cartId, createdAt])
+  @@index([productItemId])
   @@map("cart_items")
 }
 
