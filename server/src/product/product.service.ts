@@ -36,8 +36,15 @@ export class ProductService {
       ?.split(',')
       .map((name) => name.trim())
       .filter(Boolean);
+    const productItemPriceWhere: Prisma.IntFilter | undefined =
+      from != null || to != null
+        ? {
+            gte: from,
+            lte: to,
+          }
+        : undefined;
 
-    const where: Prisma.ProductWhereInput = {
+    const productWhere: Prisma.ProductWhereInput = {
       ingredients: ingredientNames?.length
         ? {
             some: {
@@ -51,22 +58,20 @@ export class ProductService {
 
       categoryId: category,
 
-      items:
-        from != null || to != null
-          ? {
-              some: {
-                price: {
-                  gte: from,
-                  lte: to,
-                },
-              },
-            }
-          : undefined,
-
       name: query
         ? {
             contains: query,
             mode: 'insensitive',
+          }
+        : undefined,
+    };
+    const where: Prisma.ProductWhereInput = {
+      ...productWhere,
+      items: productItemPriceWhere
+        ? {
+            some: {
+              price: productItemPriceWhere,
+            },
           }
         : undefined,
     };
@@ -75,6 +80,8 @@ export class ProductService {
 
     if (shouldSortByPrice) {
       const products = await this.getProductsSortedByPrice({
+        productWhere,
+        productItemPriceWhere,
         where,
         sort,
         skip,
@@ -119,11 +126,15 @@ export class ProductService {
   }
 
   private async getProductsSortedByPrice({
+    productWhere,
+    productItemPriceWhere,
     where,
     sort,
     skip,
     limit,
   }: {
+    productWhere: Prisma.ProductWhereInput;
+    productItemPriceWhere?: Prisma.IntFilter;
     where: Prisma.ProductWhereInput;
     sort?: SORT;
     skip: number;
@@ -132,7 +143,8 @@ export class ProductService {
     const groupedItems = await this.prisma.productItem.groupBy({
       by: ['productId'],
       where: {
-        product: where,
+        product: productWhere,
+        price: productItemPriceWhere,
       },
       _min: {
         price: true,
