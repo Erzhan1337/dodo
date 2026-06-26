@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { hash } from 'argon2';
+import { normalizeKzPhone } from '../auth/lib/phone';
 
 @Injectable()
 export class UserService {
@@ -15,7 +16,7 @@ export class UserService {
 
   async getUserByPhone(phone: string) {
     return this.prisma.user.findUnique({
-      where: { phone },
+      where: { phone: normalizeKzPhone(phone) },
     });
   }
 
@@ -23,10 +24,17 @@ export class UserService {
     return this.prisma.user.create({
       data: {
         name: dto.name,
-        phone: dto.phone,
+        phone: normalizeKzPhone(dto.phone),
         email: dto.email,
         password: await hash(dto.password),
       },
+    });
+  }
+
+  async updateRefreshToken(userId: string, refreshToken: string | null) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken },
     });
   }
 }

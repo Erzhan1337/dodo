@@ -1,28 +1,34 @@
 "use client";
-import React, { ReactNode, useEffect } from "react";
-import { useSessionStore, AUTH_CHANNEL } from "@/entities/session/model/store";
+import React, { ReactNode, useEffect, useState } from "react";
+import {
+  useSessionStore,
+  AUTH_CHANNEL,
+  AUTH_LOGOUT_EVENT,
+} from "@/entities/session/model/store";
 import { $api } from "@/shared/api";
 import Image from "next/image";
+import { useQueryClient } from "@tanstack/react-query";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const queryClient = useQueryClient();
   const setAuthData = useSessionStore((state) => state.setAuthData);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const logout = useSessionStore((state) => state.logout);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const accessToken = useSessionStore((state) => state.accessToken);
-  const isLoading = React.useRef(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       if (!_hasHydrated) return;
       if (!isAuthenticated) {
-        isLoading.current = false;
+        setIsLoading(false);
         return;
       }
 
       // If we already have the token in memory (e.g. just logged in), skip refresh
       if (accessToken) {
-        isLoading.current = false;
+        setIsLoading(false);
         return;
       }
 
@@ -32,27 +38,37 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       } catch {
         logout();
       } finally {
-        isLoading.current = false;
+        setIsLoading(false);
       }
     };
     void checkAuth();
   }, [setAuthData, isAuthenticated, logout, _hasHydrated, accessToken]);
 
   useEffect(() => {
+    const clearSession = () => {
+      queryClient.removeQueries({ queryKey: ["cart"] });
+      useSessionStore.setState({
+        user: null,
+        accessToken: null,
+        isAuthenticated: false,
+      });
+    };
+
     const channel = new BroadcastChannel(AUTH_CHANNEL);
     channel.onmessage = (e: MessageEvent<string>) => {
       if (e.data === "logout") {
-        useSessionStore.setState({
-          user: null,
-          accessToken: null,
-          isAuthenticated: false,
-        });
+        clearSession();
       }
     };
-    return () => channel.close();
-  }, []);
+    window.addEventListener(AUTH_LOGOUT_EVENT, clearSession);
 
-  if (isLoading.current || !_hasHydrated) {
+    return () => {
+      channel.close();
+      window.removeEventListener(AUTH_LOGOUT_EVENT, clearSession);
+    };
+  }, [queryClient]);
+
+  if (isLoading || !_hasHydrated) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
         <div className="relative size-10">

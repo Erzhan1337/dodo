@@ -6,12 +6,12 @@ import {
   Param,
   Patch,
   Post,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { CartService } from './cart.service';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
+import { AddCartItemDto } from './dto/add-cart-item.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Controller('cart')
 export class CartController {
@@ -23,10 +23,12 @@ export class CartController {
     return this.cartService.getCart(userId);
   }
 
-  @UsePipes(new ValidationPipe())
   @Post()
   @Auth()
-  async addToCart(@CurrentUser('id') userId: string, @Body() dto: any) {
+  async addToCart(
+    @CurrentUser('id') userId: string,
+    @Body() dto: AddCartItemDto,
+  ) {
     return this.cartService.addToCart(userId, dto);
   }
 
@@ -35,7 +37,7 @@ export class CartController {
   async updateItemQuantity(
     @CurrentUser('id') userId: string,
     @Param('id') id: string,
-    @Body() dto: any,
+    @Body() dto: UpdateCartItemDto,
   ) {
     return this.cartService.updateItemQuantity(userId, id, dto);
   }

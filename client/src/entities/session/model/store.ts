@@ -4,6 +4,7 @@ import { $api } from "@/shared/api";
 import type { User } from "@/entities/session/model/types";
 
 export const AUTH_CHANNEL = "auth";
+export const AUTH_LOGOUT_EVENT = "auth:logout";
 
 interface SessionState {
   user: User | null;
@@ -29,7 +30,11 @@ export const useSessionStore = create<SessionState>()(
       logout: () => {
         set({ user: null, accessToken: null, isAuthenticated: false });
         void $api.post("auth/logout");
-        new BroadcastChannel(AUTH_CHANNEL).postMessage("logout");
+        window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT));
+
+        const channel = new BroadcastChannel(AUTH_CHANNEL);
+        channel.postMessage("logout");
+        channel.close();
       },
     }),
     {

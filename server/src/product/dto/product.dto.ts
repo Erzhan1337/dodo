@@ -1,4 +1,5 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export enum SORT {
   ASC = 'asc',
@@ -7,21 +8,45 @@ export enum SORT {
 }
 export class ProductDto {
   @IsOptional()
-  from?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  from?: number;
+
   @IsOptional()
-  to?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  to?: number;
+
   @IsOptional()
+  @IsString()
   ingredients?: string;
+
   @IsOptional()
-  category?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  category?: number;
+
   @IsOptional()
   @IsEnum(SORT)
   sort?: SORT;
+
   @IsOptional()
   @IsString()
   query?: string;
+
   @IsOptional()
-  page?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
   @IsOptional()
-  limit?: string;
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(50)
+  limit?: number;
 }

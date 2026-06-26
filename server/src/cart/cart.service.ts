@@ -1,5 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AddCartItemDto } from './dto/add-cart-item.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
 export class CartService {
@@ -72,14 +78,15 @@ export class CartService {
     return { ...updatedCart, totalAmount: updatedCart.totalPrice };
   }
 
-  async addToCart(userId: string, dto: any) {
+  async addToCart(userId: string, dto: AddCartItemDto) {
     const cart = await this.getCart(userId);
+    await this.validateCartItemInput(dto);
 
     const existingCartItem = cart.items.find((item) => {
       if (item.productItemId !== dto.productItemId) return false;
 
       const itemIngIds = item.ingredients.map((ing) => ing.id).sort();
-      const dtoIngIds = (dto.ingredients || []).sort();
+      const dtoIngIds = [...(dto.ingredients || [])].sort();
       return (
         itemIngIds.length === dtoIngIds.length &&
         itemIngIds.every((val, index) => val === dtoIngIds[index])
@@ -107,14 +114,20 @@ export class CartService {
     return this.updateCartTotalAmount(cart.id);
   }
 
-  async updateItemQuantity(userId: string, itemId: string, dto: any) {
+  async updateItemQuantity(
+    userId: string,
+    itemId: string,
+    dto: UpdateCartItemDto,
+  ) {
     const cart = await this.getCart(userId);
 
     const cartItem = await this.prisma.cartItem.findFirst({
       where: { id: itemId, cartId: cart.id },
     });
 
-    if (!cartItem) return cart;
+    if (!cartItem) {
+      throw new NotFoundException('Cart item not found');
+    }
 
     await this.prisma.cartItem.update({
       where: { id: itemId },
@@ -127,10 +140,40 @@ export class CartService {
   async removeCartItem(userId: string, itemId: string) {
     const cart = await this.getCart(userId);
 
-    await this.prisma.cartItem.deleteMany({
+    const result = await this.prisma.cartItem.deleteMany({
       where: { id: itemId, cartId: cart.id },
     });
 
+    if (result.count === 0) {
+      throw new NotFoundException('Cart item not found');
+    }
+
     return this.updateCartTotalAmount(cart.id);
+  }
+
+  private async validateCartItemInput(dto: AddCartItemDto) {
+    const productItem = await this.prisma.productItem.findUnique({
+      where: { id: dto.productItemId },
+      select: { id: true },
+    });
+
+    if (!productItem) {
+      throw new NotFoundException('Product item not found');
+    }
+
+    if (!dto.ingredients?.length) return;
+
+    const ingredients = await this.prisma.ingredient.findMany({
+      where: {
+        id: {
+          in: dto.ingredients,
+        },
+      },
+      select: { id: true },
+    });
+
+    if (ingredients.length !== dto.ingredients.length) {
+      throw new BadRequestException('Invalid ingredients');
+    }
   }
 }

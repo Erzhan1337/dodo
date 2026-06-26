@@ -10,10 +10,6 @@ interface Props {
 export const ProductPage = ({ id }: Props) => {
   const { data: product, isLoading, isError } = useProduct(id);
 
-  if (!product || isError) {
-    return <div>Not found</div>
-  }
-
   if (isLoading) {
     return (
       <Container className="mt-10">
@@ -45,6 +41,11 @@ export const ProductPage = ({ id }: Props) => {
       </Container>
     );
   }
+
+  if (!product || isError) {
+    return <div>Not found</div>;
+  }
+
   return (
     <Container className="flex flex-col my-10">
       <Breadcrumbs
