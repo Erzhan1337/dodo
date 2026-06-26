@@ -6,16 +6,37 @@ import {
 } from "@/entities/cart/model/types";
 import { useSessionStore } from "@/entities/session/model/store";
 
+const CART_QUERY_KEY = ["cart"] as const;
+const ANONYMOUS_CART_QUERY_KEY = "anonymous";
+
+const getCartQueryKey = (userId: string | null | undefined) => [
+  ...CART_QUERY_KEY,
+  userId ?? ANONYMOUS_CART_QUERY_KEY,
+];
+
+const getCurrentUserId = () => useSessionStore.getState().user?.id ?? null;
+
+const setCurrentUserCartQueryData = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  userId: string | null,
+  cart: CartResponse,
+) => {
+  if (!userId || getCurrentUserId() !== userId) return;
+
+  queryClient.setQueryData(getCartQueryKey(userId), cart);
+};
+
 export const useCart = () => {
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const userId = useSessionStore((state) => state.user?.id);
 
   return useQuery<CartResponse>({
-    queryKey: ["cart"],
+    queryKey: getCartQueryKey(userId),
     queryFn: async () => {
       const { data } = await $api.get<CartResponse>("/cart");
       return data;
     },
-    enabled: isAuthenticated,
+    enabled: isAuthenticated && Boolean(userId),
   });
 };
 
@@ -24,10 +45,12 @@ export const useAddToCart = () => {
 
   return useMutation({
     mutationFn: async (values: CreateCartItemValues) => {
-      return $api.post<CartResponse>("/cart", values);
+      const userId = getCurrentUserId();
+      const { data } = await $api.post<CartResponse>("/cart", values);
+      return { cart: data, userId };
     },
-    onSuccess: (response) => {
-      queryClient.setQueryData(["cart"], response.data);
+    onSuccess: ({ cart, userId }) => {
+      setCurrentUserCartQueryData(queryClient, userId, cart);
     },
   });
 };
@@ -37,10 +60,14 @@ export const useUpdateItemQuantity = () => {
 
   return useMutation({
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
-      return $api.patch<CartResponse>("/cart/" + id, { quantity });
+      const userId = getCurrentUserId();
+      const { data } = await $api.patch<CartResponse>("/cart/" + id, {
+        quantity,
+      });
+      return { cart: data, userId };
     },
-    onSuccess: (response) => {
-      queryClient.setQueryData(["cart"], response.data);
+    onSuccess: ({ cart, userId }) => {
+      setCurrentUserCartQueryData(queryClient, userId, cart);
     },
   });
 };
@@ -50,10 +77,12 @@ export const useRemoveCartItem = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      return $api.delete<CartResponse>("/cart/" + id);
+      const userId = getCurrentUserId();
+      const { data } = await $api.delete<CartResponse>("/cart/" + id);
+      return { cart: data, userId };
     },
-    onSuccess: (response) => {
-      queryClient.setQueryData(["cart"], response.data);
+    onSuccess: ({ cart, userId }) => {
+      setCurrentUserCartQueryData(queryClient, userId, cart);
     },
   });
 };
