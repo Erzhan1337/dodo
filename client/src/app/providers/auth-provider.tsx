@@ -8,6 +8,10 @@ import {
 import { $api } from "@/shared/api";
 import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
+import {
+  EMPTY_CART_RESPONSE,
+  getCartQueryKey,
+} from "@/entities/cart/model/query-key";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
@@ -46,11 +50,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const clearSession = () => {
-      queryClient.removeQueries({ queryKey: ["cart"] });
+      const userId = useSessionStore.getState().user?.id;
+
+      if (userId) {
+        queryClient.removeQueries({
+          queryKey: getCartQueryKey(userId),
+          exact: true,
+        });
+      }
+
+      queryClient.setQueryData(getCartQueryKey(null), EMPTY_CART_RESPONSE);
       useSessionStore.setState({
         user: null,
         accessToken: null,
         isAuthenticated: false,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: getCartQueryKey(null),
+        exact: true,
       });
     };
 

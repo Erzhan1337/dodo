@@ -5,7 +5,6 @@ import { User2 } from "lucide-react";
 import Link from "next/link";
 import { RefObject, useState } from "react";
 import { useClickOutside } from "@/shared/hooks";
-import { useQueryClient } from "@tanstack/react-query";
 
 const options = [
   { label: "Настройки", href: "/profile" },
@@ -17,11 +16,9 @@ export const AuthButton = () => {
   const ref = useClickOutside(() => setOpen(false));
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const logout = useSessionStore((state) => state.logout);
-  const queryClient = useQueryClient();
   const handleLogout = () => {
     setOpen(false);
     logout();
-    queryClient.removeQueries({ queryKey: ["cart"] });
   };
 
   return (

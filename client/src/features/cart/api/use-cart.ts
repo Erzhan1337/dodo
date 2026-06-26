@@ -5,14 +5,7 @@ import {
   CreateCartItemValues,
 } from "@/entities/cart/model/types";
 import { useSessionStore } from "@/entities/session/model/store";
-import { CART_QUERY_KEY } from "@/entities/cart/model/query-key";
-
-const ANONYMOUS_CART_QUERY_KEY = "anonymous";
-
-const getCartQueryKey = (userId: string | null | undefined) => [
-  ...CART_QUERY_KEY,
-  userId ?? ANONYMOUS_CART_QUERY_KEY,
-];
+import { getCartQueryKey } from "@/entities/cart/model/query-key";
 
 const getCurrentUserId = () => useSessionStore.getState().user?.id ?? null;
 
