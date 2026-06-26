@@ -2,8 +2,12 @@ import { useState } from "react";
 import { Ingredient, Product } from "@/entities/product";
 
 export const useProductForm = (product: Product, ingredients: Ingredient[]) => {
-  const [size, setSizeState] = useState<number>(product.items[0].size);
-  const [type, setTypeState] = useState<number>(product.items[0].pizzaType);
+  const [size, setSizeState] = useState<number | undefined>(
+    product.items[0]?.size,
+  );
+  const [type, setTypeState] = useState<number | undefined>(
+    product.items[0]?.pizzaType,
+  );
 
   const [selectedIngredients, setSelectedIngredients] = useState<Set<string>>(
     new Set(),

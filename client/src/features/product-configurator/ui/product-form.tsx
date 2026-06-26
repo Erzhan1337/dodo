@@ -24,6 +24,7 @@ interface Props {
 
 export const ProductForm = ({ product, onSubmit, className }: Props) => {
   const { data: ingredients, isLoading } = useIngredients();
+  const hasProductItems = product.items.length > 0;
   const {
     size,
     type,
@@ -43,6 +44,8 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
   const { total } = totalPrice();
 
   const handleSubmit = () => {
+    if (!hasProductItems) return;
+
     if (!isAuth) {
       toast.error("Войдите, чтобы добавить товар");
       onSubmit?.();
@@ -65,7 +68,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
     );
   };
 
-  if (isLoading) return <div>Loading</div>;
+  if (isLoading && hasProductItems) return <div>Loading</div>;
 
   return (
     <div className={cn("flex flex-1 flex-col lg:flex-row", className)}>
@@ -88,45 +91,53 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
         <div>
           <h2 className="text-2xl font-semibold">{product.name}</h2>
         </div>
-        <div className="flex flex-col gap-3 mt-3">
-          <GroupVariants
-            items={PIZZA_SIZES.map((item) => ({
-              name: item.name,
-              value: item.value,
-              disabled: !product.items.some(
-                (pizza) => pizza.size === item.value,
-              ),
-            }))}
-            value={size}
-            onClick={(val) => setSize(val)}
-          />
-          <GroupVariants
-            items={PIZZA_TYPES.map((item) => ({
-              name: item.name,
-              value: item.value,
-              disabled: !product.items.some(
-                (pizza) =>
-                  pizza.size === size && pizza.pizzaType === item.value,
-              ),
-            }))}
-            value={type}
-            onClick={(val) => setType(val)}
-          />
-        </div>
-
-        <div className="mt-5">
-          <p className="text-lg font-semibold mb-2">Добавить по вкусу</p>
-          <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {ingredients?.map((ingredient) => (
-              <IngredientCard
-                key={ingredient.id}
-                ingredient={ingredient}
-                onClick={() => toggleIngredient(ingredient.id)}
-                active={selectedIngredients.has(ingredient.id)}
+        {hasProductItems ? (
+          <>
+            <div className="flex flex-col gap-3 mt-3">
+              <GroupVariants
+                items={PIZZA_SIZES.map((item) => ({
+                  name: item.name,
+                  value: item.value,
+                  disabled: !product.items.some(
+                    (pizza) => pizza.size === item.value,
+                  ),
+                }))}
+                value={size}
+                onClick={(val) => setSize(val)}
               />
-            ))}
+              <GroupVariants
+                items={PIZZA_TYPES.map((item) => ({
+                  name: item.name,
+                  value: item.value,
+                  disabled: !product.items.some(
+                    (pizza) =>
+                      pizza.size === size && pizza.pizzaType === item.value,
+                  ),
+                }))}
+                value={type}
+                onClick={(val) => setType(val)}
+              />
+            </div>
+
+            <div className="mt-5">
+              <p className="text-lg font-semibold mb-2">Добавить по вкусу</p>
+              <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                {ingredients?.map((ingredient) => (
+                  <IngredientCard
+                    key={ingredient.id}
+                    ingredient={ingredient}
+                    onClick={() => toggleIngredient(ingredient.id)}
+                    active={selectedIngredients.has(ingredient.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="mt-5 rounded-2xl bg-white p-5 text-center text-muted-foreground">
+            Этот продукт сейчас недоступен для заказа.
           </div>
-        </div>
+        )}
 
         <button
           onClick={handleSubmit}
@@ -136,7 +147,11 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
             (!isAvailable || isPending) && "opacity-50 cursor-not-allowed",
           )}
         >
-          {isPending ? "Добавляем..." : `Добавить в корзину за ${formatPrice(total)}`}
+          {!hasProductItems
+            ? "Нет в наличии"
+            : isPending
+              ? "Добавляем..."
+              : `Добавить в корзину за ${formatPrice(total)}`}
         </button>
       </div>
     </div>

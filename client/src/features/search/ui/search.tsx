@@ -88,33 +88,39 @@ export const SearchBar = () => {
               onAction={() => void refetch()}
             />
           ) : products && products.length > 0 ? (
-            products.map((product) => (
-              <Link
-                href={`/product/${product.id}`}
-                key={product.id}
-                scroll={false}
-              >
-                <div className="px-5 py-2 hover:bg-orange-50 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="relative size-9 shrink-0">
-                      <Image
-                        src={product.imageUrl}
-                        alt={product.name}
-                        fill
-                        sizes="36px"
-                        className="object-cover"
-                      />
+            products.map((product) => {
+              const minPrice = product.items[0]?.price;
+
+              return (
+                <Link
+                  href={`/product/${product.id}`}
+                  key={product.id}
+                  scroll={false}
+                >
+                  <div className="px-5 py-2 hover:bg-orange-50 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="relative size-9 shrink-0">
+                        <Image
+                          src={product.imageUrl}
+                          alt={product.name}
+                          fill
+                          sizes="36px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <span>{product.name}</span>
                     </div>
-                    <span>{product.name}</span>
+                    <div>
+                      <span className="font-bold">
+                        {minPrice != null
+                          ? formatPrice(minPrice)
+                          : "Нет в наличии"}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <span className="font-bold">
-                      {formatPrice(product.items[0].price)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           ) : (
             <div className="h-full flex items-center justify-center">
               <span>Ничего не найдено!</span>

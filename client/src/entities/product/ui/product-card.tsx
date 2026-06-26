@@ -12,6 +12,9 @@ interface Props {
 }
 
 export const ProductCard = memo(({ product }: Props) => {
+  const minPrice = product.items[0]?.price;
+  const isAvailable = minPrice != null;
+
   return (
     <div className="">
       <div className="h-50 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
@@ -33,18 +36,35 @@ export const ProductCard = memo(({ product }: Props) => {
         </p>
         <div className="mt-5 flex items-center justify-between">
           <p className="text-lg">
-            от <span className="font-bold">{formatPrice(product.items[0].price)}</span>
+            {isAvailable ? (
+              <>
+                от <span className="font-bold">{formatPrice(minPrice)}</span>
+              </>
+            ) : (
+              <span className="font-bold text-gray-400">Нет в наличии</span>
+            )}
           </p>
-          <Link href={`/product/${product.id}`} scroll={false}>
+          {isAvailable ? (
+            <Link href={`/product/${product.id}`} scroll={false}>
+              <Button
+                type="button"
+                variant="secondary"
+                className="flex items-center gap-1 px-2 text-primary font-bold rounded-xl shadow-md bg-[#FFFAF4] hover:scale-95 transition-transform duration-300"
+              >
+                <Plus className="size-4" />
+                Добавить
+              </Button>
+            </Link>
+          ) : (
             <Button
               type="button"
               variant="secondary"
+              disabled
               className="flex items-center gap-1 px-2 text-primary font-bold rounded-xl shadow-md bg-[#FFFAF4] hover:scale-95 transition-transform duration-300"
             >
-              <Plus className="size-4" />
-              Добавить
+              Нет в наличии
             </Button>
-          </Link>
+          )}
         </div>
       </div>
     </div>
