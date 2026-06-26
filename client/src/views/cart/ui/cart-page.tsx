@@ -1,4 +1,6 @@
 "use client";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   useCart,
   useRemoveCartItem,
@@ -9,11 +11,21 @@ import { formatPrice } from "@/shared/lib/format-price";
 import Link from "next/link";
 import { CartItem } from "@/features/cart/ui/cart-item";
 import { ArrowRight } from "lucide-react";
+import { useSessionStore } from "@/entities/session/model/store";
 
 export const CartPage = () => {
+  const router = useRouter();
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const { data: cart, isLoading } = useCart();
   const updateQuantity = useUpdateItemQuantity();
   const removeCartItem = useRemoveCartItem();
+
+  useEffect(() => {
+    if (_hasHydrated && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [_hasHydrated, isAuthenticated, router]);
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     updateQuantity.mutate({ id, quantity });
@@ -23,7 +35,7 @@ export const CartPage = () => {
     removeCartItem.mutate(id);
   };
 
-  if (isLoading) {
+  if (!_hasHydrated || !isAuthenticated || isLoading) {
     return (
       <Container className="mt-10">
         <div className="flex flex-col gap-4">
