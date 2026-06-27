@@ -24,7 +24,7 @@ export const AuthButton = () => {
 
   if (!_hasHydrated) {
     return (
-      <Skeleton className="h-7 w-16 rounded-md md:h-9 md:w-20 md:rounded-xl lg:h-11 lg:w-28 lg:rounded-2xl" />
+      <Skeleton className="h-7 w-16 md:h-9 md:w-20 lg:h-11 lg:w-28" />
     );
   }
 

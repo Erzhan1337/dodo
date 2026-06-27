@@ -46,11 +46,11 @@ export const ProductList = () => {
               <div className="h-44 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
                 <Skeleton className="w-36 h-36 md:w-54 md:h-54 rounded-full" />
               </div>
-              <Skeleton className="h-6 w-3/4 rounded-md mt-2" />
-              <Skeleton className="h-12 md:h-15 w-full rounded-md" />
+              <Skeleton className="h-6 w-3/4 mt-2" />
+              <Skeleton className="h-12 md:h-15 w-full" />
               <div className="flex items-center justify-between mt-1">
-                <Skeleton className="h-6 w-20 rounded-md" />
-                <Skeleton className="h-10 w-28 rounded-xl" />
+                <Skeleton className="h-6 w-20" />
+                <Skeleton className="h-10 w-28" />
               </div>
             </div>
           ))}

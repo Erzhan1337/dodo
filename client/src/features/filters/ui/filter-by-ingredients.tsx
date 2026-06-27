@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { useIngredients } from "@/entities/ingredient";
-import { FilterCheckbox } from "@/shared/ui";
+import { FilterCheckbox, Skeleton } from "@/shared/ui";
 
 interface Props {
   selectedIngs: Set<string>;
@@ -44,7 +44,7 @@ export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
       {isLoading && (
         <div className="mt-3 flex flex-col gap-2 h-46 w-full">
           {[1, 2, 3, 4, 5, 6].map((id) => (
-            <div className="w-full rounded-[8px] h-6 bg-zinc-200" key={id} />
+            <Skeleton className="h-6 w-full" key={id} />
           ))}
         </div>
       )}

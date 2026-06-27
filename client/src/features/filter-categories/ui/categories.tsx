@@ -35,7 +35,7 @@ export const Categories = ({ className }: Props) => {
         )}
       >
         {[...Array(6)].map((_, index) => (
-          <Skeleton key={index} className="h-10 w-24 rounded-xl" />
+          <Skeleton key={index} className="h-10 w-24" />
         ))}
       </div>
     );

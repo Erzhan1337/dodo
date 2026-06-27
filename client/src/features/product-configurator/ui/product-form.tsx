@@ -117,10 +117,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
               <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {isLoading
                   ? Array.from({ length: 6 }).map((_, index) => (
-                      <Skeleton
-                        key={index}
-                        className="h-28 w-full rounded-2xl"
-                      />
+                      <Skeleton key={index} className="h-28 w-full" />
                     ))
                   : ingredients.map((ingredient) => (
                       <IngredientCard
