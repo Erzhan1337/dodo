@@ -4,12 +4,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from '../auth/dto/register.dto';
 import { hash } from 'argon2';
 import { normalizeKzPhone } from '../auth/lib/phone';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 const safeUserSelect = {
   id: true,
   name: true,
   phone: true,
   email: true,
+  address: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.UserSelect;
@@ -67,6 +69,19 @@ export class UserService {
         phone: normalizeKzPhone(dto.phone),
         email: dto.email,
         password: await hash(dto.password),
+      },
+      select: safeUserSelect,
+    });
+  }
+
+  async updateProfile(userId: string, dto: UpdateProfileDto) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.name !== undefined ? { name: dto.name } : {}),
+        ...(dto.address !== undefined
+          ? { address: dto.address.trim() || null }
+          : {}),
       },
       select: safeUserSelect,
     });

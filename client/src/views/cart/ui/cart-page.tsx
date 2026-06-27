@@ -74,25 +74,23 @@ export const CartPage = () => {
 
               <div className="border-b border-gray-100 my-5" />
 
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full text-base font-bold h-14"
-              >
-                Оформить заказ
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </Button>
+              <Link href="/checkout" className="block">
+                <Button size="lg" className="w-full text-base font-bold h-14">
+                  Оформить заказ
+                  <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </div>
       <div className="block md:hidden mt-10 w-full text-white px-4">
-        <button
-          type="button"
-          className="bg-primary py-3 px-4 w-full rounded-xl cursor-pointer"
+        <Link
+          href="/checkout"
+          className="bg-primary py-3 px-4 w-full rounded-xl cursor-pointer block text-center"
         >
           {`Оформить заказ на ${formatPrice(cart.totalPrice)}`}
-        </button>
+        </Link>
       </div>
     </Container>
   );

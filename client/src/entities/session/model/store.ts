@@ -12,6 +12,7 @@ interface SessionState {
   isAuthenticated: boolean;
   _hasHydrated: boolean;
   setAuthData: (user: User, accessToken: string) => void;
+  updateUser: (user: User) => void;
   logout: () => void;
 }
 
@@ -25,6 +26,10 @@ export const useSessionStore = create<SessionState>()(
 
       setAuthData: (user, accessToken) => {
         set({ user, accessToken, isAuthenticated: true });
+      },
+
+      updateUser: (user) => {
+        set({ user });
       },
 
       logout: () => {

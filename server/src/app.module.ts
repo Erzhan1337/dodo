@@ -7,6 +7,7 @@ import { ProductModule } from './product/product.module';
 import { CategoriesModule } from './categories/categories.module';
 import { IngredientsModule } from './ingredients/ingredients.module';
 import { CartModule } from './cart/cart.module';
+import { OrderModule } from './order/order.module';
 import { HealthModule } from './health/health.module';
 
 @Module({
@@ -19,6 +20,7 @@ import { HealthModule } from './health/health.module';
     CategoriesModule,
     IngredientsModule,
     CartModule,
+    OrderModule,
     HealthModule,
   ],
 })
