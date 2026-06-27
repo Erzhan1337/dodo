@@ -42,6 +42,7 @@ import {
   AdminUpdateUserDto,
 } from './dto/admin-user.dto';
 import { OrderEventsService } from '../order/order-events.service';
+import { ReviewsService } from '../reviews/reviews.service';
 
 type AdminEntity = 'product' | 'category' | 'ingredient' | 'order' | 'user';
 
@@ -66,6 +67,7 @@ const adminProductInclude = {
 
 const adminOrderSelect = {
   id: true,
+  orderNumber: true,
   token: true,
   status: true,
   totalPrice: true,
@@ -124,6 +126,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly orderEventsService: OrderEventsService,
+    private readonly reviewsService: ReviewsService,
   ) {}
 
   async getDashboard() {
@@ -435,6 +438,7 @@ export class AdminService {
     await this.assertExists('order', orderId);
 
     await this.prisma.$transaction(async (tx) => {
+      await this.reviewsService.deleteReviewsForOrder(tx, orderId);
       await tx.orderItem.deleteMany({ where: { orderId } });
       await tx.order.delete({ where: { id: orderId } });
     });
@@ -742,12 +746,18 @@ export class AdminService {
   private getProductOrderBy(
     sortBy: AdminProductsSortBy,
     sortOrder: SortOrder,
-  ): Prisma.ProductOrderByWithRelationInput {
+  ): Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] {
     switch (sortBy) {
       case AdminProductsSortBy.NAME:
         return { name: sortOrder };
       case AdminProductsSortBy.CATEGORY:
         return { category: { name: sortOrder } };
+      case AdminProductsSortBy.RATING:
+        return [
+          { ratingAvg: sortOrder },
+          { ratingCount: sortOrder },
+          { createdAt: 'desc' },
+        ];
       case AdminProductsSortBy.UPDATED_AT:
         return { updatedAt: sortOrder };
       case AdminProductsSortBy.CREATED_AT:

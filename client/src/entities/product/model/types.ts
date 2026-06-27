@@ -21,6 +21,9 @@ export type Product = {
   imageUrl: string;
   categoryId: number;
   canBuildHalfAndHalf: boolean;
+  ratingAvg: number;
+  ratingSum: number;
+  ratingCount: number;
   ingredients: Ingredient[];
   items: ProductItem[];
 };

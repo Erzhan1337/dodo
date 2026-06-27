@@ -12,6 +12,7 @@ import type {
   AdminOrderDetails,
   AdminProduct,
   AdminProductPayload,
+  AdminReview,
   AdminUser,
   AdminUserPayload,
   PaginatedResponse,
@@ -27,6 +28,8 @@ export const adminKeys = {
   orders: (params: AdminListParams) =>
     [...adminKeys.root, "orders", params] as const,
   order: (id: string) => [...adminKeys.root, "order", id] as const,
+  reviews: (params: AdminListParams) =>
+    [...adminKeys.root, "reviews", params] as const,
   users: (params: AdminListParams) =>
     [...adminKeys.root, "users", params] as const,
   categories: (params: AdminListParams) =>
@@ -176,6 +179,36 @@ export const useDeleteAdminOrder = () => {
       toast.success("Заказ удалён");
       void queryClient.invalidateQueries({ queryKey: [...adminKeys.root, "orders"] });
       void queryClient.invalidateQueries({ queryKey: adminKeys.dashboard() });
+    },
+  });
+};
+
+export const useAdminReviews = (params: AdminListParams) => {
+  return useQuery({
+    queryKey: adminKeys.reviews(params),
+    queryFn: async ({ signal }): Promise<PaginatedResponse<AdminReview>> => {
+      const { data } = await $api.get("/admin/reviews", {
+        params: cleanParams(params),
+        signal,
+      });
+      return data;
+    },
+    placeholderData: keepPreviousData,
+  });
+};
+
+export const useDeleteAdminReview = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await $api.delete(`/admin/reviews/${id}`);
+      return id;
+    },
+    onSuccess: () => {
+      toast.success("Отзыв удалён");
+      void queryClient.invalidateQueries({ queryKey: [...adminKeys.root, "reviews"] });
+      void queryClient.invalidateQueries({ queryKey: [...adminKeys.root, "products"] });
+      void queryClient.invalidateQueries({ queryKey: ["pizzas"] });
     },
   });
 };

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   CalendarDays,
@@ -9,6 +9,7 @@ import {
   ClipboardList,
   MapPin,
   PackageCheck,
+  Star,
 } from "lucide-react";
 import {
   Breadcrumbs,
@@ -24,9 +25,12 @@ import {
   ORDER_STATUS_META,
   useRealtimeOrdersStatus,
   type Order,
+  type OrderItem,
 } from "@/entities/order";
 import { useOrders } from "@/entities/order/api/use-orders";
 import { useSessionStore } from "@/entities/session/model/store";
+import { RatingStars } from "@/entities/review";
+import { ReviewModal } from "@/features/reviews";
 
 const formatOrderDate = (value: string) =>
   new Intl.DateTimeFormat("ru-RU", {
@@ -37,7 +41,8 @@ const formatOrderDate = (value: string) =>
     minute: "2-digit",
   }).format(new Date(value));
 
-const getOrderNumber = (order: Order) => order.id.slice(-6).toUpperCase();
+const getOrderNumber = (order: Order) =>
+  String(order.orderNumber).padStart(6, "0");
 
 const getItemsLabel = (count: number) => {
   const mod10 = count % 10;
@@ -51,17 +56,21 @@ const getItemsLabel = (count: number) => {
   return `${count} товаров`;
 };
 
-const OrderCard = ({ order }: { order: Order }) => {
+const OrderCard = ({
+  order,
+  onReview,
+}: {
+  order: Order;
+  onReview: (item: OrderItem) => void;
+}) => {
   const status = ORDER_STATUS_META[order.status];
   const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const previewItems = order.items.slice(0, 3);
   const hiddenItemsCount = order.items.length - previewItems.length;
+  const canReview = order.status === "SUCCEEDED";
 
   return (
-    <Link
-      href={`/order/${order.token}`}
-      className="block rounded-[30px] bg-white p-5 shadow-lg transition-transform hover:-translate-y-0.5 md:p-6"
-    >
+    <article className="rounded-[30px] bg-white p-5 shadow-lg md:p-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2">
@@ -131,11 +140,61 @@ const OrderCard = ({ order }: { order: Order }) => {
         )}
       </div>
 
-      <div className="mt-5 flex items-center justify-end text-sm font-semibold text-primary">
-        Подробнее
-        <ChevronRight className="size-4" />
+      {canReview && (
+        <div className="mt-5 rounded-2xl border border-orange-100 bg-[#FFFDF9] p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-bold">
+            <Star className="size-4 fill-primary text-primary" />
+            Оцените заказанные товары
+          </div>
+          <div className="space-y-2">
+            {order.items.map((item) => {
+              const title = item.customName || item.productItem.product.name;
+              return (
+                <div
+                  key={item.id}
+                  className="flex flex-col gap-2 rounded-xl bg-white px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="min-w-0">
+                    <div className="font-semibold text-gray-800">{title}</div>
+                    {item.review ? (
+                      <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
+                        <RatingStars
+                          value={item.review.rating}
+                          iconClassName="size-3.5"
+                        />
+                        Оценено
+                      </div>
+                    ) : (
+                      <div className="mt-1 text-xs text-gray-400">
+                        Оценки пока нет
+                      </div>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant={item.review ? "outline" : "secondary"}
+                    size="sm"
+                    className="px-3 text-primary"
+                    onClick={() => onReview(item)}
+                  >
+                    {item.review ? "Изменить" : "Оценить"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className="mt-5 flex items-center justify-end">
+        <Button asChild variant="ghost" size="sm" className="gap-1 text-primary">
+          <Link href={`/order/${order.token}`}>
+            Подробнее
+            <ChevronRight className="size-4" />
+          </Link>
+        </Button>
       </div>
-    </Link>
+    </article>
   );
 };
 
@@ -155,6 +214,7 @@ const OrdersPageSkeleton = () => {
 
 export const OrdersPage = () => {
   const router = useRouter();
+  const [reviewItem, setReviewItem] = useState<OrderItem | null>(null);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const { data: orders, isLoading, isError, isFetching, refetch } = useOrders();
@@ -207,7 +267,7 @@ export const OrdersPage = () => {
       ) : orders && orders.length > 0 ? (
         <div className="flex flex-col gap-5">
           {orders.map((order) => (
-            <OrderCard key={order.id} order={order} />
+            <OrderCard key={order.id} order={order} onReview={setReviewItem} />
           ))}
         </div>
       ) : (
@@ -223,6 +283,11 @@ export const OrdersPage = () => {
           </Button>
         </div>
       )}
+      <ReviewModal
+        item={reviewItem}
+        isOpen={Boolean(reviewItem)}
+        onClose={() => setReviewItem(null)}
+      />
     </Container>
   );
 };

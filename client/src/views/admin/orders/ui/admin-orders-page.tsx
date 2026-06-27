@@ -34,6 +34,8 @@ const statusLabels: Record<OrderStatus, string> = {
   CANCELED: "Отменён",
 };
 
+const formatOrderNumber = (value: number) => String(value).padStart(6, "0");
+
 export const AdminOrdersPage = () => {
   const { params, setParams, setPage, setSort } = useAdminListState(
     "createdAt",
@@ -66,7 +68,9 @@ export const AdminOrdersPage = () => {
         header: "Заказ",
         cell: (order) => (
           <div>
-            <div className="font-semibold">#{order.id.slice(-6)}</div>
+            <div className="font-semibold">
+              #{formatOrderNumber(order.orderNumber)}
+            </div>
             <div className="text-xs text-muted-foreground">
               {order.token.slice(0, 8)}
             </div>
@@ -203,7 +207,9 @@ export const AdminOrdersPage = () => {
       <AdminPagination meta={ordersQuery.data?.meta} onPageChange={setPage} />
 
       <AdminModal
-        title={details ? `Заказ #${details.id.slice(-6)}` : "Заказ"}
+        title={
+          details ? `Заказ #${formatOrderNumber(details.orderNumber)}` : "Заказ"
+        }
         isOpen={Boolean(selectedOrderId)}
         onClose={() => setSelectedOrderId(undefined)}
         size="lg"

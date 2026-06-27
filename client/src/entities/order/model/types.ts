@@ -5,6 +5,7 @@ export interface OrderItemProductItem {
   size: number | null;
   pizzaType: number | null;
   product: {
+    id: string;
     name: string;
     imageUrl: string;
   };
@@ -62,10 +63,18 @@ export interface OrderItem {
   customDetails: OrderCustomPizzaDetails | null;
   productItem: OrderItemProductItem;
   ingredients: OrderIngredient[];
+  review: {
+    id: string;
+    rating: number;
+    comment: string | null;
+    createdAt: string;
+    updatedAt: string;
+  } | null;
 }
 
 export interface Order {
   id: string;
+  orderNumber: number;
   token: string;
   status: OrderStatus;
   totalPrice: number;

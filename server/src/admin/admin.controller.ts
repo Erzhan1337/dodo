@@ -36,11 +36,16 @@ import {
   AdminCreateUserDto,
   AdminUpdateUserDto,
 } from './dto/admin-user.dto';
+import { ReviewsService } from '../reviews/reviews.service';
+import { AdminReviewsQueryDto } from '../reviews/dto/reviews-query.dto';
 
 @Admin()
 @Controller('admin')
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly reviewsService: ReviewsService,
+  ) {}
 
   @Get('dashboard')
   getDashboard() {
@@ -101,6 +106,16 @@ export class AdminController {
   @Delete('orders/:id')
   deleteOrder(@CurrentUser('id') adminId: string, @Param('id') id: string) {
     return this.adminService.deleteOrder(adminId, id);
+  }
+
+  @Get('reviews')
+  getReviews(@Query() query: AdminReviewsQueryDto) {
+    return this.reviewsService.getAdminReviews(query);
+  }
+
+  @Delete('reviews/:id')
+  deleteReview(@CurrentUser('id') adminId: string, @Param('id') id: string) {
+    return this.reviewsService.deleteReviewAsAdmin(adminId, id);
   }
 
   @Get('users')

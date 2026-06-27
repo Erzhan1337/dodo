@@ -24,6 +24,7 @@ export type AdminListParams = {
   status?: OrderStatus;
   role?: UserRole;
   categoryId?: number;
+  rating?: number;
 };
 
 export type AdminCategory = {
@@ -62,6 +63,9 @@ export type AdminProduct = {
   description: string;
   imageUrl: string;
   canBuildHalfAndHalf: boolean;
+  ratingAvg: number;
+  ratingSum: number;
+  ratingCount: number;
   categoryId: number;
   category: AdminCategory;
   ingredients: AdminIngredient[];
@@ -84,6 +88,7 @@ export type AdminProductPayload = {
 
 export type AdminOrder = {
   id: string;
+  orderNumber: number;
   token: string;
   status: OrderStatus;
   totalPrice: number;
@@ -120,6 +125,26 @@ export type AdminOrderDetails = AdminOrder & {
     };
     ingredients: Array<{ id: string; name: string; price: number }>;
   }>;
+};
+
+export type AdminReview = {
+  id: string;
+  rating: number;
+  comment: string | null;
+  productId: string;
+  userId: string;
+  orderItemId: string;
+  createdAt: string;
+  updatedAt: string;
+  user: {
+    id: string;
+    name: string;
+  };
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string;
+  };
 };
 
 export type AdminUser = {

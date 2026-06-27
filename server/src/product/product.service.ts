@@ -32,6 +32,7 @@ export class ProductService {
     const limit = dto.limit || 6;
     const skip = (page - 1) * limit;
     const shouldSortByPrice = sort === SORT.ASC || sort === SORT.DESC;
+    const shouldSortByRating = sort === SORT.RATING || sort === undefined;
     const ingredientNames = ingredients
       ?.split(',')
       .map((name) => name.trim())
@@ -110,6 +111,13 @@ export class ProductService {
           },
         },
       },
+      orderBy: shouldSortByRating
+        ? [
+            { ratingAvg: 'desc' },
+            { ratingCount: 'desc' },
+            { createdAt: 'desc' },
+          ]
+        : [{ createdAt: 'desc' }],
       skip,
       take: limit,
     });

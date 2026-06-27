@@ -16,6 +16,7 @@ type OrderIdentity = {
 
 const orderResponseSelect = {
   id: true,
+  orderNumber: true,
   token: true,
   status: true,
   updatedAt: true,
@@ -38,10 +39,19 @@ const orderResponseSelect = {
           id: true,
           size: true,
           pizzaType: true,
-          product: { select: { name: true, imageUrl: true } },
+          product: { select: { id: true, name: true, imageUrl: true } },
         },
       },
       ingredients: { select: { id: true, name: true } },
+      review: {
+        select: {
+          id: true,
+          rating: true,
+          comment: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      },
     },
   },
 } satisfies Prisma.OrderSelect;

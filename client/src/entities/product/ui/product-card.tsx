@@ -6,6 +6,7 @@ import type { Product } from "@/entities/product/model/types";
 import { formatPrice } from "@/shared/lib/format-price";
 import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 import { memo } from "react";
+import { ProductRatingSummary } from "@/entities/review";
 
 interface Props {
   product: Product;
@@ -46,7 +47,15 @@ export const ProductCard = memo(({ product }: Props) => {
         </div>
       </div>
       <div className="mt-4">
-        <h3 className="font-bold text-xl">{product.name}</h3>
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <h3 className="font-bold text-xl">{product.name}</h3>
+          <ProductRatingSummary
+            ratingAvg={product.ratingAvg}
+            ratingCount={product.ratingCount}
+            className="mt-1"
+            compact
+          />
+        </div>
         <p className="text-sm text-gray-400 h-15 overflow-y-auto">
           {product.description}
         </p>

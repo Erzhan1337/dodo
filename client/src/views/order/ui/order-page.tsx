@@ -11,10 +11,12 @@ import {
   type Order,
 } from "@/entities/order";
 
+const formatOrderNumber = (value: number) => String(value).padStart(6, "0");
+
 export const OrderPage = ({ order: initialOrder }: { order: Order }) => {
   const order = useRealtimeOrderStatus(initialOrder);
   const status = ORDER_STATUS_META[order.status];
-  const orderNumber = order.id.slice(-6).toUpperCase();
+  const orderNumber = formatOrderNumber(order.orderNumber);
 
   return (
     <Container className="mt-10 max-w-3xl pb-20">

@@ -16,6 +16,7 @@ import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 import { IngredientGridSkeleton } from "@/features/product-configurator/ui/ingredient-grid-skeleton";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { ProductRatingSummary } from "@/entities/review";
 
 interface Props {
   product: Product;
@@ -116,6 +117,11 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
       <div className="w-full rounded-b-3xl bg-[#F4F1EE] px-4 py-5 sm:px-6 lg:w-[50%] lg:rounded-br-3xl lg:rounded-tl-none lg:rounded-tr-3xl lg:px-10">
         <div>
           <h2 className="text-xl font-semibold sm:text-2xl">{product.name}</h2>
+          <ProductRatingSummary
+            ratingAvg={product.ratingAvg}
+            ratingCount={product.ratingCount}
+            className="mt-1"
+          />
           <p className="mt-1 text-sm text-gray-600">
             {product.description}
           </p>

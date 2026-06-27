@@ -26,6 +26,7 @@ import type {
   AdminProductItem,
   AdminProductPayload,
 } from "@/features/admin/model/types";
+import { ProductRatingSummary } from "@/entities/review";
 import { useDebounce } from "@/shared/hooks";
 import { Button, Skeleton } from "@/shared/ui";
 
@@ -256,6 +257,17 @@ export const AdminProductsPage = () => {
             : product.minPrice === product.maxPrice
               ? formatMoney(product.minPrice)
               : `${formatMoney(product.minPrice)} - ${formatMoney(product.maxPrice ?? product.minPrice)}`,
+      },
+      {
+        id: "rating",
+        header: "Рейтинг",
+        sortKey: "rating",
+        cell: (product) => (
+          <ProductRatingSummary
+            ratingAvg={product.ratingAvg}
+            ratingCount={product.ratingCount}
+          />
+        ),
       },
       {
         id: "variants",

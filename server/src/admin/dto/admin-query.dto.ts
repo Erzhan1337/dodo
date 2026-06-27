@@ -41,6 +41,7 @@ export enum AdminProductsSortBy {
   NAME = 'name',
   CATEGORY = 'category',
   MIN_PRICE = 'minPrice',
+  RATING = 'rating',
   CREATED_AT = 'createdAt',
   UPDATED_AT = 'updatedAt',
 }
