@@ -20,7 +20,11 @@ import {
 } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import { formatPrice } from "@/shared/lib/format-price";
-import { ORDER_STATUS_META, type Order } from "@/entities/order";
+import {
+  ORDER_STATUS_META,
+  useRealtimeOrdersStatus,
+  type Order,
+} from "@/entities/order";
 import { useOrders } from "@/entities/order/api/use-orders";
 import { useSessionStore } from "@/entities/session/model/store";
 
@@ -154,6 +158,8 @@ export const OrdersPage = () => {
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const { data: orders, isLoading, isError, isFetching, refetch } = useOrders();
+
+  useRealtimeOrdersStatus(orders);
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {

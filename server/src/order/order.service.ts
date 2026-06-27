@@ -18,6 +18,7 @@ const orderResponseSelect = {
   id: true,
   token: true,
   status: true,
+  updatedAt: true,
   totalPrice: true,
   name: true,
   phone: true,

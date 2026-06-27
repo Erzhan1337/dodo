@@ -75,5 +75,6 @@ export interface Order {
   email: string | null;
   comment: string | null;
   createdAt: string;
+  updatedAt: string;
   items: OrderItem[];
 }

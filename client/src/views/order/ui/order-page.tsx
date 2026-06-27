@@ -1,13 +1,20 @@
+"use client";
+
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Breadcrumbs, Button, Container, Title } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import { formatPrice } from "@/shared/lib/format-price";
-import { ORDER_STATUS_META, type Order } from "@/entities/order";
+import {
+  ORDER_STATUS_META,
+  useRealtimeOrderStatus,
+  type Order,
+} from "@/entities/order";
 
-export const OrderPage = ({ order }: { order: Order }) => {
-const status = ORDER_STATUS_META[order.status];
-const orderNumber = order.id.slice(-6).toUpperCase();
+export const OrderPage = ({ order: initialOrder }: { order: Order }) => {
+  const order = useRealtimeOrderStatus(initialOrder);
+  const status = ORDER_STATUS_META[order.status];
+  const orderNumber = order.id.slice(-6).toUpperCase();
 
   return (
     <Container className="mt-10 max-w-3xl pb-20">

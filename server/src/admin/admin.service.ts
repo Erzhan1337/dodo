@@ -41,6 +41,7 @@ import {
   AdminCreateUserDto,
   AdminUpdateUserDto,
 } from './dto/admin-user.dto';
+import { OrderEventsService } from '../order/order-events.service';
 
 type AdminEntity = 'product' | 'category' | 'ingredient' | 'order' | 'user';
 
@@ -120,7 +121,10 @@ const adminUserSelect = {
 export class AdminService {
   private readonly logger = new Logger(AdminService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly orderEventsService: OrderEventsService,
+  ) {}
 
   async getDashboard() {
     const now = new Date();
@@ -422,6 +426,7 @@ export class AdminService {
       select: adminOrderSelect,
     });
 
+    this.orderEventsService.emitStatusChanged(order);
     this.logAction(adminId, `updated order status to ${dto.status}`, orderId);
     return order;
   }
