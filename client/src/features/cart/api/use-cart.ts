@@ -22,6 +22,10 @@ const setCurrentUserCartQueryData = (
 export const useCart = () => {
   const userId = useSessionStore((state) => state.user?.id);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
+  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const accessToken = useSessionStore((state) => state.accessToken);
+  const canFetchCart =
+    _hasHydrated && (!isAuthenticated || Boolean(accessToken));
 
   return useQuery<CartResponse>({
     queryKey: getCartQueryKey(userId),
@@ -29,7 +33,7 @@ export const useCart = () => {
       const { data } = await $api.get<CartResponse>("/cart");
       return data;
     },
-    enabled: _hasHydrated,
+    enabled: canFetchCart,
   });
 };
 
