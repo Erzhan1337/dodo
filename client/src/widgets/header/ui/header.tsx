@@ -2,8 +2,7 @@ import { Container } from "@/shared/ui";
 import Link from "next/link";
 import Image from "next/image";
 import { SearchBar } from "@/features/search";
-import { AuthButton } from "@/features/auth";
-import { CartButton } from "@/features/cart";
+import { HeaderActions } from "@/widgets/header/ui/header-actions";
 
 export const Header = () => {
   return (
@@ -35,10 +34,7 @@ export const Header = () => {
           <SearchBar />
         </div>
         {/*Login & Cart*/}
-        <div className="flex items-center gap-2 md:gap-3">
-          <AuthButton />
-          <CartButton />
-        </div>
+        <HeaderActions />
       </Container>
     </header>
   );

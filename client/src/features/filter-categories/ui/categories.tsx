@@ -1,45 +1,26 @@
 "use client";
 
-import { Category, useCategories } from "@/entities/category";
+import type { Category } from "@/entities/category";
 import { cn } from "@/shared/lib/utils";
 import { LazyMotion, m } from "framer-motion";
 import { useQueryParam } from "@/shared/hooks";
-import { Skeleton } from "@/shared/ui";
 import { loadMotionFeatures } from "@/shared/lib/motion";
 
 interface Props {
+  categories: Category[];
   className?: string;
 }
 
-export const Categories = ({ className }: Props) => {
-  const { data: categories, isLoading } = useCategories();
-
+export const Categories = ({ categories, className }: Props) => {
   const { value, setQueryParam } = useQueryParam("category");
 
   const activeCategory = Number(value) || 0;
 
-  const listCategories: Category[] = categories
-    ? [{ id: 0, name: "Все" }, ...categories]
-    : [];
+  const listCategories: Category[] = [{ id: 0, name: "Все" }, ...categories];
 
   const handleSelectCategory = (categoryId: number) => {
     setQueryParam(categoryId === 0 ? null : String(categoryId));
   };
-
-  if (isLoading) {
-    return (
-      <div
-        className={cn(
-          "w-[60%] flex md:inline-flex items-center gap-1 p-1 rounded-2xl bg-gray-50 shadow-md",
-          className,
-        )}
-      >
-        {[...Array(6)].map((_, index) => (
-          <Skeleton key={index} className="h-10 w-24" />
-        ))}
-      </div>
-    );
-  }
 
   return (
     <LazyMotion features={loadMotionFeatures}>

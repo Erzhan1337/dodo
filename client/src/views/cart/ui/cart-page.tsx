@@ -4,12 +4,13 @@ import {
   useRemoveCartItem,
   useUpdateItemQuantity,
 } from "@/features/cart/api/use-cart";
-import { Button, Breadcrumbs, Container, Skeleton, Title } from "@/shared/ui";
+import { Button, Breadcrumbs, Container, Title } from "@/shared/ui";
 import { formatPrice } from "@/shared/lib/format-price";
 import Link from "next/link";
 import { CartItem } from "@/features/cart/ui/cart-item";
 import { ArrowRight } from "lucide-react";
 import { useSessionStore } from "@/entities/session/model/store";
+import { CartPageSkeleton } from "@/views/cart/ui/cart-page-skeleton";
 
 export const CartPage = () => {
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
@@ -26,15 +27,7 @@ export const CartPage = () => {
   };
 
   if (!_hasHydrated || isLoading) {
-    return (
-      <Container className="mt-10">
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
-        </div>
-      </Container>
-    );
+    return <CartPageSkeleton />;
   }
 
   if (!cart || cart.items.length === 0) {

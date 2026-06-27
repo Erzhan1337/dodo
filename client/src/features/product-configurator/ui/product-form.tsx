@@ -3,7 +3,6 @@ import { useProductForm } from "@/features/product-configurator/model/use-produc
 import { Product } from "@/entities/product";
 import { cn } from "@/shared/lib/utils";
 import Image from "next/image";
-import { Skeleton } from "@/shared/ui";
 import { GroupVariants } from "@/features/product-configurator/ui/group-variants";
 import {
   PIZZA_SIZES,
@@ -14,6 +13,7 @@ import { useAddToCart } from "@/features/cart/api/use-cart";
 import toast from "react-hot-toast";
 import { formatPrice } from "@/shared/lib/format-price";
 import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
+import { IngredientGridSkeleton } from "@/features/product-configurator/ui/ingredient-grid-skeleton";
 
 interface Props {
   product: Product;
@@ -112,23 +112,23 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
               />
             </div>
 
-            <div className="mt-5">
-              <p className="text-lg font-semibold mb-2">Добавить по вкусу</p>
-              <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {isLoading
-                  ? Array.from({ length: 6 }).map((_, index) => (
-                      <Skeleton key={index} className="h-28 w-full" />
-                    ))
-                  : ingredients.map((ingredient) => (
-                      <IngredientCard
-                        key={ingredient.id}
-                        ingredient={ingredient}
-                        onClick={() => toggleIngredient(ingredient.id)}
-                        active={selectedIngredients.has(ingredient.id)}
-                      />
-                    ))}
+            {isLoading ? (
+              <IngredientGridSkeleton />
+            ) : (
+              <div className="mt-5">
+                <p className="text-lg font-semibold mb-2">Добавить по вкусу</p>
+                <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                  {ingredients.map((ingredient) => (
+                    <IngredientCard
+                      key={ingredient.id}
+                      ingredient={ingredient}
+                      onClick={() => toggleIngredient(ingredient.id)}
+                      active={selectedIngredients.has(ingredient.id)}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </>
         ) : (
           <div className="mt-5 rounded-2xl bg-white p-5 text-center text-muted-foreground">

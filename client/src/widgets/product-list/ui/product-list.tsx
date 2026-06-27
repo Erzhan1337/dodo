@@ -1,8 +1,10 @@
 "use client";
 import { Product, ProductCard, useProducts } from "@/entities/product";
 import { useQueryParam } from "@/shared/hooks";
-import { Pagination, QueryErrorState, Skeleton } from "@/shared/ui";
+import { Pagination, QueryErrorState } from "@/shared/ui";
 import { domAnimation, LazyMotion, m, type Variants } from "framer-motion";
+import { ProductListSkeleton } from "@/widgets/product-list/ui/product-list-skeleton";
+import { useEffect, useState } from "react";
 
 const listVariants: Variants = {
   hidden: {},
@@ -32,31 +34,20 @@ export const ProductList = () => {
   const meta = response?.meta;
   const { setQueryParam } = useQueryParam("page");
 
+  // Server-rendered (hydrated) cards must paint immediately. Only run the
+  // staggered reveal for client-side dataset changes (filter / sort / page),
+  // otherwise framer's `initial="hidden"` bakes opacity:0 into the SSR HTML
+  // and the list flashes empty until JS hydrates.
+  const [hasMounted, setHasMounted] = useState(false);
+  useEffect(() => setHasMounted(true), []);
+
   const onPageChange = (page: number) => {
     setQueryParam(String(page));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   if (isLoading) {
-    return (
-      <div className="flex-1">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {[1, 2, 3, 4, 5, 6].map((id) => (
-            <div key={id} className="flex flex-col gap-4">
-              <div className="h-44 md:h-70 bg-[#FFF7EE] flex items-center justify-center rounded-2xl">
-                <Skeleton className="w-36 h-36 md:w-54 md:h-54 rounded-full" />
-              </div>
-              <Skeleton className="h-6 w-3/4 mt-2" />
-              <Skeleton className="h-12 md:h-15 w-full" />
-              <div className="flex items-center justify-between mt-1">
-                <Skeleton className="h-6 w-20" />
-                <Skeleton className="h-10 w-28" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+    return <ProductListSkeleton />;
   }
 
   if (isError) {
@@ -90,7 +81,7 @@ export const ProductList = () => {
           key={productsAnimationKey}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
           variants={listVariants}
-          initial="hidden"
+          initial={hasMounted ? "hidden" : false}
           animate="visible"
         >
           {products.map((product: Product) => (

@@ -1,24 +1,28 @@
 "use client";
+import type { Ingredient } from "@/entities/ingredient";
 import { useMemo, useState } from "react";
-import { useIngredients } from "@/entities/ingredient";
-import { FilterCheckbox, Skeleton } from "@/shared/ui";
+import { FilterCheckbox } from "@/shared/ui";
 
 interface Props {
+  ingredients: Ingredient[];
   selectedIngs: Set<string>;
   onChange: (id: string) => void;
 }
 
-export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
+export const FilterByIngredients = ({
+  ingredients,
+  selectedIngs,
+  onChange,
+}: Props) => {
   const [showAll, setShowAll] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: ingredients = [], isLoading } = useIngredients();
   const items = useMemo(() => {
-    const filtered = ingredients.filter((ing: any) =>
+    const filtered = ingredients.filter((ing) =>
       ing.name
         .toLowerCase()
         .includes(searchTerm.toLowerCase().replace(/\s/g, "")),
     );
-    return filtered.toSorted((a: any, b: any) => {
+    return filtered.toSorted((a, b) => {
       const isASelected = selectedIngs.has(a.name);
       const isBSelected = selectedIngs.has(b.name);
       if (isASelected === isBSelected) return 0;
@@ -41,16 +45,9 @@ export const FilterByIngredients = ({ selectedIngs, onChange }: Props) => {
           />
         </div>
       )}
-      {isLoading && (
-        <div className="mt-3 flex flex-col gap-2 h-46 w-full">
-          {[1, 2, 3, 4, 5, 6].map((id) => (
-            <Skeleton className="h-6 w-full" key={id} />
-          ))}
-        </div>
-      )}
       <div className="mt-3 flex flex-col gap-2 h-46 max-h-46 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {visibleItems.length > 0 &&
-          visibleItems.map((ingredient: any) => (
+          visibleItems.map((ingredient) => (
             <FilterCheckbox
               key={ingredient.id}
               text={ingredient.name}

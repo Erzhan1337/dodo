@@ -4,9 +4,11 @@ import { Container } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 
 import { Categories } from "@/features/filter-categories";
+import { useCategories } from "@/entities/category";
 
 import { SortPopup } from "@/features/sort-products";
 import { useEffect, useState } from "react";
+import { TopBarSkeleton } from "@/widgets/topbar/ui/top-bar-skeleton";
 
 interface Props {
   className?: string;
@@ -14,6 +16,8 @@ interface Props {
 
 const TopBar = ({ className }: Props) => {
   const [isScroll, setIsScroll] = useState(false);
+  const { data: categories = [], isLoading: isCategoriesLoading } =
+    useCategories();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +32,11 @@ const TopBar = ({ className }: Props) => {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  if (isCategoriesLoading) {
+    return <TopBarSkeleton className={className} isScroll={isScroll} />;
+  }
+
   return (
     <div
       className={cn(
@@ -39,7 +48,10 @@ const TopBar = ({ className }: Props) => {
       )}
     >
       <Container className="flex items-center justify-between">
-        <Categories className={cn(isScroll && "bg-transparent shadow-none")} />
+        <Categories
+          categories={categories}
+          className={cn(isScroll && "bg-transparent shadow-none")}
+        />
 
         <SortPopup className={cn(isScroll && "bg-transparent shadow-none")} />
       </Container>
