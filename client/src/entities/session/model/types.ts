@@ -4,4 +4,5 @@ export type User = {
   phone: string;
   name: string;
   address?: string | null;
+  role: "CUSTOMER" | "ADMIN";
 };

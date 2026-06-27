@@ -15,6 +15,7 @@ model User {
   password     String
   address      String?
   refreshToken String? @map("refresh_token")
+  role         UserRole @default(CUSTOMER)
 
   cart   Cart?
   orders Order[]
@@ -187,4 +188,9 @@ enum STATUS {
   PENDING
   SUCCEEDED
   CANCELED
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
 }

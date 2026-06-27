@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { hash } from 'argon2';
 
 const ALLOW_DESTRUCTIVE_SEED = 'ALLOW_DESTRUCTIVE_SEED';
 const ALLOW_NON_LOCAL_DESTRUCTIVE_SEED = 'ALLOW_NON_LOCAL_DESTRUCTIVE_SEED';
@@ -629,6 +630,16 @@ async function main() {
           },
         ],
       },
+    },
+  });
+
+  await prisma.user.create({
+    data: {
+      name: process.env.SEED_ADMIN_NAME || 'Admin',
+      phone: process.env.SEED_ADMIN_PHONE || '+77770000000',
+      email: process.env.SEED_ADMIN_EMAIL || 'admin@404pizza.local',
+      password: await hash(process.env.SEED_ADMIN_PASSWORD || 'admin12345'),
+      role: 'ADMIN',
     },
   });
 }

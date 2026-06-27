@@ -66,7 +66,7 @@ export const useFilters = () => {
     params.delete("page");
 
     router.push(`?${params.toString()}`, { scroll: false });
-  }, [searchParams, selectedIngredients, pricesRange]);
+  }, [searchParams, selectedIngredients, pricesRange, router]);
 
   return {
     pricesRange,

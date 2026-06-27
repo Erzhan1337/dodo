@@ -91,7 +91,7 @@ export class AuthService {
     let data: AuthTokenPayload;
     try {
       data = await this.verifyRefreshToken(refreshToken);
-    } catch (e) {
+    } catch {
       throw new UnauthorizedException('Invalid refresh token');
     }
     const user = await this.userService.getUserWithRefreshTokenById(data.id);
@@ -173,7 +173,11 @@ export class AuthService {
   }
 
   private sanitizeUser<T extends SensitiveUserFields>(user: T) {
-    const { password, refreshToken, ...userWithoutSensitiveData } = user;
+    const {
+      password: _password,
+      refreshToken: _refreshToken,
+      ...userWithoutSensitiveData
+    } = user;
     return userWithoutSensitiveData;
   }
 

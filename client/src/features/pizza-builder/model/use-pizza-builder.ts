@@ -50,6 +50,10 @@ const INGREDIENT_WEIGHT_BY_SIZE: Record<number, number> = {
   35: 48,
 };
 
+const EMPTY_PRODUCTS: Product[] = [];
+const EMPTY_INGREDIENTS: Ingredient[] = [];
+const EMPTY_PRODUCT_ITEMS: ProductItem[] = [];
+
 const getPlacementRatio = (placement: CustomPizzaPlacement) =>
   placement === "whole" ? 1 : 0.5;
 
@@ -185,8 +189,8 @@ export const usePizzaBuilder = () => {
     },
   });
 
-  const products = data?.products ?? [];
-  const ingredients = data?.ingredients ?? [];
+  const products = data?.products ?? EMPTY_PRODUCTS;
+  const ingredients = data?.ingredients ?? EMPTY_INGREDIENTS;
   const halfAndHalfProducts = useMemo(
     () => products.filter(canProductUseHalfAndHalf),
     [products],
@@ -237,7 +241,7 @@ export const usePizzaBuilder = () => {
 
   const baseProduct = products.find((product) => product.id === baseProductId);
   const rightProduct = products.find((product) => product.id === rightProductId);
-  const availableItems = baseProduct?.items ?? [];
+  const availableItems = baseProduct?.items ?? EMPTY_PRODUCT_ITEMS;
   const halfAndHalfPairs = useMemo(
     () =>
       format === "halves"

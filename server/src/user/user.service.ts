@@ -12,6 +12,7 @@ const safeUserSelect = {
   phone: true,
   email: true,
   address: true,
+  role: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.UserSelect;
