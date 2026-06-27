@@ -1,6 +1,6 @@
 "use client";
 import { useSessionStore } from "@/entities/session/model/store";
-import { Button } from "@/shared/ui";
+import { Button, Skeleton } from "@/shared/ui";
 import { User2 } from "lucide-react";
 import Link from "next/link";
 import { RefObject, useState } from "react";
@@ -15,11 +15,18 @@ export const AuthButton = () => {
   const [open, setOpen] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const logout = useSessionStore((state) => state.logout);
   const handleLogout = () => {
     setOpen(false);
     logout();
   };
+
+  if (!_hasHydrated) {
+    return (
+      <Skeleton className="h-7 w-16 rounded-md md:h-9 md:w-20 md:rounded-xl lg:h-11 lg:w-28 lg:rounded-2xl" />
+    );
+  }
 
   return (
     <div>

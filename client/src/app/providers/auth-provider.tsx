@@ -1,12 +1,11 @@
 "use client";
-import React, { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect } from "react";
 import {
   useSessionStore,
   AUTH_CHANNEL,
   AUTH_LOGOUT_EVENT,
 } from "@/entities/session/model/store";
 import { $api } from "@/shared/api";
-import Image from "next/image";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   EMPTY_CART_RESPONSE,
@@ -20,29 +19,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = useSessionStore((state) => state.logout);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const accessToken = useSessionStore((state) => state.accessToken);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
       if (!_hasHydrated) return;
-      if (!isAuthenticated) {
-        setIsLoading(false);
-        return;
-      }
+      if (!isAuthenticated) return;
 
-      // If we already have the token in memory (e.g. just logged in), skip refresh
-      if (accessToken) {
-        setIsLoading(false);
-        return;
-      }
+      if (accessToken) return;
 
       try {
         const { data } = await $api.post("auth/login/access-token");
         setAuthData(data.user, data.accessToken);
       } catch {
         logout();
-      } finally {
-        setIsLoading(false);
       }
     };
     void checkAuth();
@@ -84,23 +73,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       window.removeEventListener(AUTH_LOGOUT_EVENT, clearSession);
     };
   }, [queryClient]);
-
-  if (isLoading || !_hasHydrated) {
-    return (
-      <div className="w-full h-screen flex items-center justify-center">
-        <div className="relative size-10">
-          <Image
-            src="https://res.cloudinary.com/dgtya5crt/image/upload/v1767594112/%D0%BA%D0%BE%D0%BB%D0%B1%D0%B0%D1%81%D0%BA%D0%B8_%D0%B1%D0%B0%D1%80%D0%B1%D0%B5%D0%BA%D1%8E_o8so4w.avif"
-            alt="loader"
-            fill
-            sizes="40px"
-            priority
-            className="object-contain animate-spin"
-          />
-        </div>
-      </div>
-    );
-  }
 
   return <>{children}</>;
 };
