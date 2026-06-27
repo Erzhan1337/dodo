@@ -22,7 +22,7 @@ interface Props {
 }
 
 export const ProductForm = ({ product, onSubmit, className }: Props) => {
-  const { data: ingredients, isLoading } = useIngredients();
+  const { data: ingredients = [], isLoading } = useIngredients();
   const hasProductItems = product.items.length > 0;
   const {
     size,
@@ -35,7 +35,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
     currentImage,
     totalPrice,
     currentItemId,
-  } = useProductForm(product, ingredients || []);
+  } = useProductForm(product, ingredients);
 
   const { mutate: addToCart, isPending } = useAddToCart();
 
@@ -60,8 +60,6 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
     );
   };
 
-  if (isLoading && hasProductItems) return <div>Loading</div>;
-
   return (
     <div className={cn("flex flex-1 flex-col lg:flex-row", className)}>
       <div className="w-full lg:w-[50%] flex items-center justify-center bg-white lg:rounded-tl-3xl lg:rounded-bl-3xl">
@@ -82,6 +80,9 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
       <div className="bg-[#F4F1EE] w-full lg:w-[50%] lg:rounded-tr-3xl lg:rounded-br-3xl py-5 px-10">
         <div>
           <h2 className="text-2xl font-semibold">{product.name}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {product.description}
+          </p>
         </div>
         {hasProductItems ? (
           <>
@@ -114,14 +115,21 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
             <div className="mt-5">
               <p className="text-lg font-semibold mb-2">Добавить по вкусу</p>
               <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                {ingredients?.map((ingredient) => (
-                  <IngredientCard
-                    key={ingredient.id}
-                    ingredient={ingredient}
-                    onClick={() => toggleIngredient(ingredient.id)}
-                    active={selectedIngredients.has(ingredient.id)}
-                  />
-                ))}
+                {isLoading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <Skeleton
+                        key={index}
+                        className="h-28 w-full rounded-2xl"
+                      />
+                    ))
+                  : ingredients.map((ingredient) => (
+                      <IngredientCard
+                        key={ingredient.id}
+                        ingredient={ingredient}
+                        onClick={() => toggleIngredient(ingredient.id)}
+                        active={selectedIngredients.has(ingredient.id)}
+                      />
+                    ))}
               </div>
             </div>
           </>
