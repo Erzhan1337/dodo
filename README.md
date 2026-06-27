@@ -1,430 +1,402 @@
-<div align="center">
+# 404 Pizza
 
-# 🍕 Next Pizza
+Full-stack приложение для онлайн-заказа пиццы: каталог, фильтры, карточка товара, конструктор собственной пиццы, корзина, checkout, личный кабинет, история заказов, realtime-статусы и админ-панель для управления магазином.
 
-### Fullstack Pizza Delivery Service Clone
+Проект состоит из двух независимых частей:
 
-[![Status](https://img.shields.io/badge/Status-In%20Development-yellow?style=for-the-badge)](https://github.com/erzhan1337/dodo)
-[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs)](https://nestjs.com/)
+- `client` - Next.js приложение на App Router.
+- `server` - NestJS API с Prisma и PostgreSQL.
 
-[Live Demo](https://dodo-six-tau.vercel.app) · [Report Bug](https://github.com/erzhan1337/dodo/issues) · [Request Feature](https://github.com/erzhan1337/dodo/issues)
+## Содержание
 
-</div>
+- [Возможности](#возможности)
+- [Технологии](#технологии)
+- [Архитектура](#архитектура)
+- [Быстрый старт](#быстрый-старт)
+- [Переменные окружения](#переменные-окружения)
+- [Скрипты](#скрипты)
+- [Маршруты клиента](#маршруты-клиента)
+- [API](#api)
+- [Realtime-статусы заказов](#realtime-статусы-заказов)
 
----
+## Возможности
 
----
+- Каталог товаров с категориями, поиском, пагинацией, сортировкой и фильтрами.
+- Фильтрация по цене, категории и ингредиентам.
+- Карточка товара как отдельная страница и как модальное окно через intercepting routes Next.js.
+- Конструктор пиццы:
+  - выбор базовой пиццы;
+  - размер и тип теста;
+  - соус, сыр, нарезка и запекание;
+  - дополнительные ингредиенты;
+  - удаление базовых ингредиентов;
+  - режим "две половинки";
+  - пересчёт цены, веса и состава в интерфейсе.
+- Корзина для авторизованных пользователей и гостей.
+- Гостевая корзина хранится через cookie-токен и сливается с аккаунтом при входе или регистрации.
+- Оформление заказа для гостя или авторизованного пользователя.
+- Страница заказа с realtime-обновлением статуса через Socket.IO.
+- Личный кабинет с профилем, адресом и историей заказов.
+- JWT-аутентификация с access token на клиенте и refresh token в httpOnly cookie.
+- Админ-панель:
+  - dashboard с выручкой, заказами, пользователями и топом товаров;
+  - CRUD товаров, категорий, ингредиентов и пользователей;
+  - просмотр, фильтрация, сортировка, смена статуса и удаление заказов;
+  - роли `CUSTOMER` и `ADMIN`.
+- Skeleton/loading-состояния и адаптивный интерфейс для mobile/tablet/desktop.
 
-## 🎯 About The Project
-
-**Next Pizza** is a modern, full-stack web application that replicates the core functionality of popular pizza delivery services. Built with cutting-edge technologies, it features a microservice-based monorepo architecture, complex cart logic, real-time product customization, and robust authentication system.
-
-### Why This Project?
-
-- 🎓 **Educational**: Demonstrates modern full-stack development practices
-- 🏗️ **Production-Ready**: Built with scalability and maintainability in mind
-- 🔧 **Comprehensive**: Covers authentication, state management, database design, and API development
-- 🎨 **Beautiful UI**: Responsive design with smooth animations and intuitive UX
-
----
-
-
-> 💡 **Note**: Replace placeholder images with actual screenshots from your project
-
----
-
-## 🛠 Tech Stack
-
-<div align="center">
+## Технологии
 
 ### Frontend
 
-[![Next.js](https://img.shields.io/badge/Next.js_14-000000?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![React Query](https://img.shields.io/badge/React_Query-FF4154?style=for-the-badge&logo=react-query&logoColor=white)](https://tanstack.com/query)
-[![Zustand](https://img.shields.io/badge/Zustand-443E38?style=for-the-badge)](https://github.com/pmndrs/zustand)
+- Next.js 16, React 19, TypeScript
+- Tailwind CSS 4
+- TanStack React Query
+- Zustand
+- React Hook Form, Zod
+- Axios
+- Socket.IO Client
+- Framer Motion
+- Recharts
+- Lucide React
 
 ### Backend
 
-[![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)](https://nestjs.com/)
-[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![JWT](https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=json-web-tokens&logoColor=white)](https://jwt.io/)
-[![Passport](https://img.shields.io/badge/Passport-34E27A?style=for-the-badge&logo=passport&logoColor=white)](http://www.passportjs.org/)
+- NestJS 11, TypeScript
+- PostgreSQL 16
+- Prisma ORM
+- JWT access/refresh authentication
+- Passport JWT
+- Argon2
+- class-validator / class-transformer
+- Socket.IO WebSocket gateway
+- Docker Compose для локальной БД
 
-</div>
+## Архитектура
 
-### 📦 Detailed Stack
-
-<table>
-<tr>
-<td width="50%" valign="top">
-
-#### **Frontend (Client)**
-
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: TailwindCSS
-- **UI Components**: Shadcn/ui + Radix UI
-- **State Management**: Zustand
-- **Data Fetching**: React Query (TanStack Query)
-- **Form Handling**: React Hook Form
-- **Validation**: Zod
-- **Icons**: Lucide React
-
-</td>
-<td width="50%" valign="top">
-
-#### **Backend (Server)**
-
-- **Framework**: NestJS
-- **Language**: TypeScript
-- **Database**: PostgreSQL (Neon/Railway)
-- **ORM**: Prisma
-- **Authentication**: Passport.js
-- **Token Strategy**: JWT (Access + Refresh)
-- **Validation**: class-validator, class-transformer
-- **API Documentation**: Swagger (planned)
-
-</td>
-</tr>
-</table>
-
----
-
-## ✨ Key Features
-
-<table>
-<tr>
-<td width="50%">
-
-### 🎨 User Experience
-
-- ✅ **Product Customization**
-  - Multiple crust types (thin/traditional)
-  - Size selection (S/M/L)
-  - Custom ingredient selection
-  - Real-time price updates
-
-- ✅ **Smart Shopping Cart**
-  - Automatic price calculation
-  - Item quantity management
-  - Persistent cart state
-  - Summary with totals
-
-- ✅ **Advanced Filtering**
-  - Live search functionality
-  - Price range filters
-  - Ingredient-based filtering
-  - Category navigation
-
-</td>
-<td width="50%">
-
-### 🔧 Technical Features
-
-- ✅ **Authentication & Security**
-  - JWT-based authentication
-  - Refresh token rotation
-  - Protected routes
-  - HTTP-only cookies
-
-- ✅ **Data Validation**
-  - Client-side validation (Zod)
-  - Server-side validation (DTO)
-  - Type-safe API contracts
-
-- ✅ **Performance**
-  - Server-side rendering (SSR)
-  - Optimistic UI updates
-  - Image optimization
-  - Code splitting
-
-</td>
-</tr>
-</table>
-
-### 📱 Additional Features
-
-- 🌐 Fully responsive design (mobile, tablet, desktop)
-- 🎭 Smooth animations and transitions
-- ♿ Accessibility-focused components
-- 🚀 Fast page loads with Next.js optimizations
-- 🔄 Real-time data synchronization
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-Before you begin, ensure you have the following installed:
-
-```bash
-Node.js >= 18.x
-npm >= 9.x or yarn >= 1.22.x
-PostgreSQL >= 14.x
+```txt
+dodo/
+|-- client/                         # Next.js приложение
+|   |-- src/app/                    # App Router, layouts, pages, parallel/intercepting routes
+|   |-- src/entities/               # Бизнес-сущности: product, cart, order, session, category
+|   |-- src/features/               # Фичи: auth, filters, cart, checkout, admin, pizza-builder
+|   |-- src/shared/                 # UI-kit, api instance, hooks, libs
+|   |-- src/views/                  # Крупные страницы и layout-композиции
+|   `-- src/widgets/                # Header, topbar, product-list, product-modal, filters
+|
+`-- server/                         # NestJS API
+    |-- src/admin/                  # Админ API и dashboard
+    |-- src/auth/                   # Auth, JWT strategy, guards, decorators
+    |-- src/cart/                   # Корзина пользователя и гостя
+    |-- src/categories/             # Категории
+    |-- src/health/                 # Healthcheck
+    |-- src/ingredients/            # Ингредиенты
+    |-- src/order/                  # Заказы и WebSocket-события
+    |-- src/prisma/                 # Prisma service/module
+    |-- src/product/                # Каталог и карточка товара
+    |-- src/user/                   # Профиль пользователя
+    `-- prisma/                     # Schema, migrations, seed
 ```
 
-### Installation
+### Основные сущности БД
 
-Follow these steps to get your development environment running:
+- `User` - пользователь, профиль, роль, refresh token.
+- `Category` - категория товаров.
+- `Product` - пицца или продукт каталога.
+- `ProductItem` - конкретный вариант продукта: размер, тип теста, цена.
+- `Ingredient` - ингредиент с ценой и изображением.
+- `Cart` / `CartItem` - корзина пользователя или гостя.
+- `Order` / `OrderItem` - заказ, состав, получатель и статус.
 
-#### 1️⃣ Clone the Repository
+## Быстрый старт
+
+### Требования
+
+- Node.js 20+
+- npm для `client`
+- Yarn 1.x для `server`
+- Docker и Docker Compose для локального PostgreSQL
+
+### 1. Установка проекта
 
 ```bash
 git clone https://github.com/erzhan1337/dodo.git
 cd dodo
 ```
 
-#### 2️⃣ Backend Setup (Server)
+### 2. Запуск backend
 
 ```bash
-# Navigate to server directory
 cd server
-
-# Install dependencies
-yarn install
-# or
-npm install
-
-# Set up environment variables
 cp .env.example .env
-# Edit .env with your configuration
-
-# Run database migrations
+yarn install
+docker compose up -d
 npx prisma migrate dev
-
-# Seed the database with sample data
-npx prisma db seed
-
-# Start the development server
+ALLOW_DESTRUCTIVE_SEED=true npx prisma db seed
 yarn start:dev
-# or
-npm run start:dev
 ```
 
-The backend server will start on `http://localhost:4000`
+API будет доступен на:
 
-#### 3️⃣ Frontend Setup (Client)
+```txt
+http://localhost:4000
+```
 
-Open a new terminal window:
+Проверка healthcheck:
 
 ```bash
-# Navigate to client directory
+curl http://localhost:4000/health
+```
+
+Seed создаёт демо-данные, товары с изображениями и администратора:
+
+```txt
+phone: +77770000000
+email: admin@404pizza.local
+password: admin12345
+```
+
+Важно: seed очищает таблицы перед заполнением. Для защиты от случайного запуска требуется флаг `ALLOW_DESTRUCTIVE_SEED=true`. Для production-like окружений seed заблокирован.
+
+### 3. Запуск frontend
+
+В отдельном терминале:
+
+```bash
 cd client
-
-# Install dependencies
+cp .env.example .env
 npm install
-# or
-yarn install
-# or
-bun install
-
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your configuration
-
-# Start the development server
 npm run dev
-# or
-yarn dev
 ```
 
-The frontend application will start on `http://localhost:3000`
+Клиент будет доступен на:
 
-#### 4️⃣ Access the Application
-
-Open your browser and navigate to:
-- **Frontend**: [http://localhost:3000](http://localhost:3000)
-- **Backend API**: [http://localhost:4000/api](http://localhost:4000/api)
-
----
-
-## 📁 Project Structure
-
-```
-dodo/
-│
-├── client/                     # Frontend Application (Next.js)
-│   ├── public/                 # Static assets
-│   ├── src/
-│   │   ├── app/                # App Router pages
-│   │   │   ├── (auth)/         # Auth-related pages
-│   │   │   ├── (root)/         # Main application pages
-│   │   │   └── api/            # API routes
-│   │   ├── components/         # React components
-│   │   │   ├── ui/             # UI primitives (Shadcn)
-│   │   │   └── shared/         # Shared components
-│   │   ├── features/           # Feature-based modules
-│   │   │   ├── cart/           # Shopping cart logic
-│   │   │   ├── filters/        # Product filtering
-│   │   │   └── products/       # Product management
-│   │   ├── lib/                # Utility functions
-│   │   ├── hooks/              # Custom React hooks
-│   │   ├── store/              # Zustand stores
-│   │   └── types/              # TypeScript types
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── server/                     # Backend Application (NestJS)
-│   ├── prisma/                 # Database schema & migrations
-│   │   ├── schema.prisma       # Prisma schema
-│   │   ├── migrations/         # Migration files
-│   │   └── seed.ts             # Database seeding
-│   ├── src/
-│   │   ├── auth/               # Authentication module
-│   │   │   ├── dto/            # Data Transfer Objects
-│   │   │   ├── guards/         # Auth guards
-│   │   │   └── strategies/     # Passport strategies
-│   │   ├── cart/               # Shopping cart module
-│   │   ├── products/           # Products module
-│   │   ├── users/              # Users module
-│   │   ├── common/             # Shared utilities
-│   │   └── main.ts             # Application entry point
-│   ├── package.json
-│   └── tsconfig.json
-│
-├── .gitignore
-├── LICENSE
-└── README.md
+```txt
+http://localhost:3000
 ```
 
----
+## Переменные окружения
 
-## 🔐 Environment Variables
-
-### Backend (server/.env)
+### `client/.env`
 
 ```env
-# Server Configuration
-PORT=4000
-NODE_ENV=development
+NEXT_PUBLIC_SERVER_URL="http://localhost:4000"
+```
 
-# Database
-DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE?schema=public"
+### `server/.env`
 
-# JWT Configuration
-JWT_SECRET="your-super-secret-jwt-key-change-in-production"
-JWT_ACCESS_EXPIRATION="15m"
-JWT_REFRESH_EXPIRATION="7d"
+```env
+JWT_ACCESS_SECRET="change-me-access-secret"
+JWT_REFRESH_SECRET="change-me-refresh-secret"
 
-# CORS
+POSTGRES_USER="dodo"
+POSTGRES_PASSWORD="dodo"
+POSTGRES_DB="dodo"
+POSTGRES_PORT="5433"
+DATABASE_URL="postgresql://dodo:dodo@localhost:5433/dodo?schema=public"
+
 CLIENT_URL="http://localhost:3000"
-SERVER_DOMAIN="localhost"
-
-# Production Flag
 PRODUCTION="false"
 ```
 
-### Frontend (client/.env.local)
+Для production-cookie дополнительно нужен домен сервера:
 
 ```env
-# API Configuration
-NEXT_PUBLIC_SERVER_URL="http://localhost:4000"
-NEXT_PUBLIC_API_URL="http://localhost:4000/api"
-
-# Optional: Analytics, etc.
-# NEXT_PUBLIC_GA_ID="G-XXXXXXXXXX"
+SERVER_DOMAIN="example.com"
+PRODUCTION="true"
 ```
 
-> ⚠️ **Security Note**: Never commit `.env` files to version control. Use `.env.example` as a template.
+Если меняете `POSTGRES_PORT`, синхронно обновите порт в `DATABASE_URL`.
 
----
+## Скрипты
 
-## 📚 API Documentation
+### Client
 
-### Authentication Endpoints
+```bash
+npm run dev      # dev server Next.js
+npm run build    # production build
+npm run start    # запуск production build
+npm run lint     # ESLint
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/auth/register` | Register new user | ❌ |
-| POST | `/auth/login` | Login user | ❌ |
-| POST | `/auth/logout` | Logout user | ✅ |
-| POST | `/auth/refresh` | Refresh access token | ✅ |
-| GET | `/auth/me` | Get current user | ✅ |
+### Server
 
-### Products Endpoints
+```bash
+yarn start       # запуск NestJS
+yarn start:dev   # dev server with watch
+yarn build       # prisma generate + nest build
+yarn start:prod  # запуск dist/main
+yarn lint        # ESLint с --fix
+yarn test        # Jest unit tests
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/products` | Get all products | ❌ |
-| GET | `/products/:id` | Get product by ID | ❌ |
-| GET | `/products/search` | Search products | ❌ |
+Полезные Prisma-команды:
 
-### Cart Endpoints
+```bash
+npx prisma migrate dev
+npx prisma generate
+npx prisma studio
+ALLOW_DESTRUCTIVE_SEED=true npx prisma db seed
+```
 
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/cart` | Get user's cart | ✅ |
-| POST | `/cart/items` | Add item to cart | ✅ |
-| PATCH | `/cart/items/:id` | Update cart item | ✅ |
-| DELETE | `/cart/items/:id` | Remove cart item | ✅ |
+## Проверка перед коммитом
 
-> 📖 Full API documentation will be available via Swagger UI at `/api/docs` (coming soon)
+```bash
+cd client
+npm run lint
+npm run build
 
----
+cd ../server
+yarn build
+npx eslint "{src,apps,libs}/**/*.ts"
+```
 
-## 🤝 Contributing
+`yarn lint` на сервере запускает ESLint с `--fix`, поэтому для проверки без автоисправлений удобнее использовать прямой вызов `npx eslint`.
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+## Маршруты клиента
 
-### How to Contribute
+| Маршрут | Назначение |
+| --- | --- |
+| `/` | Главная страница с каталогом, категориями, фильтрами и пагинацией. |
+| `/product/[id]` | Полная страница продукта. |
+| `/(.)product/[id]` | Модальное окно продукта через intercepting route. |
+| `/pizza-constructor` | Конструктор собственной пиццы. |
+| `/cart` | Корзина. |
+| `/checkout` | Оформление заказа. |
+| `/order/[token]` | Страница созданного заказа и realtime-статус. |
+| `/orders` | История заказов пользователя. |
+| `/profile` | Профиль и адрес доставки. |
+| `/login` | Вход. |
+| `/register` | Регистрация. |
+| `/admin` | Dashboard админ-панели. |
+| `/admin/products` | Управление товарами. |
+| `/admin/categories` | Управление категориями. |
+| `/admin/ingredients` | Управление ингредиентами. |
+| `/admin/orders` | Управление заказами. |
+| `/admin/users` | Управление пользователями и ролями. |
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## API
 
-### Development Guidelines
+Base URL по умолчанию:
 
-- Follow the existing code style
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation as needed
-- Ensure all tests pass before submitting PR
+```txt
+http://localhost:4000
+```
 
----
+### Auth
 
-## 📄 License
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `POST` | `/auth/login` | Вход по телефону и паролю. |
+| `POST` | `/auth/register` | Регистрация пользователя. |
+| `POST` | `/auth/login/access-token` | Обновление access token через refresh cookie. |
+| `POST` | `/auth/logout` | Выход и очистка refresh cookie. |
 
-Distributed under the MIT License. See `LICENSE` file for more information.
+### Catalog
 
----
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `GET` | `/product/all` | Список товаров с фильтрами, сортировкой и пагинацией. |
+| `GET` | `/product/:id` | Один товар. |
+| `GET` | `/categories` | Список категорий. |
+| `GET` | `/ingredients` | Список ингредиентов. |
 
-## 👨‍💻 Contact & Support
+`GET /product/all` поддерживает query-параметры:
 
-<div align="center">
+| Параметр | Описание |
+| --- | --- |
+| `from` / `to` | Диапазон цены. |
+| `ingredients` | Список названий ингредиентов через запятую. |
+| `category` | ID категории. |
+| `sort` | `asc`, `desc` или `rating`. |
+| `query` | Поиск по названию. |
+| `page` / `limit` | Пагинация. `limit` максимум 50. |
 
-**Erzhan**
+### Cart
 
-[![GitHub](https://img.shields.io/badge/GitHub-@erzhan1337-181717?style=for-the-badge&logo=github)](https://github.com/erzhan1337)
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `GET` | `/cart` | Текущая корзина пользователя или гостя. |
+| `POST` | `/cart` | Добавление товара в корзину. |
+| `PATCH` | `/cart/:id` | Изменение количества позиции. |
+| `DELETE` | `/cart/:id` | Удаление позиции. |
+| `DELETE` | `/cart/:itemId/ingredients/:ingredientId` | Удаление ингредиента из позиции. |
 
-**Project Link**: [https://github.com/erzhan1337/dodo](https://github.com/erzhan1337/dodo)
+### Orders
 
-**Live Demo**: [https://dodo-six-tau.vercel.app](https://dodo-six-tau.vercel.app)
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `POST` | `/order` | Создание заказа из текущей корзины. |
+| `GET` | `/order/my` | Заказы текущего пользователя. Требует авторизации. |
+| `GET` | `/order/:token` | Заказ по публичному token. |
 
-</div>
+Статусы заказа:
 
----
+- `PENDING` - принят, ожидает оплаты.
+- `SUCCEEDED` - оплачен.
+- `CANCELED` - отменён.
 
-## 🙏 Acknowledgments
+### User
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [NestJS Documentation](https://docs.nestjs.com/)
-- [Prisma Documentation](https://www.prisma.io/docs)
-- [Shadcn/ui](https://ui.shadcn.com/)
-- [Lucide Icons](https://lucide.dev/)
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `GET` | `/user/me` | Текущий пользователь. |
+| `PATCH` | `/user/me` | Обновление профиля. |
 
----
+### Admin
 
-<div align="center">
+Все `/admin/*` endpoints требуют авторизации и роль `ADMIN`.
 
-### ⭐ Star this repo if you find it helpful!
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `GET` | `/admin/dashboard` | Метрики dashboard. |
+| `GET` | `/admin/products` | Список товаров с поиском, сортировкой и пагинацией. |
+| `GET` | `/admin/products/:id` | Один товар для редактирования. |
+| `POST` | `/admin/products` | Создание товара. |
+| `PATCH` | `/admin/products/:id` | Обновление товара. |
+| `DELETE` | `/admin/products/:id` | Удаление товара. |
+| `GET` | `/admin/orders` | Список заказов. |
+| `GET` | `/admin/orders/:id` | Детали заказа. |
+| `PATCH` | `/admin/orders/:id/status` | Смена статуса заказа. |
+| `DELETE` | `/admin/orders/:id` | Удаление заказа. |
+| `GET` | `/admin/users` | Список пользователей. |
+| `POST` | `/admin/users` | Создание пользователя. |
+| `PATCH` | `/admin/users/:id` | Обновление пользователя. |
+| `DELETE` | `/admin/users/:id` | Удаление пользователя. |
+| `GET` | `/admin/categories` | Список категорий. |
+| `POST` | `/admin/categories` | Создание категории. |
+| `PATCH` | `/admin/categories/:id` | Обновление категории. |
+| `DELETE` | `/admin/categories/:id` | Удаление категории. |
+| `GET` | `/admin/ingredients` | Список ингредиентов. |
+| `POST` | `/admin/ingredients` | Создание ингредиента. |
+| `PATCH` | `/admin/ingredients/:id` | Обновление ингредиента. |
+| `DELETE` | `/admin/ingredients/:id` | Удаление ингредиента. |
 
-Made with ❤️ by [Erzhan](https://github.com/erzhan1337)
+### Healthcheck
 
-</div>
+| Метод | Endpoint | Описание |
+| --- | --- | --- |
+| `GET` | `/health` | Проверка доступности API. |
+
+## Realtime-статусы заказов
+
+Сервер использует Socket.IO gateway в модуле заказов.
+
+Клиент подключается к `NEXT_PUBLIC_SERVER_URL`, подписывается на комнату заказа по token и получает обновления при смене статуса в админ-панели.
+
+События:
+
+| Событие | Направление | Описание |
+| --- | --- | --- |
+| `order:subscribe` | client -> server | Подписка на заказ по token. |
+| `order:unsubscribe` | client -> server | Отписка от заказа. |
+| `order:status` | server -> client | Новый статус заказа. |
+| `order:error` | server -> client | Ошибка подписки или отсутствующий заказ. |
+
+## Troubleshooting
+
+- Если frontend не видит API, проверьте `NEXT_PUBLIC_SERVER_URL` в `client/.env`.
+- Если CORS или cookie не работают, проверьте `CLIENT_URL` в `server/.env`.
+- Если PostgreSQL не стартует из-за занятого порта, измените `POSTGRES_PORT` и порт в `DATABASE_URL`.
+- Если seed отказывается запускаться, убедитесь, что окружение не production-like и команда содержит `ALLOW_DESTRUCTIVE_SEED=true`.
+- Если админ-панель возвращает `403`, войдите под пользователем с ролью `ADMIN`. Демо-админ создаётся seed-скриптом.
