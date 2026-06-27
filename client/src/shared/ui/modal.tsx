@@ -54,12 +54,14 @@ export const Modal = ({
                     className,
                   )}
                 >
-                  <button
-                    onClick={onClose}
-                    className="absolute right-4 top-4 z-10 text-primary hover:scale-120 transition-transform duration-300 cursor-pointer"
-                  >
-                    <X className="size-5 stroke-3" />
-                  </button>
+                  {onClose && (
+                    <button
+                      onClick={onClose}
+                      className="absolute right-4 top-4 z-10 cursor-pointer text-primary transition-transform duration-300 hover:scale-120"
+                    >
+                      <X className="size-5 stroke-3" />
+                    </button>
+                  )}
                   {children}
                 </m.div>
               </div>

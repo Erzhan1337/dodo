@@ -84,8 +84,8 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
 
   return (
     <div className={cn("flex flex-1 flex-col lg:flex-row", className)}>
-      <div className="w-full lg:w-[50%] flex items-center justify-center bg-white lg:rounded-tl-3xl lg:rounded-bl-3xl">
-        <div className="relative w-70 h-70 lg:w-85 lg:h-85">
+      <div className="flex w-full items-center justify-center rounded-t-3xl bg-white py-5 lg:w-[50%] lg:rounded-bl-3xl lg:rounded-tr-none lg:py-0">
+        <div className="relative size-56 sm:size-70 lg:size-85">
           <NextImage
             src={currentImage}
             alt={product.name}
@@ -113,10 +113,10 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
         </div>
       </div>
 
-      <div className="bg-[#F4F1EE] w-full lg:w-[50%] lg:rounded-tr-3xl lg:rounded-br-3xl py-5 px-10">
+      <div className="w-full rounded-b-3xl bg-[#F4F1EE] px-4 py-5 sm:px-6 lg:w-[50%] lg:rounded-br-3xl lg:rounded-tl-none lg:rounded-tr-3xl lg:px-10">
         <div>
-          <h2 className="text-2xl font-semibold">{product.name}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h2 className="text-xl font-semibold sm:text-2xl">{product.name}</h2>
+          <p className="mt-1 text-sm text-gray-600">
             {product.description}
           </p>
         </div>

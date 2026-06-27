@@ -109,7 +109,7 @@ const SegmentGroup = <T extends string | number>({
     <LazyMotion features={loadMotionFeatures}>
       <div
         className={cn(
-          "grid gap-1 rounded-2xl bg-[#ECECEC] p-1 shadow-sm",
+          "grid gap-1 rounded-2xl bg-white/90 p-1 shadow-sm sm:bg-[#ECECEC]",
           options.length === 2 && "grid-cols-2",
           options.length === 3 && "grid-cols-3",
           className,
@@ -126,7 +126,7 @@ const SegmentGroup = <T extends string | number>({
               onClick={() => onChange(option.value)}
               className={cn(
                 "relative z-10 min-h-11 cursor-pointer rounded-xl px-3 text-sm font-semibold transition-colors",
-                isActive ? "text-black" : "text-gray-500 hover:text-black",
+                isActive ? "text-black" : "text-gray-700 hover:text-black sm:text-gray-500",
                 option.disabled &&
                   "cursor-not-allowed opacity-45 hover:text-gray-500",
                 buttonClassName,
@@ -160,7 +160,7 @@ const StepTabs = ({
 
   return (
     <LazyMotion features={loadMotionFeatures}>
-      <div className="w-full overflow-x-auto rounded-2xl bg-[#ECECEC] p-1 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="w-full overflow-x-auto rounded-2xl bg-white/90 p-1 shadow-sm [scrollbar-width:none] sm:bg-[#ECECEC] [&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-max items-center gap-1 sm:min-w-full">
           {PIZZA_BUILDER_STEPS.map((step, index) => {
             const isActive = activeStepIndex === index;
@@ -172,7 +172,7 @@ const StepTabs = ({
                 onClick={() => onChange(index)}
                 className={cn(
                   "relative z-10 min-h-10 shrink-0 cursor-pointer rounded-xl px-4 text-sm font-semibold transition-colors sm:flex-1",
-                  isActive ? "text-primary" : "text-gray-500 hover:text-primary",
+                  isActive ? "text-primary" : "text-gray-700 hover:text-primary sm:text-gray-500",
                 )}
               >
                 {isActive && (
@@ -204,7 +204,7 @@ const IngredientCategoryTabs = ({
 
   return (
     <LazyMotion features={loadMotionFeatures}>
-      <div className="mb-4 w-full overflow-x-auto rounded-2xl bg-[#ECECEC] p-1 shadow-sm [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mb-4 w-full overflow-x-auto rounded-2xl bg-white/90 p-1 shadow-sm [scrollbar-width:none] sm:bg-[#ECECEC] [&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-max items-center gap-1">
           {INGREDIENT_CATEGORY_LABELS.map((category) => {
             const isActive = activeCategory === category;
@@ -216,7 +216,7 @@ const IngredientCategoryTabs = ({
                 onClick={() => onChange(category)}
                 className={cn(
                   "relative z-10 min-h-10 shrink-0 cursor-pointer rounded-xl px-4 text-sm font-semibold transition-colors",
-                  isActive ? "text-primary" : "text-gray-500 hover:text-primary",
+                  isActive ? "text-primary" : "text-gray-700 hover:text-primary sm:text-gray-500",
                 )}
               >
                 {isActive && (
@@ -458,8 +458,8 @@ const PizzaBuilderSkeleton = () => (
   <Container className="mt-8 pb-20">
     <Skeleton className="mb-5 h-5 w-52" />
     <div className="grid gap-8 lg:grid-cols-[minmax(320px,440px)_1fr]">
-      <Skeleton className="h-[560px] rounded-[28px]" />
-      <Skeleton className="h-[620px] rounded-[28px]" />
+      <Skeleton className="h-[380px] rounded-[22px] md:h-[500px] md:rounded-[28px] lg:h-[560px]" />
+      <Skeleton className="h-[500px] rounded-[22px] md:h-[580px] md:rounded-[28px] lg:h-[620px]" />
     </div>
   </Container>
 );
@@ -558,13 +558,13 @@ export const PizzaBuilderPage = () => {
             calories={builder.estimatedCalories}
           />
 
-          <section className="min-w-0 rounded-[28px] bg-[#F4F1EE] p-4 shadow-lg md:p-6 lg:p-8">
+          <section className="min-w-0 rounded-[28px] bg-white/85 p-4 shadow-lg sm:bg-[#F4F1EE] md:p-6 lg:p-8">
             <div className="mb-6 flex flex-col gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold lg:text-3xl">
                   Соберите свою пиццу
                 </h2>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-700 sm:text-gray-500">
                   Выберите основу, добавки и настройки. Цена пересчитывается сразу.
                 </p>
               </div>
@@ -623,7 +623,7 @@ export const PizzaBuilderPage = () => {
                             },
                           ].map((column) => (
                             <div key={column.title}>
-                              <div className="mb-2 text-sm font-bold text-gray-500">
+                              <div className="mb-2 text-sm font-bold text-gray-700 sm:text-gray-500">
                                 {column.title}
                               </div>
                               <div className="grid gap-2">
@@ -716,7 +716,7 @@ export const PizzaBuilderPage = () => {
                                 </div>
                                 <div className="relative z-10 min-w-0">
                                   <div className="font-bold">{product.name}</div>
-                                  <div className="line-clamp-2 text-xs text-gray-500">
+                                  <div className="line-clamp-2 text-xs text-gray-700 sm:text-gray-500">
                                     {product.description}
                                   </div>
                                   {firstItem && (
@@ -764,7 +764,7 @@ export const PizzaBuilderPage = () => {
                     />
                   </div>
 
-                  <div className="rounded-2xl bg-white p-4 text-sm text-gray-600">
+                  <div className="rounded-2xl bg-white p-4 text-sm text-gray-700 sm:text-gray-600">
                     Сейчас: {builder.size} см,{" "}
                     {PIZZA_TYPE_LABELS[builder.pizzaType ?? 1]?.toLowerCase()}{" "}
                     тесто. Базовая цена{" "}
@@ -805,7 +805,7 @@ export const PizzaBuilderPage = () => {
                                   <Check className="size-5 text-primary" />
                                 )}
                               </div>
-                              <div className="relative z-10 mt-1 text-sm text-gray-500">
+                              <div className="relative z-10 mt-1 text-sm text-gray-700 sm:text-gray-500">
                                 {option.description}
                               </div>
                             </button>
@@ -841,7 +841,7 @@ export const PizzaBuilderPage = () => {
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div className="text-lg font-bold">Убрать из основы</div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-700 sm:text-gray-500">
                           Без скидки к цене
                         </div>
                       </div>
@@ -950,7 +950,7 @@ export const PizzaBuilderPage = () => {
 
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
-                      <div className="mb-2 text-sm font-bold text-gray-500">
+                      <div className="mb-2 text-sm font-bold text-gray-700 sm:text-gray-500">
                         Запекание
                       </div>
                       <SegmentGroup
@@ -963,7 +963,7 @@ export const PizzaBuilderPage = () => {
                       />
                     </div>
                     <div>
-                      <div className="mb-2 text-sm font-bold text-gray-500">
+                      <div className="mb-2 text-sm font-bold text-gray-700 sm:text-gray-500">
                         Нарезка
                       </div>
                       <SegmentGroup
@@ -983,7 +983,7 @@ export const PizzaBuilderPage = () => {
                         <div className="text-xl font-extrabold">
                           {selectedProductName}
                         </div>
-                        <div className="mt-1 text-sm text-gray-500">
+                        <div className="mt-1 text-sm text-gray-700 sm:text-gray-500">
                           {builder.size} см,{" "}
                           {PIZZA_TYPE_LABELS[
                             builder.pizzaType ?? 1
@@ -1035,7 +1035,7 @@ export const PizzaBuilderPage = () => {
 
                     {builder.builderIngredientLines.length === 0 &&
                       builder.removedIngredientIds.length === 0 && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-700 sm:text-gray-500">
                           Без изменений к выбранной основе.
                         </div>
                       )}

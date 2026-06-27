@@ -21,7 +21,11 @@ export const ProductModal = ({ product }: Props) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose}>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      className="max-h-[calc(100dvh-24px)] w-[calc(100vw-24px)] max-w-250 overflow-y-auto rounded-3xl sm:max-h-[calc(100dvh-48px)] sm:w-[calc(100vw-48px)]"
+    >
       <ProductForm product={product} onSubmit={handleClose} />
     </Modal>
   );

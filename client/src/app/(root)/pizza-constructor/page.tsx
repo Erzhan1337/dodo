@@ -15,8 +15,8 @@ export default function PizzaConstructorPage() {
           <Container>
             <Skeleton className="mb-5 h-5 w-52" />
             <div className="grid gap-8 lg:grid-cols-[minmax(320px,440px)_1fr]">
-              <Skeleton className="h-[560px] rounded-[28px]" />
-              <Skeleton className="h-[620px] rounded-[28px]" />
+              <Skeleton className="h-[380px] rounded-[22px] md:h-[500px] md:rounded-[28px] lg:h-[560px]" />
+              <Skeleton className="h-[500px] rounded-[22px] md:h-[580px] md:rounded-[28px] lg:h-[620px]" />
             </div>
           </Container>
         </main>

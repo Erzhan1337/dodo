@@ -37,7 +37,10 @@ export const AuthButton = () => {
           </Link>
         </Button>
       ) : (
-        <div className="relative" ref={ref as RefObject<HTMLDivElement>}>
+        <div
+          className="relative inline-block"
+          ref={ref as RefObject<HTMLDivElement>}
+        >
           <Button
             className="gap-0.5 px-1 text-xs h-7 md:h-9 md:rounded-xl md:text-sm lg:text-base md:px-2 lg:rounded-2xl lg:h-11"
             variant="outline"
@@ -47,19 +50,19 @@ export const AuthButton = () => {
             Профиль
           </Button>
           {open && (
-            <div className="absolute z-70 bg-white mt-1 w-full shadow-xl border border-primary flex flex-col gap-1 rounded-xl py-2">
+            <div className="absolute right-0 z-70 mt-1 flex w-full flex-col gap-1 rounded-xl border border-primary bg-white py-1.5 text-[11px] shadow-xl sm:text-xs md:text-sm">
               {options.map((option) => (
                 <Link
                   key={option.label}
                   href={option.href}
-                  className="hover:bg-orange-50 px-3 py-1 text-sm hover:text-primary"
+                  className="px-2.5 py-1.5 hover:bg-orange-50 hover:text-primary md:px-3"
                 >
                   {option.label}
                 </Link>
               ))}
               <button
                 onClick={handleLogout}
-                className="hover:bg-orange-50 px-3 py-1 text-sm hover:text-primary text-start cursor-pointer"
+                className="cursor-pointer px-2.5 py-1.5 text-start hover:bg-orange-50 hover:text-primary md:px-3"
               >
                 Выйти
               </button>

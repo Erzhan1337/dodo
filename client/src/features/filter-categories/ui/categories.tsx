@@ -26,7 +26,7 @@ export const Categories = ({ categories, className }: Props) => {
     <LazyMotion features={loadMotionFeatures}>
       <div
         className={cn(
-          "w-full flex justify-between md:justify-start md:w-auto md:inline-flex items-center md:gap-1 p-1 rounded-2xl bg-gray-50 shadow-md transition-all duration-500",
+          "flex w-full items-center gap-1 overflow-x-auto rounded-2xl bg-gray-50 p-1 shadow-md transition-all duration-500 [scrollbar-width:none] md:w-auto md:inline-flex md:overflow-visible [&::-webkit-scrollbar]:hidden",
           className,
         )}
       >
@@ -35,7 +35,7 @@ export const Categories = ({ categories, className }: Props) => {
             key={cat.id}
             onClick={() => handleSelectCategory(cat.id)}
             className={cn(
-              "relative p-1 md:px-3 md:py-2 z-10 cursor-pointer",
+              "relative z-10 min-h-8 shrink-0 cursor-pointer rounded-xl px-2.5 py-1.5 md:min-h-10 md:px-3 md:py-2",
               activeCategory === cat.id ? "text-primary" : "hover:text-primary",
             )}
           >
@@ -48,7 +48,7 @@ export const Categories = ({ categories, className }: Props) => {
               />
             )}
 
-            <span className="relative text-[12px] md:text-sm xl:text-base">
+            <span className="relative whitespace-nowrap text-[12px] md:text-sm xl:text-base">
               {cat.name}
             </span>
           </button>

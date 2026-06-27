@@ -96,12 +96,12 @@ export const CartItem: React.FC<Props> = ({
           )}
 
           {isCustomPizza && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
               {[...customIngredientLabels, ...removedIngredientLabels].map(
                 (label) => (
                   <span
                     key={label}
-                    className="inline-flex min-h-8 items-center rounded-full bg-orange-50 px-3 text-xs text-gray-600"
+                    className="inline-flex min-h-6 items-center rounded-full bg-orange-50 px-2 text-[10px] leading-tight text-gray-600 md:min-h-8 md:px-3 md:text-xs"
                   >
                     {label}
                   </span>
@@ -111,11 +111,11 @@ export const CartItem: React.FC<Props> = ({
           )}
 
           {!isCustomPizza && item.ingredients.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-2">
+            <div className="mt-2 flex flex-wrap gap-1.5 md:gap-2">
               {item.ingredients.map((ingredient) => (
                 <span
                   key={ingredient.id}
-                  className="inline-flex min-h-10 items-center gap-1 rounded-full bg-orange-50 pl-3 text-xs text-gray-600 md:min-h-8"
+                  className="inline-flex min-h-7 items-center gap-1 rounded-full bg-orange-50 pl-2 text-[10px] leading-tight text-gray-600 md:min-h-8 md:pl-3 md:text-xs"
                 >
                   <span className="break-words">+ {ingredient.name}</span>
                   <button
@@ -125,9 +125,9 @@ export const CartItem: React.FC<Props> = ({
                     onClick={() =>
                       onClickRemoveIngredient?.(item.id, ingredient.id)
                     }
-                    className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-orange-100 hover:text-primary disabled:pointer-events-none disabled:opacity-50 md:size-6"
+                    className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-orange-100 hover:text-primary disabled:pointer-events-none disabled:opacity-50 md:size-6"
                   >
-                    <X className="size-5 md:size-3.5" />
+                    <X className="size-3.5" />
                   </button>
                 </span>
               ))}
@@ -137,7 +137,7 @@ export const CartItem: React.FC<Props> = ({
       </div>
 
       <div className="flex items-center justify-between gap-4 md:ml-8 md:justify-end">
-        <div className="min-w-20 font-bold md:text-right">
+        <div className="min-w-24 whitespace-nowrap text-lg font-extrabold text-primary md:text-right md:text-xl">
           {formatPrice(unitPrice * item.quantity)}
         </div>
         <div className="flex items-center gap-3">

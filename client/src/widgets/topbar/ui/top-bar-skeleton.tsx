@@ -6,6 +6,15 @@ interface Props {
   isScroll?: boolean;
 }
 
+const categoryWidths = [
+  "md:w-16",
+  "md:w-22",
+  "md:w-24",
+  "md:w-20",
+  "md:w-28",
+  "md:w-23",
+];
+
 export const TopBarSkeleton = ({ className, isScroll }: Props) => {
   return (
     <div
@@ -17,18 +26,26 @@ export const TopBarSkeleton = ({ className, isScroll }: Props) => {
         className,
       )}
     >
-      <Container className="flex items-center justify-between">
+      <Container className="flex min-w-0 items-center justify-between">
         <div
           className={cn(
-            "w-full md:w-auto md:inline-flex items-center gap-1 p-1 rounded-2xl bg-gray-50 shadow-md",
+            "flex min-w-0 w-full items-center gap-1 overflow-hidden rounded-2xl bg-gray-50 p-1 shadow-md md:w-auto md:justify-start",
             isScroll && "bg-transparent shadow-none",
           )}
         >
-          {[64, 88, 96, 80, 112, 92].map((width, index) => (
+          {categoryWidths.map((widthClassName, index) => (
             <Skeleton
               key={index}
-              className="h-10"
-              style={{ width }}
+              className={cn(
+                "h-8 shrink-0 rounded-xl md:h-10",
+                index === 0 && "w-10",
+                index === 1 && "w-16",
+                index === 2 && "w-16",
+                index === 3 && "w-18",
+                index === 4 && "w-28",
+                index === 5 && "w-20",
+                widthClassName,
+              )}
             />
           ))}
         </div>

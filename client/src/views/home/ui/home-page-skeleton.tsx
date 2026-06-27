@@ -10,7 +10,7 @@ export const HomePageSkeleton = () => {
         <Title text="Все Пиццы" className="mb-2 text-2xl lg:text-3xl" />
       </Container>
       <TopBarSkeleton />
-      <Container className="flex mt-5 gap-10">
+      <Container className="mt-5 flex min-w-0 gap-10">
         <SidebarFilterSkeleton />
         <ProductListSkeleton />
       </Container>
