@@ -34,10 +34,6 @@ export const ProductList = () => {
   const meta = response?.meta;
   const { setQueryParam } = useQueryParam("page");
 
-  // Server-rendered (hydrated) cards must paint immediately. Only run the
-  // staggered reveal for client-side dataset changes (filter / sort / page),
-  // otherwise framer's `initial="hidden"` bakes opacity:0 into the SSR HTML
-  // and the list flashes empty until JS hydrates.
   const [hasMounted, setHasMounted] = useState(false);
   useEffect(() => setHasMounted(true), []);
 
@@ -71,7 +67,6 @@ export const ProductList = () => {
     );
   }
 
-  // Remount the animated grid when the dataset changes so reveal variants replay.
   const productsAnimationKey = products.map((product) => product.id).join("-");
 
   return (

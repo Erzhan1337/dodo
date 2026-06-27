@@ -101,7 +101,6 @@ export class OrderService {
         select: { token: true },
       });
 
-      // Empty the cart now that its contents were captured into the order.
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
       if (identity.userId) {
         await tx.cart.update({

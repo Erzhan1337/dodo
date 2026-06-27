@@ -8,7 +8,6 @@ export const ProductListSkeleton = () => {
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
         {PLACEHOLDER_CARDS.map((_, index) => (
           <div key={index}>
-            {/* Mirrors ProductCard geometry so swapping skeleton -> card causes no layout shift */}
             <div className="flex h-50 items-center justify-center rounded-2xl bg-[#FFF7EE] md:h-70">
               <Skeleton className="h-45 w-45 rounded-full bg-zinc-300/70 md:h-54 md:w-54" />
             </div>
