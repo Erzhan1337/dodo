@@ -19,6 +19,18 @@ export const useFilters = () => {
   const [selectedIngredients, setSelectedIngredients] =
     useState<Set<string>>(initialIngredients);
 
+  // Re-sync the draft when the URL changes outside this hook (browser
+  // back/forward, shared links). Adjusting state during render is React's
+  // recommended alternative to a useEffect here — it resyncs before paint,
+  // so there is no flash of stale filter values.
+  const searchKey = searchParams.toString();
+  const [syncedKey, setSyncedKey] = useState(searchKey);
+  if (searchKey !== syncedKey) {
+    setSyncedKey(searchKey);
+    setPricesRange(initialPrices);
+    setSelectedIngredients(initialIngredients);
+  }
+
   const setPrices = useCallback((name: string, value: number) => {
     setPricesRange((prev) => ({
       ...prev,
