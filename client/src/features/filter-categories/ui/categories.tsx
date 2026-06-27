@@ -69,11 +69,6 @@ export const Categories = ({ className }: Props) => {
 
             <span className="relative text-[12px] md:text-sm xl:text-base">
               {cat.name}
-              {cat._count?.products != null && (
-                <span className="ml-1 text-[10px] text-gray-400">
-                  ({cat._count.products})
-                </span>
-              )}
             </span>
           </button>
         ))}
