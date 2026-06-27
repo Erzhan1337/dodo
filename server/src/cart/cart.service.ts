@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import { randomUUID } from 'crypto';
+import { createHash, randomUUID } from 'crypto';
 import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
@@ -16,6 +16,14 @@ export const GUEST_CART_TOKEN_COOKIE = 'guestCartToken';
 type CartIdentity = {
   userId?: string | null;
   guestCartToken?: string | null;
+};
+
+type ValidatedCartItemInput = {
+  ingredientIds: string[];
+  ingredientsKey: string;
+  customName?: string;
+  customDetails?: Prisma.InputJsonValue;
+  customUnitPrice?: number;
 };
 
 const cartResponseSelect = {
@@ -33,6 +41,9 @@ const cartResponseSelect = {
       cartId: true,
       createdAt: true,
       updatedAt: true,
+      customName: true,
+      customDetails: true,
+      customUnitPrice: true,
       productItem: { include: { product: true } },
       ingredients: true,
     },
@@ -46,6 +57,7 @@ const cartTotalSelect = {
       productItem: {
         select: { price: true },
       },
+      customUnitPrice: true,
       ingredients: {
         select: { price: true },
       },
@@ -56,6 +68,8 @@ const cartTotalSelect = {
 @Injectable()
 export class CartService {
   private readonly EXPIRE_DAY_GUEST_CART_TOKEN = 30;
+  private readonly MAX_CUSTOM_INGREDIENTS = 8;
+  private readonly MAX_DOUBLE_INGREDIENTS = 4;
 
   constructor(
     private prisma: PrismaService,
@@ -95,15 +109,14 @@ export class CartService {
     const cart = await this.prisma.$transaction(async (tx) => {
       await this.lockCart(resolvedCart.cart.id, tx);
 
-      const ingredientIds = await this.validateCartItemInput(dto, tx);
-      const ingredientsKey = this.createIngredientsKey(ingredientIds);
+      const cartItemInput = await this.validateCartItemInput(dto, tx);
 
       await tx.cartItem.upsert({
         where: {
           cartId_productItemId_ingredientsKey: {
             cartId: resolvedCart.cart.id,
             productItemId: dto.productItemId,
-            ingredientsKey,
+            ingredientsKey: cartItemInput.ingredientsKey,
           },
         },
         update: {
@@ -112,10 +125,13 @@ export class CartService {
         create: {
           cartId: resolvedCart.cart.id,
           productItemId: dto.productItemId,
-          ingredientsKey,
+          ingredientsKey: cartItemInput.ingredientsKey,
+          customName: cartItemInput.customName,
+          customDetails: cartItemInput.customDetails,
+          customUnitPrice: cartItemInput.customUnitPrice,
           quantity: 1,
           ingredients: {
-            connect: ingredientIds.map((id) => ({ id })),
+            connect: cartItemInput.ingredientIds.map((id) => ({ id })),
           },
         },
       });
@@ -192,12 +208,19 @@ export class CartService {
           id: true,
           quantity: true,
           productItemId: true,
+          customUnitPrice: true,
           ingredients: { select: { id: true } },
         },
       });
 
       if (!cartItem) {
         throw new NotFoundException('Cart item not found');
+      }
+
+      if (cartItem.customUnitPrice != null) {
+        throw new BadRequestException(
+          'Custom pizza ingredients should be changed in pizza builder',
+        );
       }
 
       const remainingIngredientIds = cartItem.ingredients
@@ -284,6 +307,9 @@ export class CartService {
           quantity: true,
           productItemId: true,
           ingredientsKey: true,
+          customName: true,
+          customDetails: true,
+          customUnitPrice: true,
           ingredients: { select: { id: true } },
         },
       });
@@ -304,6 +330,9 @@ export class CartService {
             cartId: userCart.id,
             productItemId: item.productItemId,
             ingredientsKey: item.ingredientsKey,
+            customName: item.customName,
+            customDetails: item.customDetails ?? undefined,
+            customUnitPrice: item.customUnitPrice,
             quantity: item.quantity,
             ingredients: {
               connect: item.ingredients.map(({ id }) => ({ id })),
@@ -470,7 +499,8 @@ export class CartService {
         (sum, ing) => sum + ing.price,
         0,
       );
-      return acc + (productPrice + ingredientsPrice) * item.quantity;
+      const unitPrice = item.customUnitPrice ?? productPrice + ingredientsPrice;
+      return acc + unitPrice * item.quantity;
     }, 0);
 
     const updatedCart = await client.cart.update({
@@ -502,19 +532,36 @@ export class CartService {
   private async validateCartItemInput(
     dto: AddCartItemDto,
     client: Prisma.TransactionClient = this.prisma,
-  ) {
+  ): Promise<ValidatedCartItemInput> {
     const productItem = await client.productItem.findUnique({
       where: { id: dto.productItemId },
-      select: { id: true },
+      select: {
+        id: true,
+        price: true,
+        product: {
+          select: {
+            ingredients: { select: { id: true, name: true } },
+          },
+        },
+      },
     });
 
     if (!productItem) {
       throw new NotFoundException('Product item not found');
     }
 
+    if (dto.customPizza) {
+      return this.validateCustomPizzaInput(dto, productItem, client);
+    }
+
     const ingredientIds = this.normalizeIngredientIds(dto.ingredients);
 
-    if (!ingredientIds.length) return ingredientIds;
+    if (!ingredientIds.length) {
+      return {
+        ingredientIds,
+        ingredientsKey: this.createIngredientsKey(ingredientIds),
+      };
+    }
 
     const ingredients = await client.ingredient.findMany({
       where: {
@@ -529,7 +576,138 @@ export class CartService {
       throw new BadRequestException('Invalid ingredients');
     }
 
-    return ingredientIds;
+    return {
+      ingredientIds,
+      ingredientsKey: this.createIngredientsKey(ingredientIds),
+    };
+  }
+
+  private async validateCustomPizzaInput(
+    dto: AddCartItemDto,
+    productItem: {
+      price: number;
+      product: { ingredients: { id: string; name: string }[] };
+    },
+    client: Prisma.TransactionClient = this.prisma,
+  ): Promise<ValidatedCartItemInput> {
+    const customPizza = dto.customPizza;
+    if (!customPizza) {
+      throw new BadRequestException('Custom pizza is required');
+    }
+
+    const normalizedLines = customPizza.ingredients
+      .map((ingredient) => ({
+        id: ingredient.id,
+        quantity: ingredient.quantity,
+        placement:
+          customPizza.format === 'whole' ? 'whole' : ingredient.placement,
+      }))
+      .sort((a, b) =>
+        `${a.id}:${a.placement}`.localeCompare(`${b.id}:${b.placement}`),
+      );
+
+    const lineKeys = normalizedLines.map(
+      (ingredient) => `${ingredient.id}:${ingredient.placement}`,
+    );
+
+    if (new Set(lineKeys).size !== lineKeys.length) {
+      throw new BadRequestException('Duplicate custom ingredients');
+    }
+
+    const uniqueIngredientIds = [...new Set(normalizedLines.map(({ id }) => id))];
+    if (uniqueIngredientIds.length > this.MAX_CUSTOM_INGREDIENTS) {
+      throw new BadRequestException('Too many custom ingredients');
+    }
+
+    const doubleIngredientsCount = normalizedLines.filter(
+      ({ quantity }) => quantity === 2,
+    ).length;
+    if (doubleIngredientsCount > this.MAX_DOUBLE_INGREDIENTS) {
+      throw new BadRequestException('Too many double ingredients');
+    }
+
+    const ingredientRecords = uniqueIngredientIds.length
+      ? await client.ingredient.findMany({
+          where: { id: { in: uniqueIngredientIds } },
+          select: { id: true, name: true, price: true },
+        })
+      : [];
+
+    if (ingredientRecords.length !== uniqueIngredientIds.length) {
+      throw new BadRequestException('Invalid ingredients');
+    }
+
+    const ingredientById = new Map(
+      ingredientRecords.map((ingredient) => [ingredient.id, ingredient]),
+    );
+    const baseIngredientById = new Map(
+      productItem.product.ingredients.map((ingredient) => [
+        ingredient.id,
+        ingredient,
+      ]),
+    );
+    const removedIngredientIds = [
+      ...new Set(customPizza.removedIngredientIds ?? []),
+    ].sort();
+
+    const invalidRemovedIngredient = removedIngredientIds.find(
+      (id) => !baseIngredientById.has(id),
+    );
+    if (invalidRemovedIngredient) {
+      throw new BadRequestException('Invalid removed ingredient');
+    }
+
+    let customUnitPrice = productItem.price;
+    const detailedIngredients = normalizedLines.map((line) => {
+      const ingredient = ingredientById.get(line.id);
+      if (!ingredient) {
+        throw new BadRequestException('Invalid ingredients');
+      }
+
+      const placementRatio = line.placement === 'whole' ? 1 : 0.5;
+      const linePrice = Math.round(
+        ingredient.price * line.quantity * placementRatio,
+      );
+      customUnitPrice += linePrice;
+
+      return {
+        id: ingredient.id,
+        name: ingredient.name,
+        price: ingredient.price,
+        quantity: line.quantity,
+        placement: line.placement,
+        linePrice,
+      };
+    });
+
+    const customName = this.normalizeCustomName(customPizza.name);
+    const customDetails = {
+      type: 'pizza-builder',
+      version: 1,
+      name: customName,
+      format: customPizza.format,
+      sauce: customPizza.sauce.trim(),
+      cheeseMode: customPizza.cheeseMode,
+      bakeMode: customPizza.bakeMode?.trim() || 'standard',
+      sliceMode: customPizza.sliceMode?.trim() || 'standard',
+      ingredients: detailedIngredients,
+      removedIngredients: removedIngredientIds.map((id) => {
+        const ingredient = baseIngredientById.get(id);
+        return {
+          id,
+          name: ingredient?.name ?? id,
+        };
+      }),
+      unitPrice: customUnitPrice,
+    };
+
+    return {
+      ingredientIds: uniqueIngredientIds.sort(),
+      ingredientsKey: this.createCustomIngredientsKey(customDetails),
+      customName,
+      customDetails: customDetails as Prisma.InputJsonValue,
+      customUnitPrice,
+    };
   }
 
   private normalizeIngredientIds(ingredientIds?: string[]) {
@@ -547,6 +725,18 @@ export class CartService {
 
   private createIngredientsKey(ingredientIds: string[]) {
     return ingredientIds.join(',');
+  }
+
+  private createCustomIngredientsKey(value: Prisma.InputJsonValue) {
+    return `custom:${createHash('sha256')
+      .update(JSON.stringify(value))
+      .digest('hex')
+      .slice(0, 40)}`;
+  }
+
+  private normalizeCustomName(name?: string) {
+    const normalizedName = name?.trim();
+    return normalizedName || 'Моя пицца';
   }
 
   private createEmptyCartResponse() {

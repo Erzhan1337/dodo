@@ -6,6 +6,18 @@ import { Button } from "@/shared/ui/button";
 import { Title } from "@/shared/ui/title";
 import Image from "next/image";
 
+const CHEESE_MODE_LABEL = {
+  standard: "сыр стандарт",
+  double: "двойной сыр",
+  none: "без сыра",
+} as const;
+
+const PLACEMENT_LABEL = {
+  whole: "",
+  left: "левая половина",
+  right: "правая половина",
+} as const;
+
 interface Props {
   item: CartItemType;
   className?: string;
@@ -23,6 +35,25 @@ export const CartItem: React.FC<Props> = ({
   onClickRemoveIngredient,
   ingredientActionsDisabled,
 }) => {
+  const isCustomPizza = Boolean(item.customDetails);
+  const itemTitle = item.customName || item.productItem.product.name;
+  const unitPrice =
+    item.customUnitPrice ??
+    item.productItem.price +
+      item.ingredients.reduce((acc, ingredient) => acc + ingredient.price, 0);
+  const doughLabel =
+    item.productItem.pizzaType === 1 ? "традиционное" : "тонкое";
+  const customIngredientLabels =
+    item.customDetails?.ingredients.map((ingredient) => {
+      const quantityLabel = ingredient.quantity === 2 ? " x2" : "";
+      const placementLabel = PLACEMENT_LABEL[ingredient.placement];
+      return `${ingredient.name}${quantityLabel}${placementLabel ? `, ${placementLabel}` : ""}`;
+    }) ?? [];
+  const removedIngredientLabels =
+    item.customDetails?.removedIngredients.map(
+      (ingredient) => `без ${ingredient.name.toLowerCase()}`,
+    ) ?? [];
+
   return (
     <div
       className={cn(
@@ -42,14 +73,36 @@ export const CartItem: React.FC<Props> = ({
         </div>
         <div className="min-w-0 flex-1">
           <h4 className="font-semibold leading-snug">
-            {item.productItem.product.name}
+            {itemTitle}
           </h4>
           <div className="mt-1 text-xs text-gray-400">
-            {item.productItem.size} см,{" "}
-            {item.productItem.pizzaType === 1 ? "традиционное" : "тонкое"} тесто
+            {item.productItem.size} см, {doughLabel} тесто
+            {item.customDetails && (
+              <>
+                {" "}
+                · {item.customDetails.sauce} ·{" "}
+                {CHEESE_MODE_LABEL[item.customDetails.cheeseMode]}
+                {item.customDetails.format === "halves" && " · две половинки"}
+              </>
+            )}
           </div>
 
-          {item.ingredients.length > 0 && (
+          {isCustomPizza && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[...customIngredientLabels, ...removedIngredientLabels].map(
+                (label) => (
+                  <span
+                    key={label}
+                    className="inline-flex min-h-8 items-center rounded-full bg-orange-50 px-3 text-xs text-gray-600"
+                  >
+                    {label}
+                  </span>
+                ),
+              )}
+            </div>
+          )}
+
+          {!isCustomPizza && item.ingredients.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
               {item.ingredients.map((ingredient) => (
                 <span
@@ -60,7 +113,7 @@ export const CartItem: React.FC<Props> = ({
                   <button
                     type="button"
                     aria-label={`Убрать ингредиент ${ingredient.name}`}
-                    disabled={ingredientActionsDisabled}
+                    disabled={ingredientActionsDisabled || isCustomPizza}
                     onClick={() =>
                       onClickRemoveIngredient?.(item.id, ingredient.id)
                     }
@@ -77,11 +130,7 @@ export const CartItem: React.FC<Props> = ({
 
       <div className="flex items-center justify-between gap-4 md:ml-8 md:justify-end">
         <div className="min-w-20 font-bold md:text-right">
-          {formatPrice(
-            (item.productItem.price +
-              item.ingredients.reduce((acc, i) => acc + i.price, 0)) *
-              item.quantity,
-          )}
+          {formatPrice(unitPrice * item.quantity)}
         </div>
         <div className="flex items-center gap-3">
           <Button

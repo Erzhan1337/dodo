@@ -15,10 +15,36 @@ export interface OrderIngredient {
   name: string;
 }
 
+export type OrderCustomPizzaDetails = {
+  type: "pizza-builder";
+  version: number;
+  name: string;
+  format: "whole" | "halves";
+  sauce: string;
+  cheeseMode: "standard" | "double" | "none";
+  bakeMode: string;
+  sliceMode: string;
+  unitPrice: number;
+  ingredients: Array<{
+    id: string;
+    name: string;
+    price: number;
+    quantity: 1 | 2;
+    placement: "whole" | "left" | "right";
+    linePrice: number;
+  }>;
+  removedIngredients: Array<{
+    id: string;
+    name: string;
+  }>;
+};
+
 export interface OrderItem {
   id: string;
   quantity: number;
   price: number;
+  customName: string | null;
+  customDetails: OrderCustomPizzaDetails | null;
   productItem: OrderItemProductItem;
   ingredients: OrderIngredient[];
 }

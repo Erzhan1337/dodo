@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { SearchBar } from "@/features/search";
 import { HeaderActions } from "@/widgets/header/ui/header-actions";
+import { Pizza } from "lucide-react";
 
 export const Header = () => {
   return (
@@ -31,6 +32,13 @@ export const Header = () => {
         <div className="hidden md:flex md:flex-1 mx-8">
           <SearchBar />
         </div>
+        <Link
+          href="/pizza-constructor"
+          className="mr-3 hidden min-h-10 items-center gap-2 rounded-xl bg-orange-50 px-4 text-sm font-bold text-primary transition-transform hover:scale-95 lg:flex"
+        >
+          <Pizza className="size-4" />
+          Конструктор
+        </Link>
         <HeaderActions />
       </Container>
     </header>

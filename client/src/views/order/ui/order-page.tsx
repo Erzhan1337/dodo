@@ -6,8 +6,8 @@ import { formatPrice } from "@/shared/lib/format-price";
 import { ORDER_STATUS_META, type Order } from "@/entities/order";
 
 export const OrderPage = ({ order }: { order: Order }) => {
-  const status = ORDER_STATUS_META[order.status];
-  const orderNumber = order.id.slice(-6).toUpperCase();
+const status = ORDER_STATUS_META[order.status];
+const orderNumber = order.id.slice(-6).toUpperCase();
 
   return (
     <Container className="mt-10 max-w-3xl pb-20">
@@ -37,12 +37,25 @@ export const OrderPage = ({ order }: { order: Order }) => {
           {order.items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between gap-3 text-sm"
+              className="flex items-start justify-between gap-3 text-sm"
             >
-              <span className="text-gray-700">
-                {item.productItem.product.name}
-                <span className="text-gray-400"> × {item.quantity}</span>
-              </span>
+              <div className="min-w-0 text-gray-700">
+                <div>
+                  {item.customName || item.productItem.product.name}
+                  <span className="text-gray-400"> × {item.quantity}</span>
+                </div>
+                {item.customDetails && (
+                  <div className="mt-1 text-xs text-gray-400">
+                    {item.productItem.size} см,{" "}
+                    {item.productItem.pizzaType === 1
+                      ? "традиционное"
+                      : "тонкое"}{" "}
+                    тесто · {item.customDetails.sauce}
+                    {item.customDetails.format === "halves" &&
+                      " · две половинки"}
+                  </div>
+                )}
+              </div>
               <span className="whitespace-nowrap font-semibold">
                 {formatPrice(item.price * item.quantity)}
               </span>

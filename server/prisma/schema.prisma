@@ -128,6 +128,8 @@ model OrderItem {
 
   quantity Int
   price    Int
+  customName    String? @map("custom_name")
+  customDetails Json?   @map("custom_details")
 
   ingredients Ingredient[]
 
@@ -159,6 +161,9 @@ model CartItem {
   id             String @id @default(cuid())
   quantity       Int    @default(1)
   ingredientsKey String @default("") @map("ingredients_key")
+  customName      String? @map("custom_name")
+  customDetails   Json?   @map("custom_details")
+  customUnitPrice Int?    @map("custom_unit_price")
 
   productItem   ProductItem @relation(fields: [productItemId], references: [id])
   productItemId String      @map("product_item_id")

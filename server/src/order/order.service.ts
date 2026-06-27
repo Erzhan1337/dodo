@@ -30,6 +30,8 @@ const orderResponseSelect = {
       id: true,
       quantity: true,
       price: true,
+      customName: true,
+      customDetails: true,
       productItem: {
         select: {
           id: true,
@@ -59,6 +61,9 @@ export class OrderService {
             select: {
               quantity: true,
               productItemId: true,
+              customName: true,
+              customDetails: true,
+              customUnitPrice: true,
               productItem: { select: { price: true } },
               ingredients: { select: { id: true, price: true } },
             },
@@ -76,13 +81,16 @@ export class OrderService {
           (sum, ing) => sum + ing.price,
           0,
         );
-        const unitPrice = item.productItem.price + ingredientsPrice;
+        const unitPrice =
+          item.customUnitPrice ?? item.productItem.price + ingredientsPrice;
         totalPrice += unitPrice * item.quantity;
 
         return {
           productItemId: item.productItemId,
           quantity: item.quantity,
           price: unitPrice,
+          customName: item.customName,
+          customDetails: item.customDetails ?? undefined,
           ingredients: {
             connect: item.ingredients.map((ing) => ({ id: ing.id })),
           },

@@ -104,7 +104,7 @@ const OrderCard = ({ order }: { order: Order }) => {
             className="flex items-start justify-between gap-4 text-sm"
           >
             <span className="text-gray-700">
-              {item.productItem.product.name}
+              {item.customName || item.productItem.product.name}
               <span className="text-gray-400"> × {item.quantity}</span>
             </span>
             <span className="whitespace-nowrap font-semibold">

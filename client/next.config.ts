@@ -6,6 +6,15 @@ const analyzer = withBundleAnalyzer({
 });
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/constructor",
+        destination: "/pizza-constructor",
+        permanent: false,
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {

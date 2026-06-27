@@ -7,7 +7,7 @@ export const HomePage = () => {
   return (
     <main className="my-5 md:my-8 xl:my-10">
       <Container>
-        <Title text="Все Пиццы" className="mb-2 text-2xl lg:text-3xl" />
+        <Title text="Все Пиццы" className="text-2xl lg:text-3xl" />
       </Container>
       <TopBar />
       <Container className="flex mt-5 gap-10">
