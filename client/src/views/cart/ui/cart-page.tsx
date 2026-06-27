@@ -2,6 +2,7 @@
 import {
   useCart,
   useRemoveCartItem,
+  useRemoveCartItemIngredient,
   useUpdateItemQuantity,
 } from "@/features/cart/api/use-cart";
 import { Button, Breadcrumbs, Container, Title } from "@/shared/ui";
@@ -17,6 +18,7 @@ export const CartPage = () => {
   const { data: cart, isLoading } = useCart();
   const updateQuantity = useUpdateItemQuantity();
   const removeCartItem = useRemoveCartItem();
+  const removeCartItemIngredient = useRemoveCartItemIngredient();
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
     updateQuantity.mutate({ id, quantity });
@@ -24,6 +26,10 @@ export const CartPage = () => {
 
   const handleRemoveItem = (id: string) => {
     removeCartItem.mutate(id);
+  };
+
+  const handleRemoveIngredient = (itemId: string, ingredientId: string) => {
+    removeCartItemIngredient.mutate({ itemId, ingredientId });
   };
 
   if (!_hasHydrated || isLoading) {
@@ -61,6 +67,8 @@ export const CartPage = () => {
               item={item}
               onClickCountButton={handleUpdateQuantity}
               onClickRemove={handleRemoveItem}
+              onClickRemoveIngredient={handleRemoveIngredient}
+              ingredientActionsDisabled={removeCartItemIngredient.isPending}
             />
           ))}
         </div>

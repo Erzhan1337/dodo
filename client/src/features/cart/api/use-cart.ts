@@ -83,3 +83,26 @@ export const useRemoveCartItem = () => {
     },
   });
 };
+
+export const useRemoveCartItemIngredient = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      itemId,
+      ingredientId,
+    }: {
+      itemId: string;
+      ingredientId: string;
+    }) => {
+      const userId = getCurrentUserId();
+      const { data } = await $api.delete<CartResponse>(
+        `/cart/${itemId}/ingredients/${ingredientId}`,
+      );
+      return { cart: data, userId };
+    },
+    onSuccess: ({ cart, userId }) => {
+      setCurrentUserCartQueryData(queryClient, userId, cart);
+    },
+  });
+};

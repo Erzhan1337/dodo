@@ -78,6 +78,28 @@ export class CartController {
     return result.cart;
   }
 
+  @Delete(':itemId/ingredients/:ingredientId')
+  @OptionalAuth()
+  async removeItemIngredient(
+    @CurrentUser('id') userId: string | undefined,
+    @Param('itemId') itemId: string,
+    @Param('ingredientId') ingredientId: string,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.cartService.removeItemIngredient(
+      {
+        userId,
+        guestCartToken: this.getGuestCartToken(req),
+      },
+      itemId,
+      ingredientId,
+    );
+
+    this.syncGuestCartCookie(res, result);
+    return result.cart;
+  }
+
   @Delete(':id')
   @OptionalAuth()
   async removeCartItem(

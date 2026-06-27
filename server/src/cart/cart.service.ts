@@ -176,6 +176,74 @@ export class CartService {
     return { ...resolvedCart, cart };
   }
 
+  async removeItemIngredient(
+    identity: CartIdentity,
+    itemId: string,
+    ingredientId: string,
+  ) {
+    const resolvedCart = await this.getMutableCart(identity);
+
+    const cart = await this.prisma.$transaction(async (tx) => {
+      await this.lockCart(resolvedCart.cart.id, tx);
+
+      const cartItem = await tx.cartItem.findFirst({
+        where: { id: itemId, cartId: resolvedCart.cart.id },
+        select: {
+          id: true,
+          quantity: true,
+          productItemId: true,
+          ingredients: { select: { id: true } },
+        },
+      });
+
+      if (!cartItem) {
+        throw new NotFoundException('Cart item not found');
+      }
+
+      const remainingIngredientIds = cartItem.ingredients
+        .map(({ id }) => id)
+        .filter((id) => id !== ingredientId)
+        .sort();
+
+      if (remainingIngredientIds.length === cartItem.ingredients.length) {
+        throw new NotFoundException('Ingredient not found in cart item');
+      }
+
+      const ingredientsKey = this.createIngredientsKey(remainingIngredientIds);
+      const existingItem = await tx.cartItem.findFirst({
+        where: {
+          cartId: resolvedCart.cart.id,
+          productItemId: cartItem.productItemId,
+          ingredientsKey,
+          NOT: { id: cartItem.id },
+        },
+        select: { id: true },
+      });
+
+      if (existingItem) {
+        await tx.cartItem.update({
+          where: { id: existingItem.id },
+          data: { quantity: { increment: cartItem.quantity } },
+        });
+        await tx.cartItem.delete({ where: { id: cartItem.id } });
+      } else {
+        await tx.cartItem.update({
+          where: { id: cartItem.id },
+          data: {
+            ingredientsKey,
+            ingredients: {
+              set: remainingIngredientIds.map((id) => ({ id })),
+            },
+          },
+        });
+      }
+
+      return this.updateCartTotalAmount(resolvedCart.cart.id, tx);
+    });
+
+    return { ...resolvedCart, cart };
+  }
+
   async mergeGuestCartIntoUser(userId: string, guestCartToken: string) {
     return this.prisma.$transaction(async (tx) => {
       const guestCart = await tx.cart.findUnique({
