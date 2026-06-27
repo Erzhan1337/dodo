@@ -3,19 +3,10 @@ import { CheckCircle2 } from "lucide-react";
 import { Breadcrumbs, Button, Container, Title } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import { formatPrice } from "@/shared/lib/format-price";
-import type { Order, OrderStatus } from "@/entities/order";
-
-const STATUS_LABELS: Record<OrderStatus, { text: string; className: string }> = {
-  PENDING: {
-    text: "Принят, ожидает оплаты",
-    className: "bg-amber-100 text-amber-700",
-  },
-  SUCCEEDED: { text: "Оплачен", className: "bg-green-100 text-green-700" },
-  CANCELED: { text: "Отменён", className: "bg-red-100 text-red-700" },
-};
+import { ORDER_STATUS_META, type Order } from "@/entities/order";
 
 export const OrderPage = ({ order }: { order: Order }) => {
-  const status = STATUS_LABELS[order.status];
+  const status = ORDER_STATUS_META[order.status];
   const orderNumber = order.id.slice(-6).toUpperCase();
 
   return (

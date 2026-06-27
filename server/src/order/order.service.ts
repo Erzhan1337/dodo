@@ -130,4 +130,12 @@ export class OrderService {
 
     return order;
   }
+
+  async getOrdersByUserId(userId: string) {
+    return this.prisma.order.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      select: orderResponseSelect,
+    });
+  }
 }

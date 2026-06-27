@@ -13,6 +13,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { OptionalAuth } from '../auth/decorators/optional-auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { CartService, GUEST_CART_TOKEN_COOKIE } from '../cart/cart.service';
+import { Auth } from '../auth/decorators/auth.decorator';
 
 @Controller('order')
 export class OrderController {
@@ -42,6 +43,12 @@ export class OrderController {
     }
 
     return { token: result.token };
+  }
+
+  @Get('my')
+  @Auth()
+  getCurrentUserOrders(@CurrentUser('id') userId: string) {
+    return this.orderService.getOrdersByUserId(userId);
   }
 
   @Get(':token')
