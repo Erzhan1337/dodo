@@ -1,8 +1,9 @@
-import dynamic from "next/dynamic";
-
-const ProductModal = dynamic(() =>
-  import("@/widgets/product-modal").then((m) => m.ProductModal),
-);
+import {
+  fetchProduct,
+  isProductNotFoundFetchError,
+} from "@/entities/product/api/fetch-product";
+import { ProductModal } from "@/widgets/product-modal";
+import { notFound } from "next/navigation";
 
 export default async function ProductModalPage({
   params,
@@ -11,5 +12,14 @@ export default async function ProductModalPage({
 }) {
   const { id } = await params;
 
-  return <ProductModal id={id} />;
+  try {
+    const product = await fetchProduct(id);
+    return <ProductModal product={product} />;
+  } catch (error) {
+    if (isProductNotFoundFetchError(error)) {
+      notFound();
+    }
+
+    throw error;
+  }
 }
