@@ -2,12 +2,27 @@
 import { Product, ProductCard, useProducts } from "@/entities/product";
 import { useQueryParam } from "@/shared/hooks";
 import { Pagination, QueryErrorState, Skeleton } from "@/shared/ui";
-import { LazyMotion, m } from "framer-motion";
-import { loadMotionFeatures } from "@/shared/lib/motion";
+import { domAnimation, LazyMotion, m, type Variants } from "framer-motion";
 
-const itemVariants = {
+const listVariants: Variants = {
+  hidden: {},
+  visible: {
+    transition: {
+      staggerChildren: 0.07,
+    },
+  },
+};
+
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.35,
+      ease: "easeOut",
+    },
+  },
 };
 
 export const ProductList = () => {
@@ -65,21 +80,21 @@ export const ProductList = () => {
     );
   }
 
+  // Remount the animated grid when the dataset changes so reveal variants replay.
+  const productsAnimationKey = products.map((product) => product.id).join("-");
+
   return (
     <div className="flex-1">
-      <LazyMotion features={loadMotionFeatures}>
+      <LazyMotion features={domAnimation}>
         <m.div
+          key={productsAnimationKey}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10"
+          variants={listVariants}
           initial="hidden"
           animate="visible"
-          transition={{ staggerChildren: 0.07 }}
         >
           {products.map((product: Product) => (
-            <m.div
-              key={product.id}
-              variants={itemVariants}
-              transition={{ duration: 0.35 }}
-            >
+            <m.div key={product.id} variants={itemVariants}>
               <ProductCard product={product} />
             </m.div>
           ))}
