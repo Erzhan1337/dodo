@@ -23,7 +23,6 @@ export const SearchBar = () => {
 
   return (
     <>
-      {/*Overlay*/}
       <div
         className={cn(
           "fixed inset-0 bg-black/50 backdrop-blur-[2px] z-50 transition-all duration-500",
@@ -54,7 +53,6 @@ export const SearchBar = () => {
             className="outline-0 w-full pl-2 bg-transparent lg:text-base md:text-sm"
           />
         </div>
-        {/*Dropdown*/}
         <div
           className={cn(
             "absolute z-60 mt-3 w-full bg-white shadow-2xl rounded-2xl py-3 max-h-73 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] transition-all duration-500",

@@ -17,7 +17,7 @@ export const ProductModal = ({ product }: Props) => {
     setIsOpen(false);
     setTimeout(() => {
       back();
-    }, 300); // Wait for Framer Motion exit animation
+    }, 300);
   };
 
   return (

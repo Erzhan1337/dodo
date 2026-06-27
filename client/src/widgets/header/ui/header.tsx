@@ -8,7 +8,6 @@ export const Header = () => {
   return (
     <header className="py-3 md:py-5 border-b border-zinc-200">
       <Container className="flex items-center justify-between">
-        {/*Left Side*/}
         <Link href="/" className="flex gap-1 md:gap-2 lg:gap-3 items-center">
           <div className="relative w-8 h-8 md:w-9 md:h-9 lg:w-11 lg:h-11">
             <Image
@@ -29,11 +28,9 @@ export const Header = () => {
             </p>
           </div>
         </Link>
-        {/*Search Bar*/}
         <div className="hidden md:flex md:flex-1 mx-8">
           <SearchBar />
         </div>
-        {/*Login & Cart*/}
         <HeaderActions />
       </Container>
     </header>

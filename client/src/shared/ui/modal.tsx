@@ -35,7 +35,6 @@ export const Modal = ({
           <AnimatePresence>
             {isOpen && (
               <div className="fixed inset-0 z-60 flex items-center justify-center">
-                {/*Overlay*/}
                 <m.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -45,7 +44,6 @@ export const Modal = ({
                   className="fixed inset-0 bg-black/60"
                 />
 
-                {/*Content*/}
                 <m.div
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
