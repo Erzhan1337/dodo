@@ -15,16 +15,24 @@ import { formatPrice } from "@/shared/lib/format-price";
 import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 import { IngredientGridSkeleton } from "@/features/product-configurator/ui/ingredient-grid-skeleton";
 import { Loader2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { ProductRatingSummary } from "@/entities/review";
 
 interface Props {
   product: Product;
   onSubmit?: () => void;
   className?: string;
+  rightHeader?: ReactNode;
+  rightContent?: ReactNode;
 }
 
-export const ProductForm = ({ product, onSubmit, className }: Props) => {
+export const ProductForm = ({
+  product,
+  onSubmit,
+  className,
+  rightHeader,
+  rightContent,
+}: Props) => {
   const { data: ingredients = [], isLoading } = useIngredients();
   const hasProductItems = product.items.length > 0;
   const {
@@ -43,6 +51,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
   const { mutate: addToCart, isPending } = useAddToCart();
 
   const { total } = totalPrice();
+  const hasRightContent = rightContent !== undefined && rightContent !== null;
   const [loadedImage, setLoadedImage] = useState(currentImage);
   const isImageLoading = loadedImage !== currentImage;
   const productImageUrls = useMemo(
@@ -84,7 +93,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
   };
 
   return (
-    <div className={cn("flex flex-1 flex-col lg:flex-row", className)}>
+    <div className={cn("flex min-h-0 flex-1 flex-col lg:flex-row", className)}>
       <div className="flex w-full items-center justify-center rounded-t-3xl bg-white py-5 lg:w-[50%] lg:rounded-bl-3xl lg:rounded-tr-none lg:py-0">
         <div className="relative size-56 sm:size-70 lg:size-85">
           <NextImage
@@ -114,84 +123,104 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
         </div>
       </div>
 
-      <div className="w-full rounded-b-3xl bg-[#F4F1EE] px-4 py-5 sm:px-6 lg:w-[50%] lg:rounded-br-3xl lg:rounded-tl-none lg:rounded-tr-3xl lg:px-10">
-        <div>
-          <h2 className="text-xl font-semibold sm:text-2xl">{product.name}</h2>
-          <ProductRatingSummary
-            ratingAvg={product.ratingAvg}
-            ratingCount={product.ratingCount}
-            className="mt-1"
-          />
-          <p className="mt-1 text-sm text-gray-600">
-            {product.description}
-          </p>
-        </div>
-        {hasProductItems ? (
-          <>
-            <div className="flex flex-col gap-3 mt-3">
-              <GroupVariants
-                items={PIZZA_SIZES.map((item) => ({
-                  name: item.name,
-                  value: item.value,
-                  disabled: !product.items.some(
-                    (pizza) => pizza.size === item.value,
-                  ),
-                }))}
-                value={size}
-                onClick={(val) => setSize(val)}
-              />
-              <GroupVariants
-                items={PIZZA_TYPES.map((item) => ({
-                  name: item.name,
-                  value: item.value,
-                  disabled: !product.items.some(
-                    (pizza) =>
-                      pizza.size === size && pizza.pizzaType === item.value,
-                  ),
-                }))}
-                value={type}
-                onClick={(val) => setType(val)}
-              />
-            </div>
+      <div
+        className={cn(
+          "flex min-h-0 w-full flex-col rounded-br-3xl bg-[#F4F1EE] px-4 sm:px-6 lg:w-[50%] lg:rounded-br-3xl lg:rounded-tl-none lg:rounded-tr-3xl lg:px-10",
+          rightHeader ? "overflow-hidden py-5" : "py-5",
+        )}
+      >
+        {rightHeader ? (
+          <div className="mb-3 shrink-0">{rightHeader}</div>
+        ) : null}
 
-            {isLoading ? (
-              <IngredientGridSkeleton />
-            ) : (
-              <div className="mt-5">
-                <p className="text-lg font-semibold mb-2">Добавить по вкусу</p>
-                <div className="pb-2 w-full overflow-y-auto h-45 lg:h-90 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                  {ingredients.map((ingredient) => (
-                    <IngredientCard
-                      key={ingredient.id}
-                      ingredient={ingredient}
-                      onClick={() => toggleIngredient(ingredient.id)}
-                      active={selectedIngredients.has(ingredient.id)}
-                    />
-                  ))}
+        {hasRightContent ? (
+          <div className="min-h-0 flex-1 overflow-hidden">{rightContent}</div>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col">
+            <div>
+              <h2 className="text-xl font-semibold sm:text-2xl">
+                {product.name}
+              </h2>
+              <ProductRatingSummary
+                ratingAvg={product.ratingAvg}
+                ratingCount={product.ratingCount}
+                className="mt-1"
+              />
+              <p className="mt-1 text-sm text-gray-600">
+                {product.description}
+              </p>
+            </div>
+            {hasProductItems ? (
+              <>
+                <div className="flex flex-col gap-3 mt-3">
+                  <GroupVariants
+                    items={PIZZA_SIZES.map((item) => ({
+                      name: item.name,
+                      value: item.value,
+                      disabled: !product.items.some(
+                        (pizza) => pizza.size === item.value,
+                      ),
+                    }))}
+                    value={size}
+                    onClick={(val) => setSize(val)}
+                  />
+                  <GroupVariants
+                    items={PIZZA_TYPES.map((item) => ({
+                      name: item.name,
+                      value: item.value,
+                      disabled: !product.items.some(
+                        (pizza) =>
+                          pizza.size === size && pizza.pizzaType === item.value,
+                      ),
+                    }))}
+                    value={type}
+                    onClick={(val) => setType(val)}
+                  />
                 </div>
+
+                {isLoading ? (
+                  <IngredientGridSkeleton />
+                ) : (
+                  <div className="mt-5">
+                    <p className="text-lg font-semibold mb-2">
+                      Добавить по вкусу
+                    </p>
+                    <div className="pb-2 w-full overflow-y-auto h-45 lg:h-78 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                      {ingredients.map((ingredient) => (
+                        <IngredientCard
+                          key={ingredient.id}
+                          ingredient={ingredient}
+                          onClick={() => toggleIngredient(ingredient.id)}
+                          active={selectedIngredients.has(ingredient.id)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="mt-5 rounded-2xl bg-white p-5 text-center text-muted-foreground">
+                Этот продукт сейчас недоступен для заказа.
               </div>
             )}
-          </>
-        ) : (
-          <div className="mt-5 rounded-2xl bg-white p-5 text-center text-muted-foreground">
-            Этот продукт сейчас недоступен для заказа.
+
+            <button
+              onClick={handleSubmit}
+              disabled={!isAvailable || isPending}
+              className={cn(
+                "font-semibold w-full bg-primary py-3 cursor-pointer rounded-2xl text-white text-lg hover:scale-95 transition-transform duration-300",
+                rightHeader ? "mt-auto" : "mt-3 md:mt-5",
+                (!isAvailable || isPending) && "opacity-50 cursor-not-allowed",
+              )}
+            >
+              {!hasProductItems
+                ? "Нет в наличии"
+                : isPending
+                  ? "Добавляем..."
+                  : `Добавить в корзину за ${formatPrice(total)}`}
+            </button>
           </div>
         )}
-
-        <button
-          onClick={handleSubmit}
-          disabled={!isAvailable || isPending}
-          className={cn(
-            "font-semibold w-full mt-3 md:mt-5 bg-primary py-3 cursor-pointer rounded-2xl text-white text-lg hover:scale-95 transition-transform duration-300",
-            (!isAvailable || isPending) && "opacity-50 cursor-not-allowed",
-          )}
-        >
-          {!hasProductItems
-            ? "Нет в наличии"
-            : isPending
-              ? "Добавляем..."
-              : `Добавить в корзину за ${formatPrice(total)}`}
-        </button>
       </div>
     </div>
   );
