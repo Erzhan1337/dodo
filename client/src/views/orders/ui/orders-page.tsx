@@ -103,9 +103,17 @@ const OrderCard = ({ order }: { order: Order }) => {
             key={item.id}
             className="flex items-start justify-between gap-4 text-sm"
           >
-            <span className="text-gray-700">
-              {item.customName || item.productItem.product.name}
-              <span className="text-gray-400"> × {item.quantity}</span>
+            <span className="min-w-0 text-gray-700">
+              <span>
+                {item.customName || item.productItem.product.name}
+                <span className="text-gray-400"> × {item.quantity}</span>
+              </span>
+              {item.customDetails?.halfAndHalf && (
+                <span className="mt-1 block text-xs font-semibold text-primary">
+                  Левая: {item.customDetails.halfAndHalf.leftProduct.name} ·
+                  Правая: {item.customDetails.halfAndHalf.rightProduct.name}
+                </span>
+              )}
             </span>
             <span className="whitespace-nowrap font-semibold">
               {formatPrice(item.price * item.quantity)}

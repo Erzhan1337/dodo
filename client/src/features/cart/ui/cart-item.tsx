@@ -53,6 +53,9 @@ export const CartItem: React.FC<Props> = ({
     item.customDetails?.removedIngredients.map(
       (ingredient) => `без ${ingredient.name.toLowerCase()}`,
     ) ?? [];
+  const halfAndHalfLabel = item.customDetails?.halfAndHalf
+    ? `Левая: ${item.customDetails.halfAndHalf.leftProduct.name} · Правая: ${item.customDetails.halfAndHalf.rightProduct.name}`
+    : null;
 
   return (
     <div
@@ -86,6 +89,11 @@ export const CartItem: React.FC<Props> = ({
               </>
             )}
           </div>
+          {halfAndHalfLabel && (
+            <div className="mt-1 text-xs font-semibold text-primary">
+              {halfAndHalfLabel}
+            </div>
+          )}
 
           {isCustomPizza && (
             <div className="mt-2 flex flex-wrap gap-2">

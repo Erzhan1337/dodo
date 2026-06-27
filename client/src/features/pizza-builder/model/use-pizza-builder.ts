@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import type { Product } from "@/entities/product/model/types";
+import type { Product, ProductItem } from "@/entities/product/model/types";
 import type { Ingredient } from "@/entities/ingredient/model/types";
 import type {
   CreateCartItemValues,
@@ -24,6 +25,11 @@ type ProductsResponse = {
 type SelectedIngredient = {
   quantity: 1 | 2;
   placement: CustomPizzaPlacement;
+};
+
+type HalfAndHalfPair = {
+  left: ProductItem;
+  right: ProductItem;
 };
 
 export type BuilderIngredientLine = Ingredient &
@@ -58,12 +64,92 @@ const getFirstAvailableItem = (product?: Product) =>
     .filter((item) => item.size && item.pizzaType)
     .sort((a, b) => a.price - b.price)[0];
 
+const getFirstHalfAndHalfItem = (product?: Product) =>
+  product?.items
+    .filter((item) => item.size >= 30 && item.pizzaType)
+    .sort((a, b) => a.size - b.size || a.price - b.price)[0];
+
+const canProductUseHalfAndHalf = (product?: Product) =>
+  Boolean(product?.canBuildHalfAndHalf && getFirstHalfAndHalfItem(product));
+
+const getHalfAndHalfPairs = (
+  leftProduct?: Product,
+  rightProduct?: Product,
+): HalfAndHalfPair[] => {
+  if (!leftProduct || !rightProduct) {
+    return [];
+  }
+
+  if (!canProductUseHalfAndHalf(leftProduct) || !canProductUseHalfAndHalf(rightProduct)) {
+    return [];
+  }
+
+  const rightItemsByKey = new Map(
+    rightProduct.items
+      .filter((item) => item.size >= 30 && item.pizzaType)
+      .map((item) => [`${item.size}:${item.pizzaType}`, item]),
+  );
+
+  return leftProduct.items
+    .filter((item) => item.size >= 30 && item.pizzaType)
+    .flatMap((left) => {
+      const right = rightItemsByKey.get(`${left.size}:${left.pizzaType}`);
+      return right ? [{ left, right }] : [];
+    })
+    .sort(
+      (a, b) =>
+        a.left.size - b.left.size ||
+        a.left.pizzaType - b.left.pizzaType ||
+        a.left.price - b.left.price,
+    );
+};
+
+const getFirstHalfAndHalfPair = (
+  leftProduct?: Product,
+  rightProduct?: Product,
+) => getHalfAndHalfPairs(leftProduct, rightProduct)[0];
+
+const getCompatibleRightProduct = (
+  products: Product[],
+  leftProduct?: Product,
+  preferredProductId?: string | null,
+) => {
+  if (!leftProduct) return undefined;
+
+  const candidates = products.filter(
+    (product) =>
+      product.id !== leftProduct.id && canProductUseHalfAndHalf(product),
+  );
+  const preferredProduct = preferredProductId
+    ? candidates.find((product) => product.id === preferredProductId)
+    : undefined;
+
+  if (getFirstHalfAndHalfPair(leftProduct, preferredProduct)) {
+    return preferredProduct;
+  }
+
+  return candidates.find((product) =>
+    getFirstHalfAndHalfPair(leftProduct, product),
+  );
+};
+
+const getHalfAndHalfName = (leftProduct?: Product, rightProduct?: Product) =>
+  leftProduct && rightProduct
+    ? `${leftProduct.name} + ${rightProduct.name}`
+    : "Моя пицца";
+
 const isMozzarella = (ingredient: Pick<Ingredient, "name">) =>
   ingredient.name.toLowerCase().includes("моцарелла");
 
 export const usePizzaBuilder = () => {
+  const searchParams = useSearchParams();
+  const requestedBaseProductId =
+    searchParams.get("leftProductId") ?? searchParams.get("baseProductId");
+  const requestedRightProductId = searchParams.get("rightProductId");
+  const requestedFormat = searchParams.get("format");
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const [baseProductId, setBaseProductIdState] = useState<string>();
+  const [rightProductId, setRightProductIdState] = useState<string>();
   const [size, setSizeState] = useState<number>();
   const [pizzaType, setPizzaTypeState] = useState<number>();
   const [format, setFormatState] = useState<CustomPizzaFormat>("whole");
@@ -101,52 +187,130 @@ export const usePizzaBuilder = () => {
 
   const products = data?.products ?? [];
   const ingredients = data?.ingredients ?? [];
+  const halfAndHalfProducts = useMemo(
+    () => products.filter(canProductUseHalfAndHalf),
+    [products],
+  );
 
   useEffect(() => {
     if (baseProductId || products.length === 0) return;
 
+    const queryProduct = requestedBaseProductId
+      ? products.find((product) => product.id === requestedBaseProductId)
+      : undefined;
     const preferredProduct =
-      products.find((product) => product.name === "Сырная") ?? products[0];
-    const firstItem = getFirstAvailableItem(preferredProduct);
+      queryProduct ??
+      products.find((product) => product.name === "Сырная") ??
+      products[0];
+    const shouldUseHalves =
+      requestedFormat === "halves" &&
+      canProductUseHalfAndHalf(preferredProduct);
+    const rightProduct = shouldUseHalves
+      ? getCompatibleRightProduct(
+          products,
+          preferredProduct,
+          requestedRightProductId,
+        )
+      : undefined;
+    const firstPair = shouldUseHalves
+      ? getFirstHalfAndHalfPair(preferredProduct, rightProduct)
+      : undefined;
+    const firstItem = firstPair
+      ? firstPair.left
+      : getFirstAvailableItem(preferredProduct);
 
     setBaseProductIdState(preferredProduct.id);
+    setRightProductIdState(rightProduct?.id);
     setSizeState(firstItem?.size ?? undefined);
     setPizzaTypeState(firstItem?.pizzaType ?? undefined);
-  }, [baseProductId, products]);
+    setFormatState(shouldUseHalves ? "halves" : "whole");
+    if (shouldUseHalves) {
+      setCustomName(getHalfAndHalfName(preferredProduct, rightProduct));
+    }
+  }, [
+    baseProductId,
+    products,
+    requestedBaseProductId,
+    requestedRightProductId,
+    requestedFormat,
+  ]);
 
   const baseProduct = products.find((product) => product.id === baseProductId);
+  const rightProduct = products.find((product) => product.id === rightProductId);
   const availableItems = baseProduct?.items ?? [];
-  const currentItem = availableItems.find(
-    (item) => item.size === size && item.pizzaType === pizzaType,
+  const halfAndHalfPairs = useMemo(
+    () =>
+      format === "halves"
+        ? getHalfAndHalfPairs(baseProduct, rightProduct)
+        : [],
+    [baseProduct, format, rightProduct],
   );
+  const currentHalfAndHalfPair = halfAndHalfPairs.find(
+    (pair) => pair.left.size === size && pair.left.pizzaType === pizzaType,
+  );
+  const currentItem =
+    format === "halves"
+      ? currentHalfAndHalfPair?.left
+      : availableItems.find(
+          (item) => item.size === size && item.pizzaType === pizzaType,
+        );
+  const rightCurrentItem =
+    format === "halves" ? currentHalfAndHalfPair?.right : undefined;
   const mozzarella = ingredients.find(isMozzarella);
-  const baseMozzarella = baseProduct?.ingredients.find(isMozzarella);
+  const baseIngredients = useMemo(() => {
+    const ingredientById = new Map<string, Ingredient>();
+
+    for (const ingredient of baseProduct?.ingredients ?? []) {
+      ingredientById.set(ingredient.id, ingredient);
+    }
+
+    if (format === "halves") {
+      for (const ingredient of rightProduct?.ingredients ?? []) {
+        ingredientById.set(ingredient.id, ingredient);
+      }
+    }
+
+    return [...ingredientById.values()];
+  }, [baseProduct, format, rightProduct]);
+  const baseMozzarella = baseIngredients.find(isMozzarella);
 
   const availableSizes = useMemo(
-    () =>
-      [...new Set(availableItems.map((item) => item.size).filter(Boolean))]
+    () => {
+      const source =
+        format === "halves"
+          ? halfAndHalfPairs.map((pair) => pair.left)
+          : availableItems;
+
+      return [...new Set(source.map((item) => item.size).filter(Boolean))]
         .map(Number)
-        .sort((a, b) => a - b),
-    [availableItems],
+        .sort((a, b) => a - b);
+    },
+    [availableItems, format, halfAndHalfPairs],
   );
 
   const availablePizzaTypes = useMemo(
-    () =>
-      [
+    () => {
+      const source =
+        format === "halves"
+          ? halfAndHalfPairs.map((pair) => pair.left)
+          : availableItems;
+
+      return [
         ...new Set(
-          availableItems
+          source
             .filter((item) => item.size === size)
             .map((item) => item.pizzaType)
             .filter(Boolean),
         ),
       ]
         .map(Number)
-        .sort((a, b) => a - b),
-    [availableItems, size],
+        .sort((a, b) => a - b);
+    },
+    [availableItems, format, halfAndHalfPairs, size],
   );
 
   const baseIngredientIds = new Set(
-    baseProduct?.ingredients.map((ingredient) => ingredient.id) ?? [],
+    baseIngredients.map((ingredient) => ingredient.id),
   );
 
   const selectedIngredientLines = useMemo<BuilderIngredientLine[]>(() => {
@@ -203,7 +367,11 @@ export const usePizzaBuilder = () => {
     (sum, ingredient) => sum + ingredient.linePrice,
     0,
   );
-  const totalPrice = (currentItem?.price ?? 0) + ingredientsPrice;
+  const baseUnitPrice =
+    format === "halves" && currentItem && rightCurrentItem
+      ? Math.round(currentItem.price / 2 + rightCurrentItem.price / 2)
+      : currentItem?.price ?? 0;
+  const totalPrice = baseUnitPrice + ingredientsPrice;
 
   const estimatedWeight = useMemo(() => {
     const baseWeight = BASE_WEIGHT_BY_SIZE[size ?? 30] ?? 620;
@@ -225,11 +393,45 @@ export const usePizzaBuilder = () => {
   const doubleCount = Object.values(selectedIngredients).filter(
     (ingredient) => ingredient.quantity === 2,
   ).length;
-  const canUseHalves = (size ?? 0) >= 30;
-  const canSubmit = Boolean(currentItem);
+  const compatibleRightProduct = useMemo(
+    () =>
+      rightProduct && getFirstHalfAndHalfPair(baseProduct, rightProduct)
+        ? rightProduct
+        : getCompatibleRightProduct(products, baseProduct, rightProductId),
+    [baseProduct, products, rightProduct, rightProductId],
+  );
+  const canUseHalves =
+    Boolean(getFirstHalfAndHalfPair(baseProduct, compatibleRightProduct)) &&
+    (format === "whole" || (size ?? 0) >= 30);
+  const canSubmit = Boolean(
+    currentItem && (format === "whole" || rightCurrentItem),
+  );
 
   const setBaseProductId = (productId: string) => {
     const nextProduct = products.find((product) => product.id === productId);
+
+    if (!nextProduct) return;
+
+    if (format === "halves") {
+      const nextRightProduct =
+        rightProduct && getFirstHalfAndHalfPair(nextProduct, rightProduct)
+          ? rightProduct
+          : getCompatibleRightProduct(products, nextProduct, rightProductId);
+      const preferredPair =
+        getHalfAndHalfPairs(nextProduct, nextRightProduct).find(
+          (pair) =>
+            pair.left.size === size && pair.left.pizzaType === pizzaType,
+        ) ?? getFirstHalfAndHalfPair(nextProduct, nextRightProduct);
+
+      setBaseProductIdState(productId);
+      setRightProductIdState(nextRightProduct?.id);
+      setSizeState(preferredPair?.left.size ?? undefined);
+      setPizzaTypeState(preferredPair?.left.pizzaType ?? undefined);
+      setCustomName(getHalfAndHalfName(nextProduct, nextRightProduct));
+      setRemovedBaseIngredientIds(new Set());
+      return;
+    }
+
     const preferredItem =
       nextProduct?.items.find(
         (item) => item.size === size && item.pizzaType === pizzaType,
@@ -241,7 +443,37 @@ export const usePizzaBuilder = () => {
     setRemovedBaseIngredientIds(new Set());
   };
 
+  const setRightHalfProductId = (productId: string) => {
+    if (format !== "halves" || productId === baseProductId) return;
+
+    const nextProduct = products.find((product) => product.id === productId);
+    const preferredPair =
+      getHalfAndHalfPairs(baseProduct, nextProduct).find(
+        (pair) => pair.left.size === size && pair.left.pizzaType === pizzaType,
+      ) ?? getFirstHalfAndHalfPair(baseProduct, nextProduct);
+
+    if (!preferredPair) return;
+
+    setRightProductIdState(productId);
+    setSizeState(preferredPair.left.size);
+    setPizzaTypeState(preferredPair.left.pizzaType);
+    setCustomName(getHalfAndHalfName(baseProduct, nextProduct));
+    setRemovedBaseIngredientIds(new Set());
+  };
+
   const setSize = (nextSize: number) => {
+    if (format === "halves") {
+      const preferredPair =
+        halfAndHalfPairs.find(
+          (pair) =>
+            pair.left.size === nextSize && pair.left.pizzaType === pizzaType,
+        ) ?? halfAndHalfPairs.find((pair) => pair.left.size === nextSize);
+
+      setSizeState(preferredPair?.left.size ?? nextSize);
+      setPizzaTypeState(preferredPair?.left.pizzaType ?? undefined);
+      return;
+    }
+
     const preferredItem =
       availableItems.find(
         (item) => item.size === nextSize && item.pizzaType === pizzaType,
@@ -264,6 +496,25 @@ export const usePizzaBuilder = () => {
   };
 
   const setPizzaType = (nextPizzaType: number) => {
+    if (format === "halves") {
+      const preferredPair =
+        halfAndHalfPairs.find(
+          (pair) =>
+            pair.left.size === size && pair.left.pizzaType === nextPizzaType,
+        ) ??
+        halfAndHalfPairs.find(
+          (pair) => pair.left.pizzaType === nextPizzaType,
+        );
+
+      setPizzaTypeState(nextPizzaType);
+
+      if (preferredPair?.left.size && preferredPair.left.size !== size) {
+        setSizeState(preferredPair.left.size);
+      }
+
+      return;
+    }
+
     const preferredItem =
       availableItems.find(
         (item) => item.size === size && item.pizzaType === nextPizzaType,
@@ -277,20 +528,37 @@ export const usePizzaBuilder = () => {
   };
 
   const setFormat = (nextFormat: CustomPizzaFormat) => {
-    if (nextFormat === "halves" && !canUseHalves) return;
+    if (nextFormat === "halves") {
+      const nextRightProduct =
+        rightProduct && getFirstHalfAndHalfPair(baseProduct, rightProduct)
+          ? rightProduct
+          : getCompatibleRightProduct(products, baseProduct, rightProductId);
+      const preferredPair =
+        getHalfAndHalfPairs(baseProduct, nextRightProduct).find(
+          (pair) =>
+            pair.left.size === size && pair.left.pizzaType === pizzaType,
+        ) ?? getFirstHalfAndHalfPair(baseProduct, nextRightProduct);
+
+      if (!preferredPair) return;
+
+      setFormatState("halves");
+      setRightProductIdState(nextRightProduct?.id);
+      setSizeState(preferredPair.left.size);
+      setPizzaTypeState(preferredPair.left.pizzaType);
+      setCustomName(getHalfAndHalfName(baseProduct, nextRightProduct));
+      return;
+    }
 
     setFormatState(nextFormat);
 
-    if (nextFormat === "whole") {
-      setSelectedIngredients((prev) =>
-        Object.fromEntries(
-          Object.entries(prev).map(([id, ingredient]) => [
-            id,
-            { ...ingredient, placement: "whole" },
-          ]),
-        ),
-      );
-    }
+    setSelectedIngredients((prev) =>
+      Object.fromEntries(
+        Object.entries(prev).map(([id, ingredient]) => [
+          id,
+          { ...ingredient, placement: "whole" },
+        ]),
+      ),
+    );
   };
 
   const setIngredientQuantity = (id: string, quantity: 0 | 1 | 2) => {
@@ -376,6 +644,13 @@ export const usePizzaBuilder = () => {
         customPizza: {
           name: customName,
           format,
+          halfAndHalf:
+            format === "halves" && rightCurrentItem
+              ? {
+                  leftProductItemId: currentItem.id,
+                  rightProductItemId: rightCurrentItem.id,
+                }
+              : undefined,
           sauce,
           cheeseMode,
           bakeMode,
@@ -395,11 +670,17 @@ export const usePizzaBuilder = () => {
     setActiveStepIndex,
     baseProduct,
     baseProductId,
+    rightProduct,
+    rightProductId,
     products,
+    halfAndHalfProducts,
     ingredients,
+    baseIngredients,
     availableSizes,
     availablePizzaTypes,
     currentItem,
+    rightCurrentItem,
+    baseUnitPrice,
     size,
     pizzaType,
     format,
@@ -423,6 +704,7 @@ export const usePizzaBuilder = () => {
     isFetching,
     refetch,
     setBaseProductId,
+    setRightHalfProductId,
     setSize,
     setPizzaType,
     setFormat,

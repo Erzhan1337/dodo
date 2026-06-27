@@ -42,6 +42,7 @@ model Product {
   name        String
   imageUrl    String
   description String
+  canBuildHalfAndHalf Boolean @default(false) @map("can_build_half_and_half")
 
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId Int      @map("category_id")

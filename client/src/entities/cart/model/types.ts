@@ -29,6 +29,11 @@ export interface CustomPizzaDetails {
   version: number;
   name: string;
   format: CustomPizzaFormat;
+  halfAndHalf?: {
+    leftProduct: CustomPizzaHalfProduct;
+    rightProduct: CustomPizzaHalfProduct;
+    baseUnitPrice: number;
+  } | null;
   sauce: string;
   cheeseMode: CustomPizzaCheeseMode;
   bakeMode: string;
@@ -46,6 +51,16 @@ export interface CustomPizzaDetails {
     id: string;
     name: string;
   }>;
+}
+
+export interface CustomPizzaHalfProduct {
+  productId: string;
+  productItemId: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  size: number | null;
+  pizzaType: number | null;
 }
 
 export interface CartItem {
@@ -72,6 +87,10 @@ export interface CreateCartItemValues {
   customPizza?: {
     name?: string;
     format: CustomPizzaFormat;
+    halfAndHalf?: {
+      leftProductItemId: string;
+      rightProductItemId: string;
+    };
     sauce: string;
     cheeseMode: CustomPizzaCheeseMode;
     bakeMode?: string;

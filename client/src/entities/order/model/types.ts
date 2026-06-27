@@ -20,6 +20,11 @@ export type OrderCustomPizzaDetails = {
   version: number;
   name: string;
   format: "whole" | "halves";
+  halfAndHalf?: {
+    leftProduct: OrderCustomPizzaHalfProduct;
+    rightProduct: OrderCustomPizzaHalfProduct;
+    baseUnitPrice: number;
+  } | null;
   sauce: string;
   cheeseMode: "standard" | "double" | "none";
   bakeMode: string;
@@ -37,6 +42,16 @@ export type OrderCustomPizzaDetails = {
     id: string;
     name: string;
   }>;
+};
+
+export type OrderCustomPizzaHalfProduct = {
+  productId: string;
+  productItemId: string;
+  name: string;
+  imageUrl: string;
+  price: number;
+  size: number | null;
+  pizzaType: number | null;
 };
 
 export interface OrderItem {

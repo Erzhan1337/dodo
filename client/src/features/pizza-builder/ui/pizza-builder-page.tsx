@@ -239,6 +239,8 @@ const IngredientCategoryTabs = ({
 
 const PizzaPreview = ({
   imageUrl,
+  leftHalfImageUrl,
+  rightHalfImageUrl,
   name,
   format,
   lines,
@@ -248,6 +250,8 @@ const PizzaPreview = ({
   calories,
 }: {
   imageUrl?: string;
+  leftHalfImageUrl?: string;
+  rightHalfImageUrl?: string;
   name: string;
   format: CustomPizzaFormat;
   lines: BuilderIngredientLine[];
@@ -290,7 +294,32 @@ const PizzaPreview = ({
         {format === "halves" && (
           <div className="absolute left-1/2 top-[8%] z-20 h-[84%] w-px -translate-x-1/2 bg-white/90 shadow-[0_0_0_1px_rgba(0,0,0,0.04)]" />
         )}
-        {imageUrl && (
+        {format === "halves" && leftHalfImageUrl && rightHalfImageUrl ? (
+          <>
+            <Image
+              src={leftHalfImageUrl}
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 1024px) 320px, 380px"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+              className="object-contain p-6"
+              style={{ clipPath: "inset(0 50% 0 0)" }}
+            />
+            <Image
+              src={rightHalfImageUrl}
+              alt=""
+              fill
+              priority
+              sizes="(max-width: 1024px) 320px, 380px"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+              className="object-contain p-6"
+              style={{ clipPath: "inset(0 0 0 50%)" }}
+            />
+          </>
+        ) : imageUrl ? (
           <Image
             src={imageUrl}
             alt={name}
@@ -301,7 +330,7 @@ const PizzaPreview = ({
             blurDataURL={BLUR_DATA_URL}
             className="object-contain p-6"
           />
-        )}
+        ) : null}
         {overlayItems.map(({ line, key, position }) => {
           const left =
             line.placement === "left"
@@ -442,6 +471,7 @@ export const PizzaBuilderPage = () => {
   const [activeCategory, setActiveCategory] =
     useState<IngredientCategory>("Популярное");
   const baseProductLayoutId = useId();
+  const rightProductLayoutId = useId();
   const sauceLayoutId = useId();
 
   const visibleIngredients = useMemo(() => {
@@ -473,6 +503,8 @@ export const PizzaBuilderPage = () => {
   const activeStep = PIZZA_BUILDER_STEPS[builder.activeStepIndex];
   const productImage =
     builder.currentItem?.imageUrl || builder.baseProduct?.imageUrl;
+  const rightProductImage =
+    builder.rightCurrentItem?.imageUrl || builder.rightProduct?.imageUrl;
   const selectedProductName = builder.customName.trim() || "Моя пицца";
 
   const handleIngredientQuantity = (
@@ -515,6 +547,8 @@ export const PizzaBuilderPage = () => {
         <div className="grid gap-8 lg:grid-cols-[minmax(320px,440px)_1fr]">
           <PizzaPreview
             imageUrl={productImage}
+            leftHalfImageUrl={productImage}
+            rightHalfImageUrl={rightProductImage}
             name={selectedProductName}
             format={builder.format}
             lines={builder.builderIngredientLines}
@@ -560,63 +594,144 @@ export const PizzaBuilderPage = () => {
                     {!builder.canUseHalves && (
                       <div className="mt-2 flex items-center gap-2 text-sm text-amber-700">
                         <AlertTriangle className="size-4" />
-                        Половинки доступны для 30 и 35 см.
+                        {builder.baseProduct?.canBuildHalfAndHalf
+                          ? "Половинки доступны для 30 и 35 см."
+                          : "Для этой пиццы половинки недоступны."}
                       </div>
                     )}
                   </div>
 
-                  <div>
-                    <div className="mb-3 text-lg font-bold">
-                      Начать с готовой пиццы
-                    </div>
-                    <LazyMotion features={loadMotionFeatures}>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        {builder.products.map((product) => {
-                          const active = product.id === builder.baseProductId;
-                          const firstItem = product.items[0];
-
-                          return (
-                            <button
-                              key={product.id}
-                              type="button"
-                              onClick={() =>
-                                builder.setBaseProductId(product.id)
-                              }
-                              className="relative z-10 flex min-h-24 items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm transition-colors"
-                            >
-                              {active && (
-                                <m.div
-                                  layoutId={baseProductLayoutId}
-                                  transition={SEGMENT_TRANSITION}
-                                  className="absolute inset-0 rounded-2xl bg-orange-50 shadow-md ring-1 ring-primary"
-                                />
-                              )}
-                              <div className="relative z-10 size-16 shrink-0">
-                                <Image
-                                  src={product.imageUrl}
-                                  alt={product.name}
-                                  fill
-                                  sizes="64px"
-                                  className="object-contain"
-                                />
-                              </div>
-                              <div className="relative z-10 min-w-0">
-                                <div className="font-bold">{product.name}</div>
-                                <div className="line-clamp-2 text-xs text-gray-500">
-                                  {product.description}
-                                </div>
-                                {firstItem && (
-                                  <div className="mt-1 text-sm font-semibold text-primary">
-                                    от {formatPrice(firstItem.price)}
-                                  </div>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })}
+                  {builder.format === "halves" ? (
+                    <div>
+                      <div className="mb-3 text-lg font-bold">
+                        Собрать из двух пицц
                       </div>
-                    </LazyMotion>
-                  </div>
+                      <LazyMotion features={loadMotionFeatures}>
+                        <div className="grid gap-4 lg:grid-cols-2">
+                          {[
+                            {
+                              title: "Левая половина",
+                              activeId: builder.baseProductId,
+                              layoutId: baseProductLayoutId,
+                              onSelect: builder.setBaseProductId,
+                            },
+                            {
+                              title: "Правая половина",
+                              activeId: builder.rightProductId,
+                              layoutId: rightProductLayoutId,
+                              onSelect: builder.setRightHalfProductId,
+                            },
+                          ].map((column) => (
+                            <div key={column.title}>
+                              <div className="mb-2 text-sm font-bold text-gray-500">
+                                {column.title}
+                              </div>
+                              <div className="grid gap-2">
+                                {builder.halfAndHalfProducts.map((product) => {
+                                  const active = product.id === column.activeId;
+                                  const disabled =
+                                    column.title === "Правая половина" &&
+                                    product.id === builder.baseProductId;
+                                  const firstItem = product.items[0];
+
+                                  return (
+                                    <button
+                                      key={`${column.title}-${product.id}`}
+                                      type="button"
+                                      disabled={disabled}
+                                      onClick={() => column.onSelect(product.id)}
+                                      className="relative z-10 flex min-h-20 items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-45"
+                                    >
+                                      {active && (
+                                        <m.div
+                                          layoutId={column.layoutId}
+                                          transition={SEGMENT_TRANSITION}
+                                          className="absolute inset-0 rounded-2xl bg-orange-50 shadow-md ring-1 ring-primary"
+                                        />
+                                      )}
+                                      <div className="relative z-10 size-14 shrink-0">
+                                        <Image
+                                          src={product.imageUrl}
+                                          alt={product.name}
+                                          fill
+                                          sizes="56px"
+                                          className="object-contain"
+                                        />
+                                      </div>
+                                      <div className="relative z-10 min-w-0">
+                                        <div className="font-bold">
+                                          {product.name}
+                                        </div>
+                                        {firstItem && (
+                                          <div className="mt-1 text-sm font-semibold text-primary">
+                                            половина от{" "}
+                                            {formatPrice(firstItem.price)}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </LazyMotion>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="mb-3 text-lg font-bold">
+                        Начать с готовой пиццы
+                      </div>
+                      <LazyMotion features={loadMotionFeatures}>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          {builder.products.map((product) => {
+                            const active = product.id === builder.baseProductId;
+                            const firstItem = product.items[0];
+
+                            return (
+                              <button
+                                key={product.id}
+                                type="button"
+                                onClick={() =>
+                                  builder.setBaseProductId(product.id)
+                                }
+                                className="relative z-10 flex min-h-24 items-center gap-3 rounded-2xl bg-white p-3 text-left shadow-sm transition-colors"
+                              >
+                                {active && (
+                                  <m.div
+                                    layoutId={baseProductLayoutId}
+                                    transition={SEGMENT_TRANSITION}
+                                    className="absolute inset-0 rounded-2xl bg-orange-50 shadow-md ring-1 ring-primary"
+                                  />
+                                )}
+                                <div className="relative z-10 size-16 shrink-0">
+                                  <Image
+                                    src={product.imageUrl}
+                                    alt={product.name}
+                                    fill
+                                    sizes="64px"
+                                    className="object-contain"
+                                  />
+                                </div>
+                                <div className="relative z-10 min-w-0">
+                                  <div className="font-bold">{product.name}</div>
+                                  <div className="line-clamp-2 text-xs text-gray-500">
+                                    {product.description}
+                                  </div>
+                                  {firstItem && (
+                                    <div className="mt-1 text-sm font-semibold text-primary">
+                                      от {formatPrice(firstItem.price)}
+                                    </div>
+                                  )}
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </LazyMotion>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -654,7 +769,7 @@ export const PizzaBuilderPage = () => {
                     {PIZZA_TYPE_LABELS[builder.pizzaType ?? 1]?.toLowerCase()}{" "}
                     тесто. Базовая цена{" "}
                     <span className="font-bold text-black">
-                      {formatPrice(builder.currentItem?.price ?? 0)}
+                      {formatPrice(builder.baseUnitPrice)}
                     </span>
                     .
                   </div>
@@ -722,7 +837,7 @@ export const PizzaBuilderPage = () => {
 
               {activeStep.id === "toppings" && (
                 <div className="space-y-6">
-                  {builder.baseProduct && builder.baseProduct.ingredients.length > 0 && (
+                  {builder.baseIngredients.length > 0 && (
                     <div>
                       <div className="mb-3 flex items-center justify-between gap-3">
                         <div className="text-lg font-bold">Убрать из основы</div>
@@ -731,7 +846,7 @@ export const PizzaBuilderPage = () => {
                         </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        {builder.baseProduct.ingredients.map((ingredient) => {
+                        {builder.baseIngredients.map((ingredient) => {
                           const removed = builder.removedIngredientIds.includes(
                             ingredient.id,
                           );
@@ -876,6 +991,14 @@ export const PizzaBuilderPage = () => {
                           тесто · {builder.sauce} ·{" "}
                           {CHEESE_MODE_TEXT[builder.cheeseMode]}
                         </div>
+                        {builder.format === "halves" &&
+                          builder.baseProduct &&
+                          builder.rightProduct && (
+                            <div className="mt-2 text-sm font-semibold text-primary">
+                              Левая: {builder.baseProduct.name} · Правая:{" "}
+                              {builder.rightProduct.name}
+                            </div>
+                          )}
                       </div>
                       <div className="text-right text-xl font-extrabold text-primary">
                         {formatPrice(builder.totalPrice)}
@@ -895,7 +1018,7 @@ export const PizzaBuilderPage = () => {
                         </span>
                       ))}
                       {builder.removedIngredientIds.map((id) => {
-                        const ingredient = builder.baseProduct?.ingredients.find(
+                        const ingredient = builder.baseIngredients.find(
                           (item) => item.id === id,
                         );
 

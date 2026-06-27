@@ -45,15 +45,25 @@ const orderNumber = order.id.slice(-6).toUpperCase();
                   <span className="text-gray-400"> × {item.quantity}</span>
                 </div>
                 {item.customDetails && (
-                  <div className="mt-1 text-xs text-gray-400">
-                    {item.productItem.size} см,{" "}
-                    {item.productItem.pizzaType === 1
-                      ? "традиционное"
-                      : "тонкое"}{" "}
-                    тесто · {item.customDetails.sauce}
-                    {item.customDetails.format === "halves" &&
-                      " · две половинки"}
-                  </div>
+                  <>
+                    <div className="mt-1 text-xs text-gray-400">
+                      {item.productItem.size} см,{" "}
+                      {item.productItem.pizzaType === 1
+                        ? "традиционное"
+                        : "тонкое"}{" "}
+                      тесто · {item.customDetails.sauce}
+                      {item.customDetails.format === "halves" &&
+                        " · две половинки"}
+                    </div>
+                    {item.customDetails.halfAndHalf && (
+                      <div className="mt-1 text-xs font-semibold text-primary">
+                        Левая:{" "}
+                        {item.customDetails.halfAndHalf.leftProduct.name} ·
+                        Правая:{" "}
+                        {item.customDetails.halfAndHalf.rightProduct.name}
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               <span className="whitespace-nowrap font-semibold">

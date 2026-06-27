@@ -26,6 +26,20 @@ type ValidatedCartItemInput = {
   customUnitPrice?: number;
 };
 
+type CustomPizzaProductItem = {
+  id: string;
+  price: number;
+  size: number | null;
+  pizzaType: number | null;
+  product: {
+    id: string;
+    name: string;
+    imageUrl: string;
+    canBuildHalfAndHalf: boolean;
+    ingredients: { id: string; name: string }[];
+  };
+};
+
 const cartResponseSelect = {
   id: true,
   totalPrice: true,
@@ -538,8 +552,14 @@ export class CartService {
       select: {
         id: true,
         price: true,
+        size: true,
+        pizzaType: true,
         product: {
           select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            canBuildHalfAndHalf: true,
             ingredients: { select: { id: true, name: true } },
           },
         },
@@ -584,10 +604,7 @@ export class CartService {
 
   private async validateCustomPizzaInput(
     dto: AddCartItemDto,
-    productItem: {
-      price: number;
-      product: { ingredients: { id: string; name: string }[] };
-    },
+    productItem: CustomPizzaProductItem,
     client: Prisma.TransactionClient = this.prisma,
   ): Promise<ValidatedCartItemInput> {
     const customPizza = dto.customPizza;
@@ -640,11 +657,14 @@ export class CartService {
     const ingredientById = new Map(
       ingredientRecords.map((ingredient) => [ingredient.id, ingredient]),
     );
+    const halfAndHalf = customPizza.halfAndHalf
+      ? await this.validateHalfAndHalfInput(customPizza, productItem, client)
+      : null;
     const baseIngredientById = new Map(
-      productItem.product.ingredients.map((ingredient) => [
-        ingredient.id,
-        ingredient,
-      ]),
+      [
+        ...productItem.product.ingredients,
+        ...(halfAndHalf?.rightProductItem.product.ingredients ?? []),
+      ].map((ingredient) => [ingredient.id, ingredient]),
     );
     const removedIngredientIds = [
       ...new Set(customPizza.removedIngredientIds ?? []),
@@ -657,7 +677,8 @@ export class CartService {
       throw new BadRequestException('Invalid removed ingredient');
     }
 
-    let customUnitPrice = productItem.price;
+    let customUnitPrice =
+      halfAndHalf?.baseUnitPrice ?? productItem.price;
     const detailedIngredients = normalizedLines.map((line) => {
       const ingredient = ingredientById.get(line.id);
       if (!ingredient) {
@@ -686,6 +707,17 @@ export class CartService {
       version: 1,
       name: customName,
       format: customPizza.format,
+      halfAndHalf: halfAndHalf
+        ? {
+            leftProduct: this.toHalfAndHalfProductDetails(
+              halfAndHalf.leftProductItem,
+            ),
+            rightProduct: this.toHalfAndHalfProductDetails(
+              halfAndHalf.rightProductItem,
+            ),
+            baseUnitPrice: halfAndHalf.baseUnitPrice,
+          }
+        : null,
       sauce: customPizza.sauce.trim(),
       cheeseMode: customPizza.cheeseMode,
       bakeMode: customPizza.bakeMode?.trim() || 'standard',
@@ -707,6 +739,83 @@ export class CartService {
       customName,
       customDetails: customDetails as Prisma.InputJsonValue,
       customUnitPrice,
+    };
+  }
+
+  private async validateHalfAndHalfInput(
+    customPizza: NonNullable<AddCartItemDto['customPizza']>,
+    leftProductItem: CustomPizzaProductItem,
+    client: Prisma.TransactionClient,
+  ) {
+    const halfAndHalf = customPizza.halfAndHalf;
+
+    if (!halfAndHalf) return null;
+
+    if (customPizza.format !== 'halves') {
+      throw new BadRequestException('Half and half pizza should use halves');
+    }
+
+    if (halfAndHalf.leftProductItemId !== leftProductItem.id) {
+      throw new BadRequestException('Invalid left half product item');
+    }
+
+    const rightProductItem = await client.productItem.findUnique({
+      where: { id: halfAndHalf.rightProductItemId },
+      select: {
+        id: true,
+        price: true,
+        size: true,
+        pizzaType: true,
+        product: {
+          select: {
+            id: true,
+            name: true,
+            imageUrl: true,
+            canBuildHalfAndHalf: true,
+            ingredients: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+
+    if (!rightProductItem) {
+      throw new BadRequestException('Invalid right half product item');
+    }
+
+    if (
+      !leftProductItem.product.canBuildHalfAndHalf ||
+      !rightProductItem.product.canBuildHalfAndHalf
+    ) {
+      throw new BadRequestException('Product does not support half and half');
+    }
+
+    if (
+      !leftProductItem.size ||
+      leftProductItem.size < 30 ||
+      leftProductItem.size !== rightProductItem.size ||
+      leftProductItem.pizzaType !== rightProductItem.pizzaType
+    ) {
+      throw new BadRequestException('Half and half products are incompatible');
+    }
+
+    return {
+      leftProductItem,
+      rightProductItem,
+      baseUnitPrice: Math.round(
+        leftProductItem.price / 2 + rightProductItem.price / 2,
+      ),
+    };
+  }
+
+  private toHalfAndHalfProductDetails(item: CustomPizzaProductItem) {
+    return {
+      productId: item.product.id,
+      productItemId: item.id,
+      name: item.product.name,
+      imageUrl: item.product.imageUrl,
+      price: item.price,
+      size: item.size,
+      pizzaType: item.pizzaType,
     };
   }
 

@@ -5,7 +5,7 @@ export type Ingredient = {
   imageUrl: string;
 };
 
-type ProductItem = {
+export type ProductItem = {
   id: string;
   price: number;
   name: string;
@@ -20,6 +20,7 @@ export type Product = {
   description: string;
   imageUrl: string;
   categoryId: number;
+  canBuildHalfAndHalf: boolean;
   ingredients: Ingredient[];
   items: ProductItem[];
 };

@@ -247,6 +247,7 @@ async function main() {
     data: {
       name: 'Сырная',
       description: 'Моцарелла, сыры чеддер и пармезан, соус альфредо',
+      canBuildHalfAndHalf: true,
       imageUrl:
         'https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%81%D1%8B%D1%80%D0%BD%D0%B0%D1%8F_fuxdfh.avif',
       ingredients: {
@@ -300,6 +301,7 @@ async function main() {
       name: 'Терияки',
       description:
         'Нежный цыпленок, красный лук, зеленый перец, соус терияки, сыр моцарелла и фирменный соус альфредо',
+      canBuildHalfAndHalf: true,
       imageUrl:
         'https://res.cloudinary.com/dgtya5crt/image/upload/v1766834798/%D1%82%D0%B5%D1%80%D0%B8%D1%8F%D0%BA%D0%B8_mfiuwj.avif',
       ingredients: {
@@ -417,6 +419,7 @@ async function main() {
       name: 'Колбаски Барбекю',
       description:
         'Острая чоризо, соус барбекю, томаты, красный лук, моцарелла, томатный соус',
+      canBuildHalfAndHalf: true,
       imageUrl:
         'https://res.cloudinary.com/dgtya5crt/image/upload/v1767594112/%D0%BA%D0%BE%D0%BB%D0%B1%D0%B0%D1%81%D0%BA%D0%B8_%D0%B1%D0%B0%D1%80%D0%B1%D0%B5%D0%BA%D1%8E_o8so4w.avif',
       ingredients: {
@@ -572,6 +575,7 @@ async function main() {
       name: 'Додо',
       description:
         'Ветчина из цыпленка, сочные митболы, пепперони из цыпленка, томаты, шампиньоны, сладкий перец, красный лук',
+      canBuildHalfAndHalf: true,
       imageUrl:
         'https://res.cloudinary.com/dgtya5crt/image/upload/v1768913662/dodo_gm2gy5.avif',
       ingredients: {

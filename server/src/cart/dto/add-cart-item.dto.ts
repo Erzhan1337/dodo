@@ -28,6 +28,16 @@ export class CustomPizzaIngredientDto {
   placement: 'whole' | 'left' | 'right';
 }
 
+export class CustomPizzaHalfAndHalfDto {
+  @IsString()
+  @MinLength(1)
+  leftProductItemId: string;
+
+  @IsString()
+  @MinLength(1)
+  rightProductItemId: string;
+}
+
 export class CustomPizzaDto {
   @IsOptional()
   @IsString()
@@ -36,6 +46,12 @@ export class CustomPizzaDto {
 
   @IsIn(['whole', 'halves'])
   format: 'whole' | 'halves';
+
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => CustomPizzaHalfAndHalfDto)
+  halfAndHalf?: CustomPizzaHalfAndHalfDto;
 
   @IsString()
   @MinLength(1)
