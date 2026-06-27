@@ -2,7 +2,7 @@
 import { useProductForm } from "@/features/product-configurator/model/use-product-form";
 import { Product } from "@/entities/product";
 import { cn } from "@/shared/lib/utils";
-import Image from "next/image";
+import NextImage from "next/image";
 import { GroupVariants } from "@/features/product-configurator/ui/group-variants";
 import {
   PIZZA_SIZES,
@@ -14,6 +14,8 @@ import toast from "react-hot-toast";
 import { formatPrice } from "@/shared/lib/format-price";
 import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 import { IngredientGridSkeleton } from "@/features/product-configurator/ui/ingredient-grid-skeleton";
+import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 interface Props {
   product: Product;
@@ -40,6 +42,26 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
   const { mutate: addToCart, isPending } = useAddToCart();
 
   const { total } = totalPrice();
+  const [loadedImage, setLoadedImage] = useState(currentImage);
+  const isImageLoading = loadedImage !== currentImage;
+  const productImageUrls = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [product.imageUrl, ...product.items.map((item) => item.imageUrl)].filter(
+            Boolean,
+          ),
+        ),
+      ),
+    [product.imageUrl, product.items],
+  );
+
+  useEffect(() => {
+    productImageUrls.forEach((src) => {
+      const image = new window.Image();
+      image.src = src;
+    });
+  }, [productImageUrls]);
 
   const handleSubmit = () => {
     if (!hasProductItems) return;
@@ -64,7 +86,7 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
     <div className={cn("flex flex-1 flex-col lg:flex-row", className)}>
       <div className="w-full lg:w-[50%] flex items-center justify-center bg-white lg:rounded-tl-3xl lg:rounded-bl-3xl">
         <div className="relative w-70 h-70 lg:w-85 lg:h-85">
-          <Image
+          <NextImage
             src={currentImage}
             alt={product.name}
             fill
@@ -72,8 +94,22 @@ export const ProductForm = ({ product, onSubmit, className }: Props) => {
             sizes="(max-width: 1024px) 280px, 340px"
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
-            className="object-contain"
+            onLoad={() => setLoadedImage(currentImage)}
+            onError={() => setLoadedImage(currentImage)}
+            className={cn(
+              "object-contain transition-[filter,opacity,transform] duration-300",
+              isImageLoading && "scale-[0.98] opacity-75 blur-[2px]",
+            )}
           />
+          {isImageLoading && (
+            <div className="absolute inset-0 overflow-hidden rounded-3xl bg-white/55 backdrop-blur-[2px] before:absolute before:inset-0 before:-translate-x-full before:animate-[skeleton-shimmer_1.2s_ease-in-out_infinite] before:bg-linear-to-r before:from-transparent before:via-primary/15 before:to-transparent">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="flex size-16 items-center justify-center rounded-full bg-white/90 shadow-lg shadow-orange-200/60 ring-1 ring-primary/10">
+                  <Loader2 className="size-7 animate-spin text-primary" />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
