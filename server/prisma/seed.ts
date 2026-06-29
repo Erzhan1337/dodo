@@ -1,5 +1,7 @@
+import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient, PromoCodeType } from '@prisma/client';
 import { hash } from 'argon2';
+import { getDatabaseUrl } from '../src/prisma/database-url';
 
 const ALLOW_DESTRUCTIVE_SEED = 'ALLOW_DESTRUCTIVE_SEED';
 const ALLOW_NON_LOCAL_DESTRUCTIVE_SEED = 'ALLOW_NON_LOCAL_DESTRUCTIVE_SEED';
@@ -60,7 +62,9 @@ function assertSafeToSeed() {
 
 async function main() {
   assertSafeToSeed();
-  prisma = new PrismaClient();
+  prisma = new PrismaClient({
+    adapter: new PrismaPg(getDatabaseUrl()),
+  });
 
   console.log('Starting');
 
