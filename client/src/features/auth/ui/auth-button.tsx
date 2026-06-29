@@ -8,6 +8,7 @@ import { useClickOutside } from "@/shared/hooks";
 
 const options = [
   { label: "Настройки", href: "/profile" },
+  { label: "Избранное", href: "/favorites" },
   { label: "Заказы", href: "/orders" },
 ];
 

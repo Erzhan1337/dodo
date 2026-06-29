@@ -17,6 +17,7 @@ import { IngredientGridSkeleton } from "@/features/product-configurator/ui/ingre
 import { Loader2 } from "lucide-react";
 import { type ReactNode, useEffect, useMemo, useState } from "react";
 import { ProductRatingSummary } from "@/entities/review";
+import { FavoriteButton } from "@/features/favorites";
 
 interface Props {
   product: Product;
@@ -138,17 +139,26 @@ export const ProductForm = ({
         ) : (
           <div className="flex min-h-0 flex-1 flex-col">
             <div>
-              <h2 className="text-xl font-semibold sm:text-2xl">
-                {product.name}
-              </h2>
-              <ProductRatingSummary
-                ratingAvg={product.ratingAvg}
-                ratingCount={product.ratingCount}
-                className="mt-1"
-              />
-              <p className="mt-1 text-sm text-gray-600">
-                {product.description}
-              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold sm:text-2xl">
+                    {product.name}
+                  </h2>
+                  <ProductRatingSummary
+                    ratingAvg={product.ratingAvg}
+                    ratingCount={product.ratingCount}
+                    className="mt-1"
+                  />
+                </div>
+                <FavoriteButton
+                  product={product}
+                  productId={product.id}
+                  productName={product.name}
+                  showLabel
+                  className="w-fit shrink-0"
+                />
+              </div>
+              <p className="mt-2 text-sm text-gray-600">{product.description}</p>
             </div>
             {hasProductItems ? (
               <>

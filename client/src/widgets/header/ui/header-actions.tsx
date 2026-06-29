@@ -3,6 +3,7 @@
 import { useSessionStore } from "@/entities/session/model/store";
 import { AuthButton } from "@/features/auth";
 import { CartButton } from "@/features/cart";
+import { FavoritesHeaderLink } from "@/features/favorites";
 import { Skeleton } from "@/shared/ui";
 import { ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -33,6 +34,7 @@ export const HeaderActions = () => {
           Админка
         </Link>
       )}
+      <FavoritesHeaderLink />
       <AuthButton />
       <CartButton />
     </div>

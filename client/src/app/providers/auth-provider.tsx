@@ -11,6 +11,7 @@ import {
   EMPTY_CART_RESPONSE,
   getCartQueryKey,
 } from "@/entities/cart/model/query-key";
+import { favoriteKeys } from "@/features/favorites";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
@@ -49,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       queryClient.setQueryData(getCartQueryKey(null), EMPTY_CART_RESPONSE);
+      queryClient.removeQueries({ queryKey: favoriteKeys.root });
       useSessionStore.setState({
         user: null,
         accessToken: null,

@@ -11,6 +11,7 @@ import { OrderModule } from './order/order.module';
 import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
 import { ReviewsModule } from './reviews/reviews.module';
+import { FavoritesModule } from './favorites/favorites.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     OrderModule,
     HealthModule,
     ReviewsModule,
+    FavoritesModule,
     AdminModule,
   ],
 })

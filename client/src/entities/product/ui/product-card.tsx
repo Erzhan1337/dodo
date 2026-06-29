@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import { Button } from "@/shared/ui";
 import { CircleDivide, Plus } from "lucide-react";
@@ -7,6 +9,7 @@ import { formatPrice } from "@/shared/lib/format-price";
 import { BLUR_DATA_URL } from "@/shared/lib/blur-data-url";
 import { memo } from "react";
 import { ProductRatingSummary } from "@/entities/review";
+import { FavoriteButton } from "@/features/favorites";
 
 interface Props {
   product: Product;
@@ -23,6 +26,12 @@ export const ProductCard = memo(({ product }: Props) => {
   return (
     <div className="">
       <div className="relative flex h-50 items-center justify-center rounded-2xl bg-[#FFF7EE] md:h-70">
+        <FavoriteButton
+          product={product}
+          productId={product.id}
+          productName={product.name}
+          className="absolute left-3 top-3 z-20"
+        />
         {canBuildHalfAndHalf && (
           <Link
             href={halfAndHalfHref}

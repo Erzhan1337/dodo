@@ -20,6 +20,7 @@ model User {
   cart   Cart?
   orders Order[]
   reviews ProductReview[]
+  favorites ProductFavorite[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -55,6 +56,7 @@ model Product {
   ingredients Ingredient[]
   items       ProductItem[]
   reviews     ProductReview[]
+  favorites   ProductFavorite[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -173,6 +175,23 @@ model ProductReview {
   @@index([userId, createdAt])
   @@index([rating])
   @@map("product_reviews")
+}
+
+model ProductFavorite {
+  id String @id @default(cuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([userId, productId])
+  @@index([userId, createdAt])
+  @@index([productId])
+  @@map("favorite_products")
 }
 
 model Cart {
