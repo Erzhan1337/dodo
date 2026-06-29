@@ -12,6 +12,7 @@ import { HealthModule } from './health/health.module';
 import { AdminModule } from './admin/admin.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { PromoCodesModule } from './promo-codes/promo-codes.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { FavoritesModule } from './favorites/favorites.module';
     HealthModule,
     ReviewsModule,
     FavoritesModule,
+    PromoCodesModule,
     AdminModule,
   ],
 })

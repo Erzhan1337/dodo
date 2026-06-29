@@ -91,7 +91,16 @@ export type AdminOrder = {
   orderNumber: number;
   token: string;
   status: OrderStatus;
+  subtotalPrice: number;
+  discountAmount: number;
   totalPrice: number;
+  promoCode: {
+    id: string;
+    code: string;
+    title: string;
+    description: string;
+  } | null;
+  promoCodeSnapshot: unknown;
   userId: string | null;
   name: string;
   phone: string;

@@ -10,7 +10,11 @@ export const getCartQueryKey = (userId: string | null | undefined) => [
 
 export const EMPTY_CART_RESPONSE: CartResponse = {
   id: "",
+  subtotalPrice: 0,
+  discountAmount: 0,
   totalPrice: 0,
   totalAmount: 0,
+  promoCodeId: null,
+  promoCode: null,
   items: [],
 };

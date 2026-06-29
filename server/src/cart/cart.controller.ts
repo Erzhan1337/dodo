@@ -15,6 +15,7 @@ import { OptionalAuth } from '../auth/decorators/optional-auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { ApplyPromoCodeDto } from '../promo-codes/dto/apply-promo-code.dto';
 
 @Controller('cart')
 export class CartController {
@@ -95,6 +96,42 @@ export class CartController {
       itemId,
       ingredientId,
     );
+
+    this.syncGuestCartCookie(res, result);
+    return result.cart;
+  }
+
+  @Post('promo-code')
+  @OptionalAuth()
+  async applyPromoCode(
+    @CurrentUser('id') userId: string | undefined,
+    @Body() dto: ApplyPromoCodeDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.cartService.applyPromoCode(
+      {
+        userId,
+        guestCartToken: this.getGuestCartToken(req),
+      },
+      dto.code,
+    );
+
+    this.syncGuestCartCookie(res, result);
+    return result.cart;
+  }
+
+  @Delete('promo-code')
+  @OptionalAuth()
+  async removePromoCode(
+    @CurrentUser('id') userId: string | undefined,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const result = await this.cartService.removePromoCode({
+      userId,
+      guestCartToken: this.getGuestCartToken(req),
+    });
 
     this.syncGuestCartCookie(res, result);
     return result.cart;

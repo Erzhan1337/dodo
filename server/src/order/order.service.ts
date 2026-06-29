@@ -13,6 +13,7 @@ import {
   OrderEventsService,
 } from './order-events.service';
 import { orderPaymentSelect } from '../payment/payment.service';
+import { PromoCodesService } from '../promo-codes/promo-codes.service';
 
 type OrderIdentity = {
   userId?: string | null;
@@ -25,7 +26,18 @@ const orderResponseSelect = {
   token: true,
   status: true,
   updatedAt: true,
+  subtotalPrice: true,
+  discountAmount: true,
   totalPrice: true,
+  promoCode: {
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      description: true,
+    },
+  },
+  promoCodeSnapshot: true,
   name: true,
   phone: true,
   address: true,
@@ -67,6 +79,7 @@ export class OrderService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly orderEventsService: OrderEventsService,
+    private readonly promoCodesService: PromoCodesService,
   ) {}
 
   async createOrder(identity: OrderIdentity, dto: CreateOrderDto) {
@@ -77,6 +90,7 @@ export class OrderService {
           : { guestToken: identity.guestCartToken ?? undefined, userId: null },
         select: {
           id: true,
+          promoCode: true,
           items: {
             select: {
               quantity: true,
@@ -95,7 +109,7 @@ export class OrderService {
         throw new BadRequestException('Cart is empty');
       }
 
-      let totalPrice = 0;
+      let subtotalPrice = 0;
       const orderItems = cart.items.map((item) => {
         const ingredientsPrice = item.ingredients.reduce(
           (sum, ing) => sum + ing.price,
@@ -103,7 +117,7 @@ export class OrderService {
         );
         const unitPrice =
           item.customUnitPrice ?? item.productItem.price + ingredientsPrice;
-        totalPrice += unitPrice * item.quantity;
+        subtotalPrice += unitPrice * item.quantity;
 
         return {
           productItemId: item.productItemId,
@@ -116,12 +130,38 @@ export class OrderService {
           },
         };
       });
+      let discountAmount = 0;
+      let promoCodeId: string | null = null;
+      let promoCodeSnapshot: Prisma.InputJsonValue | undefined;
+
+      if (cart.promoCode) {
+        const calculation =
+          await this.promoCodesService.validatePromoCodeRecord(
+            cart.promoCode,
+            subtotalPrice,
+            identity.userId,
+            tx,
+          );
+
+        discountAmount = calculation.discountAmount;
+        promoCodeId = calculation.promoCode.id;
+        promoCodeSnapshot = this.promoCodesService.createSnapshot(
+          calculation.promoCode,
+          calculation.discountAmount,
+        ) as Prisma.InputJsonValue;
+      }
+
+      const totalPrice = Math.max(subtotalPrice - discountAmount, 0);
 
       const order = await tx.order.create({
         data: {
           token: randomUUID(),
           status: STATUS.NEW,
+          subtotalPrice,
+          discountAmount,
           totalPrice,
+          promoCodeId,
+          promoCodeSnapshot,
           userId: identity.userId ?? null,
           name: dto.name.trim(),
           phone: normalizeKzPhone(dto.phone),
@@ -133,11 +173,27 @@ export class OrderService {
         select: adminOrderEventSelect,
       });
 
+      if (promoCodeId) {
+        await tx.promoCodeRedemption.create({
+          data: {
+            promoCodeId,
+            orderId: order.id,
+            userId: identity.userId ?? null,
+            discountAmount,
+          },
+        });
+      }
+
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
       if (identity.userId) {
         await tx.cart.update({
           where: { id: cart.id },
-          data: { totalPrice: 0 },
+          data: {
+            subtotalPrice: 0,
+            discountAmount: 0,
+            totalPrice: 0,
+            promoCodeId: null,
+          },
         });
       } else {
         await tx.cart.delete({ where: { id: cart.id } });

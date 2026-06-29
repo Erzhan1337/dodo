@@ -92,11 +92,36 @@ export const OrderPage = ({ order: initialOrder }: { order: Order }) => {
           ))}
         </div>
 
-        <div className="my-6 flex items-center justify-between">
-          <span className="text-lg text-gray-500">Итого:</span>
-          <span className="text-2xl font-extrabold">
-            {formatPrice(order.totalPrice)}
-          </span>
+        <div className="my-6 border-t border-gray-100 pt-5">
+          {order.discountAmount > 0 && (
+            <>
+              <div className="mb-2 flex items-center justify-between text-sm">
+                <span className="text-gray-500">Товары:</span>
+                <span className="font-semibold">
+                  {formatPrice(order.subtotalPrice)}
+                </span>
+              </div>
+              <div className="mb-3 flex items-center justify-between text-sm">
+                <span className="text-gray-500">
+                  Скидка
+                  {order.promoCodeSnapshot
+                    ? ` ${order.promoCodeSnapshot.code}`
+                    : ""}
+                  :
+                </span>
+                <span className="font-bold text-primary">
+                  -{formatPrice(order.discountAmount)}
+                </span>
+              </div>
+            </>
+          )}
+
+          <div className="flex items-center justify-between">
+            <span className="text-lg text-gray-500">Итого:</span>
+            <span className="text-2xl font-extrabold">
+              {formatPrice(order.totalPrice)}
+            </span>
+          </div>
         </div>
 
         {canPay && (

@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, PromoCodeType } from '@prisma/client';
 import { hash } from 'argon2';
 
 const ALLOW_DESTRUCTIVE_SEED = 'ALLOW_DESTRUCTIVE_SEED';
@@ -71,8 +71,10 @@ async function main() {
     prisma.productFavorite.deleteMany(),
     prisma.cartItem.deleteMany(),
     prisma.orderItem.deleteMany(),
+    prisma.promoCodeRedemption.deleteMany(),
     prisma.cart.deleteMany(),
     prisma.order.deleteMany(),
+    prisma.promoCode.deleteMany(),
     prisma.productItem.deleteMany(),
     prisma.product.deleteMany(),
     prisma.ingredient.deleteMany(),
@@ -81,6 +83,61 @@ async function main() {
   ]);
 
   console.log('All data is deleted');
+
+  await prisma.promoCode.createMany({
+    data: [
+      {
+        code: 'PIZZA10',
+        title: '10% на любую пиццу',
+        description: 'Скидка 10% на заказ без минимальной суммы',
+        type: PromoCodeType.PERCENT,
+        value: 10,
+        maxDiscountAmount: 1500,
+        usageLimit: 1000,
+      },
+      {
+        code: 'DODO500',
+        title: '500 ₸ от заказа',
+        description: 'Скидка 500 ₸ при заказе от 4000 ₸',
+        type: PromoCodeType.FIXED_AMOUNT,
+        value: 500,
+        minOrderAmount: 4000,
+        usageLimit: 700,
+      },
+      {
+        code: 'FIRST20',
+        title: '20% на первый заказ',
+        description: 'Для авторизованных гостей, которые еще не заказывали',
+        type: PromoCodeType.PERCENT,
+        value: 20,
+        minOrderAmount: 3000,
+        maxDiscountAmount: 2500,
+        perUserLimit: 1,
+        firstOrderOnly: true,
+      },
+      {
+        code: 'BIGPARTY',
+        title: 'Большая компания',
+        description: '15% при заказе от 8000 ₸',
+        type: PromoCodeType.PERCENT,
+        value: 15,
+        minOrderAmount: 8000,
+        maxDiscountAmount: 4000,
+        usageLimit: 500,
+      },
+      {
+        code: 'FREESHIP',
+        title: 'Доставка за наш счет',
+        description: 'Минус 600 ₸ от заказа от 3500 ₸',
+        type: PromoCodeType.FIXED_AMOUNT,
+        value: 600,
+        minOrderAmount: 3500,
+        usageLimit: 800,
+      },
+    ],
+  });
+
+  console.log('Promo codes are created');
 
   const cheeseBorder = await prisma.ingredient.create({
     data: {

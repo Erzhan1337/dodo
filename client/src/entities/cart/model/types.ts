@@ -20,6 +20,24 @@ export interface CartIngredient {
   imageUrl: string;
 }
 
+export type PromoCodeType = "PERCENT" | "FIXED_AMOUNT";
+
+export interface CartPromoCode {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  type: PromoCodeType;
+  value: number;
+  minOrderAmount: number;
+  maxDiscountAmount: number | null;
+  firstOrderOnly: boolean;
+}
+
+export interface PromoCodeOffer extends CartPromoCode {
+  endsAt: string | null;
+}
+
 export type CustomPizzaPlacement = "whole" | "left" | "right";
 export type CustomPizzaFormat = "whole" | "halves";
 export type CustomPizzaCheeseMode = "standard" | "double" | "none";
@@ -75,8 +93,12 @@ export interface CartItem {
 
 export interface CartResponse {
   id: string;
+  subtotalPrice: number;
+  discountAmount: number;
   totalPrice: number;
   totalAmount: number;
+  promoCodeId?: string | null;
+  promoCode?: CartPromoCode | null;
   items: CartItem[];
   token?: string;
 }

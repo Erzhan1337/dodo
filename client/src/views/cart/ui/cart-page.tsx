@@ -75,6 +75,27 @@ export const CartPage = () => {
         <div className="hidden lg:block md:w-110">
           <div className="p-8 bg-white rounded-[30px] shadow-lg sticky top-10">
             <div className="flex flex-col gap-1">
+              {cart.discountAmount > 0 && (
+                <>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">Товары:</span>
+                    <span className="font-semibold">
+                      {formatPrice(cart.subtotalPrice)}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-500">
+                      Скидка
+                      {cart.promoCode ? ` ${cart.promoCode.code}` : ""}:
+                    </span>
+                    <span className="font-bold text-primary">
+                      -{formatPrice(cart.discountAmount)}
+                    </span>
+                  </div>
+                  <div className="border-b border-gray-100 my-3" />
+                </>
+              )}
+
               <span className="text-xl text-gray-500">Итого:</span>
               <span className="text-[34px] font-extrabold">
                 {formatPrice(cart.totalPrice)}

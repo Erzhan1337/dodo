@@ -3,11 +3,13 @@ import { $api } from "@/shared/api/instance";
 import {
   CartResponse,
   CreateCartItemValues,
+  PromoCodeOffer,
 } from "@/entities/cart/model/types";
 import { useSessionStore } from "@/entities/session/model/store";
 import { getCartQueryKey } from "@/entities/cart/model/query-key";
 
 const getCurrentUserId = () => useSessionStore.getState().user?.id ?? null;
+const PROMO_CODES_QUERY_KEY = ["promo-codes"] as const;
 
 const setCurrentUserCartQueryData = (
   queryClient: ReturnType<typeof useQueryClient>,
@@ -34,6 +36,17 @@ export const useCart = () => {
       return data;
     },
     enabled: canFetchCart,
+  });
+};
+
+export const usePromoCodes = () => {
+  return useQuery<PromoCodeOffer[]>({
+    queryKey: PROMO_CODES_QUERY_KEY,
+    queryFn: async () => {
+      const { data } = await $api.get<PromoCodeOffer[]>("/promo-codes");
+      return data;
+    },
+    staleTime: 60_000,
   });
 };
 
@@ -99,6 +112,38 @@ export const useRemoveCartItemIngredient = () => {
       const { data } = await $api.delete<CartResponse>(
         `/cart/${itemId}/ingredients/${ingredientId}`,
       );
+      return { cart: data, userId };
+    },
+    onSuccess: ({ cart, userId }) => {
+      setCurrentUserCartQueryData(queryClient, userId, cart);
+    },
+  });
+};
+
+export const useApplyPromoCode = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (code: string) => {
+      const userId = getCurrentUserId();
+      const { data } = await $api.post<CartResponse>("/cart/promo-code", {
+        code,
+      });
+      return { cart: data, userId };
+    },
+    onSuccess: ({ cart, userId }) => {
+      setCurrentUserCartQueryData(queryClient, userId, cart);
+    },
+  });
+};
+
+export const useRemovePromoCode = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const userId = getCurrentUserId();
+      const { data } = await $api.delete<CartResponse>("/cart/promo-code");
       return { cart: data, userId };
     },
     onSuccess: ({ cart, userId }) => {

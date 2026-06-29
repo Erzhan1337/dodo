@@ -88,7 +88,18 @@ const adminOrderSelect = {
   orderNumber: true,
   token: true,
   status: true,
+  subtotalPrice: true,
+  discountAmount: true,
   totalPrice: true,
+  promoCode: {
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      description: true,
+    },
+  },
+  promoCodeSnapshot: true,
   userId: true,
   name: true,
   phone: true,

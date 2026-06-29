@@ -10,10 +10,12 @@ import { UserModule } from '../user/user.module';
 import { getJwtConfig } from '../../config/jwt.config';
 import { PaymentController } from '../payment/payment.controller';
 import { PaymentService } from '../payment/payment.service';
+import { PromoCodesModule } from '../promo-codes/promo-codes.module';
 
 @Module({
   imports: [
     CartModule,
+    PromoCodesModule,
     UserModule,
     ConfigModule,
     JwtModule.registerAsync({

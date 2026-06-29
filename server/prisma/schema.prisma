@@ -17,10 +17,11 @@ model User {
   refreshToken String?  @map("refresh_token")
   role         UserRole @default(CUSTOMER)
 
-  cart      Cart?
-  orders    Order[]
-  reviews   ProductReview[]
-  favorites ProductFavorite[]
+  cart                 Cart?
+  orders               Order[]
+  reviews              ProductReview[]
+  favorites            ProductFavorite[]
+  promoCodeRedemptions PromoCodeRedemption[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -104,17 +105,24 @@ model Ingredient {
 }
 
 model Order {
-  id          String @id @default(cuid())
-  orderNumber Int    @unique @default(autoincrement()) @map("order_number")
-  totalPrice  Int    @default(0) @map("total_price")
-  status      STATUS
-  token       String
+  id             String @id @default(cuid())
+  orderNumber    Int    @unique @default(autoincrement()) @map("order_number")
+  subtotalPrice  Int    @default(0) @map("subtotal_price")
+  discountAmount Int    @default(0) @map("discount_amount")
+  totalPrice     Int    @default(0) @map("total_price")
+  status         STATUS
+  token          String
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @map("user_id")
 
-  items   OrderItem[]
-  payment Payment?
+  items               OrderItem[]
+  payment             Payment?
+  promoCodeRedemption PromoCodeRedemption?
+
+  promoCode         PromoCode? @relation(fields: [promoCodeId], references: [id])
+  promoCodeId       String?    @map("promo_code_id")
+  promoCodeSnapshot Json?      @map("promo_code_snapshot")
 
   name    String
   phone   String
@@ -126,6 +134,7 @@ model Order {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
+  @@index([promoCodeId])
   @@index([orderNumber])
   @@map("orders")
 }
@@ -230,18 +239,24 @@ model ProductFavorite {
 }
 
 model Cart {
-  id         String  @id @default(cuid())
-  totalPrice Int     @default(0) @map("total_price")
-  guestToken String? @unique @map("guest_token")
+  id             String  @id @default(cuid())
+  subtotalPrice  Int     @default(0) @map("subtotal_price")
+  discountAmount Int     @default(0) @map("discount_amount")
+  totalPrice     Int     @default(0) @map("total_price")
+  guestToken     String? @unique @map("guest_token")
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @unique @map("user_id")
+
+  promoCode   PromoCode? @relation(fields: [promoCodeId], references: [id])
+  promoCodeId String?    @map("promo_code_id")
 
   items CartItem[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([promoCodeId])
   @@map("carts")
 }
 
@@ -270,6 +285,53 @@ model CartItem {
   @@map("cart_items")
 }
 
+model PromoCode {
+  id                String        @id @default(cuid())
+  code              String        @unique
+  title             String
+  description       String
+  type              PromoCodeType
+  value             Int
+  minOrderAmount    Int           @default(0) @map("min_order_amount")
+  maxDiscountAmount Int?          @map("max_discount_amount")
+  usageLimit        Int?          @map("usage_limit")
+  perUserLimit      Int?          @map("per_user_limit")
+  firstOrderOnly    Boolean       @default(false) @map("first_order_only")
+  isActive          Boolean       @default(true) @map("is_active")
+  startsAt          DateTime?     @map("starts_at")
+  endsAt            DateTime?     @map("ends_at")
+
+  carts       Cart[]
+  orders      Order[]
+  redemptions PromoCodeRedemption[]
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([isActive, startsAt, endsAt])
+  @@map("promo_codes")
+}
+
+model PromoCodeRedemption {
+  id             String @id @default(cuid())
+  discountAmount Int    @map("discount_amount")
+
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id])
+  promoCodeId String    @map("promo_code_id")
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @unique @map("order_id")
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @map("user_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([promoCodeId, createdAt])
+  @@index([userId, promoCodeId])
+  @@map("promo_code_redemptions")
+}
+
 enum STATUS {
   NEW
   PREPARING
@@ -292,4 +354,9 @@ enum PaymentStatus {
   SUCCEEDED
   CANCELED
   FAILED
+}
+
+enum PromoCodeType {
+  PERCENT
+  FIXED_AMOUNT
 }

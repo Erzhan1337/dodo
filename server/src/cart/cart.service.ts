@@ -10,6 +10,7 @@ import type { Response } from 'express';
 import { PrismaService } from '../prisma/prisma.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { PromoCodesService } from '../promo-codes/promo-codes.service';
 
 export const GUEST_CART_TOKEN_COOKIE = 'guestCartToken';
 
@@ -42,8 +43,24 @@ type CustomPizzaProductItem = {
 
 const cartResponseSelect = {
   id: true,
+  subtotalPrice: true,
+  discountAmount: true,
   totalPrice: true,
   userId: true,
+  promoCodeId: true,
+  promoCode: {
+    select: {
+      id: true,
+      code: true,
+      title: true,
+      description: true,
+      type: true,
+      value: true,
+      minOrderAmount: true,
+      maxDiscountAmount: true,
+      firstOrderOnly: true,
+    },
+  },
   createdAt: true,
   updatedAt: true,
   items: {
@@ -65,6 +82,9 @@ const cartResponseSelect = {
 } satisfies Prisma.CartSelect;
 
 const cartTotalSelect = {
+  id: true,
+  userId: true,
+  promoCode: true,
   items: {
     select: {
       quantity: true,
@@ -88,6 +108,7 @@ export class CartService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private promoCodesService: PromoCodesService,
   ) {}
 
   async getCart(identity: CartIdentity) {
@@ -206,6 +227,62 @@ export class CartService {
     return { ...resolvedCart, cart };
   }
 
+  async applyPromoCode(identity: CartIdentity, code: string) {
+    const resolvedCart = await this.getMutableCart(identity);
+
+    const cart = await this.prisma.$transaction(async (tx) => {
+      await this.lockCart(resolvedCart.cart.id, tx);
+
+      const cartPricing = await tx.cart.findUnique({
+        where: { id: resolvedCart.cart.id },
+        select: cartTotalSelect,
+      });
+
+      if (!cartPricing || cartPricing.items.length === 0) {
+        throw new BadRequestException('Cart is empty');
+      }
+
+      const subtotalPrice = this.calculateItemsSubtotal(cartPricing.items);
+      const { promoCode } = await this.promoCodesService.validatePromoCode(
+        code,
+        subtotalPrice,
+        cartPricing.userId,
+        tx,
+      );
+
+      await tx.cart.update({
+        where: { id: resolvedCart.cart.id },
+        data: { promoCodeId: promoCode.id },
+      });
+
+      return this.updateCartTotalAmount(resolvedCart.cart.id, tx, {
+        throwOnInvalidPromoCode: true,
+      });
+    });
+
+    return { ...resolvedCart, cart };
+  }
+
+  async removePromoCode(identity: CartIdentity) {
+    const resolvedCart = await this.getMutableCart(identity);
+
+    const cart = await this.prisma.$transaction(async (tx) => {
+      await this.lockCart(resolvedCart.cart.id, tx);
+
+      await tx.cart.update({
+        where: { id: resolvedCart.cart.id },
+        data: {
+          promoCodeId: null,
+          discountAmount: 0,
+        },
+      });
+
+      return this.updateCartTotalAmount(resolvedCart.cart.id, tx);
+    });
+
+    return { ...resolvedCart, cart };
+  }
+
   async removeItemIngredient(
     identity: CartIdentity,
     itemId: string,
@@ -310,7 +387,8 @@ export class CartService {
           select: cartResponseSelect,
         });
 
-        return this.toCartResponse(assignedCart);
+        const updatedCart = await this.updateCartTotalAmount(assignedCart.id, tx);
+        return updatedCart ?? this.toCartResponse(assignedCart);
       }
 
       await this.lockCarts([userCart.id, guestCart.id], tx);
@@ -352,6 +430,13 @@ export class CartService {
               connect: item.ingredients.map(({ id }) => ({ id })),
             },
           },
+        });
+      }
+
+      if (!userCart.promoCodeId && guestCart.promoCodeId) {
+        await tx.cart.update({
+          where: { id: userCart.id },
+          data: { promoCodeId: guestCart.promoCodeId },
         });
       }
 
@@ -500,6 +585,7 @@ export class CartService {
   private async updateCartTotalAmount(
     cartId: string,
     client: Prisma.TransactionClient = this.prisma,
+    options?: { throwOnInvalidPromoCode?: boolean },
   ) {
     const cart = await client.cart.findUnique({
       where: { id: cartId },
@@ -507,19 +593,40 @@ export class CartService {
     });
     if (!cart) return;
 
-    const totalAmount = cart.items.reduce((acc, item) => {
-      const productPrice = item.productItem.price;
-      const ingredientsPrice = item.ingredients.reduce(
-        (sum, ing) => sum + ing.price,
-        0,
-      );
-      const unitPrice = item.customUnitPrice ?? productPrice + ingredientsPrice;
-      return acc + unitPrice * item.quantity;
-    }, 0);
+    const subtotalPrice = this.calculateItemsSubtotal(cart.items);
+    let discountAmount = 0;
+    let promoCodeId = cart.promoCode?.id ?? null;
+
+    if (cart.promoCode) {
+      const calculation = options?.throwOnInvalidPromoCode
+        ? await this.promoCodesService.validatePromoCodeRecord(
+            cart.promoCode,
+            subtotalPrice,
+            cart.userId,
+            client,
+          )
+        : await this.promoCodesService.tryValidatePromoCodeRecord(
+            cart.promoCode,
+            subtotalPrice,
+            cart.userId,
+            client,
+          );
+
+      if (calculation) {
+        discountAmount = calculation.discountAmount;
+      } else {
+        promoCodeId = null;
+      }
+    }
 
     const updatedCart = await client.cart.update({
       where: { id: cartId },
-      data: { totalPrice: totalAmount },
+      data: {
+        subtotalPrice,
+        discountAmount,
+        totalPrice: Math.max(subtotalPrice - discountAmount, 0),
+        promoCodeId,
+      },
       select: cartResponseSelect,
     });
 
@@ -851,11 +958,35 @@ export class CartService {
   private createEmptyCartResponse() {
     return {
       id: '',
+      subtotalPrice: 0,
+      discountAmount: 0,
       totalPrice: 0,
       totalAmount: 0,
       userId: null,
+      promoCodeId: null,
+      promoCode: null,
       items: [],
     };
+  }
+
+  private calculateItemsSubtotal(
+    items: Array<{
+      quantity: number;
+      productItem: { price: number };
+      customUnitPrice: number | null;
+      ingredients: Array<{ price: number }>;
+    }>,
+  ) {
+    return items.reduce((acc, item) => {
+      const ingredientsPrice = item.ingredients.reduce(
+        (sum, ing) => sum + ing.price,
+        0,
+      );
+      const unitPrice =
+        item.customUnitPrice ?? item.productItem.price + ingredientsPrice;
+
+      return acc + unitPrice * item.quantity;
+    }, 0);
   }
 
   private toCartResponse<T extends { totalPrice: number }>(cart: T) {

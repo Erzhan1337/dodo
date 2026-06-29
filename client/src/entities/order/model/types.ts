@@ -6,6 +6,7 @@ export type OrderStatus =
   | "CANCELED";
 export type PaymentStatus = "PENDING" | "SUCCEEDED" | "CANCELED" | "FAILED";
 export type PaymentProvider = "STRIPE";
+export type PromoCodeType = "PERCENT" | "FIXED_AMOUNT";
 
 export interface Payment {
   id: string;
@@ -91,12 +92,31 @@ export interface OrderItem {
   } | null;
 }
 
+export interface OrderPromoCode {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+}
+
+export interface OrderPromoCodeSnapshot extends OrderPromoCode {
+  type: PromoCodeType;
+  value: number;
+  minOrderAmount: number;
+  maxDiscountAmount: number | null;
+  discountAmount: number;
+}
+
 export interface Order {
   id: string;
   orderNumber: number;
   token: string;
   status: OrderStatus;
+  subtotalPrice: number;
+  discountAmount: number;
   totalPrice: number;
+  promoCode: OrderPromoCode | null;
+  promoCodeSnapshot: OrderPromoCodeSnapshot | null;
   name: string;
   phone: string;
   address: string;
