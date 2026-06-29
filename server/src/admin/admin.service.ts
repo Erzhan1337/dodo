@@ -430,6 +430,7 @@ export class AdminService {
     });
 
     this.orderEventsService.emitStatusChanged(order);
+    this.orderEventsService.emitAdminOrderUpdated(order);
     this.logAction(adminId, `updated order status to ${dto.status}`, orderId);
     return order;
   }
@@ -444,6 +445,7 @@ export class AdminService {
     });
 
     this.logAction(adminId, 'deleted order', orderId);
+    this.orderEventsService.emitAdminOrderDeleted(orderId);
     return { id: orderId };
   }
 

@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
-import { Eye, Trash2 } from "lucide-react";
+import { Eye, Radio, RadioTower, Trash2 } from "lucide-react";
 import {
   useAdminOrder,
   useAdminOrders,
   useDeleteAdminOrder,
   useUpdateAdminOrderStatus,
 } from "@/features/admin/api/admin-api";
+import { useAdminOrdersRealtime } from "@/features/admin/api/use-admin-orders-realtime";
 import { useAdminListState } from "@/features/admin/lib/use-admin-list-state";
 import { formatDate, formatMoney } from "@/features/admin/lib/format";
 import { AdminPagination } from "@/features/admin/ui/admin-pagination";
@@ -50,6 +51,7 @@ export const AdminOrdersPage = () => {
   const orderDetailsQuery = useAdminOrder(selectedOrderId);
   const updateStatusMutation = useUpdateAdminOrderStatus();
   const deleteMutation = useDeleteAdminOrder();
+  const realtimeState = useAdminOrdersRealtime();
 
   useEffect(() => {
     if ((params.search ?? "") !== debouncedSearch) {
@@ -172,6 +174,19 @@ export const AdminOrdersPage = () => {
         searchPlaceholder="Клиент, телефон, адрес, токен"
         onSearchChange={setSearch}
       >
+        <div className="inline-flex h-10 items-center gap-2 rounded-md border border-border px-3 text-xs font-bold text-muted-foreground">
+          {realtimeState === "connected" ? (
+            <>
+              <RadioTower className="size-4 text-green-600" />
+              Live
+            </>
+          ) : (
+            <>
+              <Radio className="size-4 text-amber-600" />
+              Sync
+            </>
+          )}
+        </div>
         <select
           value={params.status ?? ""}
           onChange={(event) =>

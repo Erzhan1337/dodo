@@ -53,6 +53,7 @@ Full-stack приложение для онлайн-заказа пиццы: к�
   - dashboard с выручкой, заказами, пользователями и топом товаров;
   - CRUD товаров, категорий, ингредиентов и пользователей;
   - просмотр, фильтрация, сортировка, смена статуса и удаление заказов;
+  - realtime-обновление списка заказов при новых заказах и смене статусов;
   - модерация отзывов;
   - роли `CUSTOMER` и `ADMIN`.
 - Skeleton/loading-состояния и адаптивный интерфейс для mobile/tablet/desktop.
@@ -434,6 +435,13 @@ http://localhost:4000
 | `order:unsubscribe` | client -> server | Отписка от заказа. |
 | `order:status` | server -> client | Новый статус заказа. |
 | `order:error` | server -> client | Ошибка подписки или отсутствующий заказ. |
+| `admin:orders:subscribe` | admin client -> server | Подписка администратора на поток заказов с access token. |
+| `admin:orders:unsubscribe` | admin client -> server | Отписка администратора от потока заказов. |
+| `admin:orders:ready` | server -> admin client | Подписка администратора активирована. |
+| `admin:orders:created` | server -> admin client | Создан новый заказ. |
+| `admin:orders:updated` | server -> admin client | Заказ изменён, например сменился статус. |
+| `admin:orders:deleted` | server -> admin client | Заказ удалён из админ-панели. |
+| `admin:orders:error` | server -> admin client | Ошибка авторизации или подписки администратора. |
 
 ## Troubleshooting
 

@@ -8,6 +8,10 @@ import { randomUUID } from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeKzPhone } from '../auth/lib/phone';
 import { CreateOrderDto } from './dto/create-order.dto';
+import {
+  adminOrderEventSelect,
+  OrderEventsService,
+} from './order-events.service';
 
 type OrderIdentity = {
   userId?: string | null;
@@ -58,10 +62,13 @@ const orderResponseSelect = {
 
 @Injectable()
 export class OrderService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly orderEventsService: OrderEventsService,
+  ) {}
 
   async createOrder(identity: OrderIdentity, dto: CreateOrderDto) {
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       const cart = await tx.cart.findFirst({
         where: identity.userId
           ? { userId: identity.userId }
@@ -121,7 +128,7 @@ export class OrderService {
           comment: dto.comment?.trim() || null,
           items: { create: orderItems },
         },
-        select: { token: true },
+        select: adminOrderEventSelect,
       });
 
       await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
@@ -135,10 +142,17 @@ export class OrderService {
       }
 
       return {
-        token: order.token,
+        order,
         clearGuestCartToken: !identity.userId,
       };
     });
+
+    this.orderEventsService.emitAdminOrderCreated(result.order);
+
+    return {
+      token: result.order.token,
+      clearGuestCartToken: result.clearGuestCartToken,
+    };
   }
 
   async getOrderByToken(token: string) {
