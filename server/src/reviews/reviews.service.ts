@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, STATUS } from '@prisma/client';
+import { PaymentStatus, Prisma, STATUS } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateProductReviewDto } from './dto/create-product-review.dto';
 import { UpdateProductReviewDto } from './dto/update-product-review.dto';
@@ -38,7 +38,7 @@ type ReviewWithRatingTarget = {
 @Injectable()
 export class ReviewsService {
   private readonly logger = new Logger(ReviewsService.name);
-  private readonly reviewableStatuses = new Set<STATUS>([STATUS.SUCCEEDED]);
+  private readonly reviewableStatuses = new Set<STATUS>([STATUS.COMPLETED]);
 
   constructor(private readonly prisma: PrismaService) {}
 
@@ -107,7 +107,13 @@ export class ReviewsService {
         id: true,
         review: { select: { id: true } },
         productItem: { select: { productId: true } },
-        order: { select: { userId: true, status: true } },
+        order: {
+          select: {
+            userId: true,
+            status: true,
+            payment: { select: { status: true } },
+          },
+        },
       },
     });
 
@@ -117,6 +123,9 @@ export class ReviewsService {
     }
     if (!this.reviewableStatuses.has(orderItem.order.status)) {
       throw new BadRequestException('Only completed orders can be reviewed');
+    }
+    if (orderItem.order.payment?.status !== PaymentStatus.SUCCEEDED) {
+      throw new BadRequestException('Only paid orders can be reviewed');
     }
     if (orderItem.review) {
       throw new BadRequestException('Order item has already been reviewed');

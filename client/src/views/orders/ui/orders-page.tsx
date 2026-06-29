@@ -22,7 +22,7 @@ import {
 import { cn } from "@/shared/lib/utils";
 import { formatPrice } from "@/shared/lib/format-price";
 import {
-  ORDER_STATUS_META,
+  getOrderDisplayStatus,
   useRealtimeOrdersStatus,
   type Order,
   type OrderItem,
@@ -63,11 +63,12 @@ const OrderCard = ({
   order: Order;
   onReview: (item: OrderItem) => void;
 }) => {
-  const status = ORDER_STATUS_META[order.status];
+  const status = getOrderDisplayStatus(order);
   const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
   const previewItems = order.items.slice(0, 3);
   const hiddenItemsCount = order.items.length - previewItems.length;
-  const canReview = order.status === "SUCCEEDED";
+  const canReview =
+    order.status === "COMPLETED" && order.payment?.status === "SUCCEEDED";
 
   return (
     <article className="rounded-[30px] bg-white p-5 shadow-lg md:p-6">

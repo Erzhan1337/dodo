@@ -67,6 +67,7 @@ export class OrderEventsGateway implements OnGatewayInit {
         id: order.id,
         token: order.token,
         status: order.status,
+        payment: order.payment,
         updatedAt:
           order.updatedAt instanceof Date
             ? order.updatedAt.toISOString()

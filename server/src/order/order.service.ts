@@ -12,6 +12,7 @@ import {
   adminOrderEventSelect,
   OrderEventsService,
 } from './order-events.service';
+import { orderPaymentSelect } from '../payment/payment.service';
 
 type OrderIdentity = {
   userId?: string | null;
@@ -31,6 +32,7 @@ const orderResponseSelect = {
   email: true,
   comment: true,
   createdAt: true,
+  payment: { select: orderPaymentSelect },
   items: {
     select: {
       id: true,
@@ -118,7 +120,7 @@ export class OrderService {
       const order = await tx.order.create({
         data: {
           token: randomUUID(),
-          status: STATUS.PENDING,
+          status: STATUS.NEW,
           totalPrice,
           userId: identity.userId ?? null,
           name: dto.name.trim(),

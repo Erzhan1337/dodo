@@ -65,6 +65,8 @@ async function main() {
   console.log('Starting');
 
   await prisma.$transaction([
+    prisma.paymentWebhookEvent.deleteMany(),
+    prisma.payment.deleteMany(),
     prisma.productReview.deleteMany(),
     prisma.productFavorite.deleteMany(),
     prisma.cartItem.deleteMany(),

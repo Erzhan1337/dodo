@@ -29,7 +29,7 @@ const metricCards = [
   { key: "todayRevenue", label: "Выручка сегодня", icon: ShoppingBag, format: formatMoney },
   { key: "ordersTotal", label: "Заказы", icon: ReceiptText },
   { key: "ordersToday", label: "Заказы сегодня", icon: Clock3 },
-  { key: "pendingOrders", label: "В ожидании", icon: AlertCircle },
+  { key: "pendingOrders", label: "Новые", icon: AlertCircle },
   { key: "productsTotal", label: "Товары", icon: Package },
   { key: "usersTotal", label: "Пользователи", icon: Users },
   { key: "averageOrderValue", label: "Средний чек", icon: Banknote, format: formatMoney },
@@ -100,7 +100,7 @@ export const AdminDashboardPage = () => {
             <div>
               <h2 className="font-extrabold">Выручка за 14 дней</h2>
               <p className="text-sm text-muted-foreground">
-                Учитываются только выполненные заказы.
+                Учитываются только подтверждённые оплаты.
               </p>
             </div>
           </div>

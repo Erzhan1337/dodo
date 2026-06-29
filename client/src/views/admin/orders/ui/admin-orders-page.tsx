@@ -20,20 +20,42 @@ import {
 import { AdminToolbar } from "@/features/admin/ui/admin-toolbar";
 import { AdminModal } from "@/features/admin/ui/admin-modal";
 import { ConfirmDialog } from "@/features/admin/ui/confirm-dialog";
-import { OrderStatusBadge } from "@/features/admin/ui/status-badge";
+import {
+  OrderStatusBadge,
+  PaymentStatusBadge,
+} from "@/features/admin/ui/status-badge";
 import type { AdminOrder } from "@/features/admin/model/types";
 import type { OrderStatus } from "@/entities/order/model/types";
 import { useDebounce } from "@/shared/hooks";
 import { Button, Skeleton } from "@/shared/ui";
 
 const orderFilterKeys = ["status"] as const;
-const statuses: OrderStatus[] = ["PENDING", "SUCCEEDED", "CANCELED"];
+const statuses: OrderStatus[] = [
+  "NEW",
+  "PREPARING",
+  "DELIVERING",
+  "COMPLETED",
+  "CANCELED",
+];
 
 const statusLabels: Record<OrderStatus, string> = {
-  PENDING: "Ожидает",
-  SUCCEEDED: "Выполнен",
+  NEW: "Новый",
+  PREPARING: "Готовится",
+  DELIVERING: "В доставке",
+  COMPLETED: "Выполнен",
   CANCELED: "Отменён",
 };
+
+const paidRequiredStatuses = new Set<OrderStatus>([
+  "PREPARING",
+  "DELIVERING",
+  "COMPLETED",
+]);
+
+const canSelectStatus = (order: AdminOrder, status: OrderStatus) =>
+  !paidRequiredStatuses.has(status) ||
+  order.payment?.status === "SUCCEEDED" ||
+  order.status === status;
 
 const formatOrderNumber = (value: number) => String(value).padStart(6, "0");
 
@@ -92,7 +114,7 @@ export const AdminOrdersPage = () => {
       },
       {
         id: "status",
-        header: "Статус",
+        header: "Этап",
         sortKey: "status",
         cell: (order) => (
           <select
@@ -108,12 +130,28 @@ export const AdminOrdersPage = () => {
             aria-label="Изменить статус заказа"
           >
             {statuses.map((status) => (
-              <option key={status} value={status}>
+              <option
+                key={status}
+                value={status}
+                disabled={!canSelectStatus(order, status)}
+              >
                 {statusLabels[status]}
               </option>
             ))}
           </select>
         ),
+      },
+      {
+        id: "payment",
+        header: "Оплата",
+        cell: (order) =>
+          order.payment ? (
+            <PaymentStatusBadge status={order.payment.status} />
+          ) : (
+            <span className="text-xs font-semibold text-muted-foreground">
+              Не создана
+            </span>
+          ),
       },
       {
         id: "totalPrice",
@@ -250,10 +288,19 @@ export const AdminOrdersPage = () => {
               </div>
               <div>
                 <p className="text-xs font-bold uppercase text-muted-foreground">
-                  Статус
+                  Этап
                 </p>
                 <div className="mt-2">
                   <OrderStatusBadge status={details.status} />
+                </div>
+                <div className="mt-2">
+                  {details.payment ? (
+                    <PaymentStatusBadge status={details.payment.status} />
+                  ) : (
+                    <span className="text-xs font-semibold text-muted-foreground">
+                      Оплата не создана
+                    </span>
+                  )}
                 </div>
                 <p className="mt-2 text-sm font-semibold">
                   {formatMoney(details.totalPrice)}

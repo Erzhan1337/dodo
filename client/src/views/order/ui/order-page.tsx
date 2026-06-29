@@ -1,22 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, CreditCard } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 import { Breadcrumbs, Button, Container, Title } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
 import { formatPrice } from "@/shared/lib/format-price";
 import {
-  ORDER_STATUS_META,
+  canPayOrder,
+  createOrderCheckout,
+  getOrderDisplayStatus,
   useRealtimeOrderStatus,
   type Order,
 } from "@/entities/order";
+import { handleApiError } from "@/shared/lib/handle-api-error";
 
 const formatOrderNumber = (value: number) => String(value).padStart(6, "0");
 
 export const OrderPage = ({ order: initialOrder }: { order: Order }) => {
   const order = useRealtimeOrderStatus(initialOrder);
-  const status = ORDER_STATUS_META[order.status];
+  const status = getOrderDisplayStatus(order);
   const orderNumber = formatOrderNumber(order.orderNumber);
+  const canPay = canPayOrder(order);
+  const paymentMutation = useMutation({
+    mutationFn: () => createOrderCheckout(order.token),
+    onSuccess: ({ paymentUrl }) => window.location.assign(paymentUrl),
+    onError: handleApiError,
+  });
 
   return (
     <Container className="mt-10 max-w-3xl pb-20">
@@ -88,6 +98,29 @@ export const OrderPage = ({ order: initialOrder }: { order: Order }) => {
             {formatPrice(order.totalPrice)}
           </span>
         </div>
+
+        {canPay && (
+          <div className="mb-6 rounded-2xl border border-orange-100 bg-[#FFFDF9] p-5 text-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h4 className="font-bold">Оплата онлайн</h4>
+                <p className="mt-1 text-gray-500">
+                  После оплаты статус заказа обновится автоматически.
+                </p>
+              </div>
+              <Button
+                type="button"
+                size="lg"
+                className="gap-2"
+                disabled={paymentMutation.isPending}
+                onClick={() => paymentMutation.mutate()}
+              >
+                <CreditCard className="size-4" />
+                Оплатить
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="rounded-2xl bg-[#FFF7EE] p-5 text-sm">
           <h4 className="mb-3 font-bold">Доставка</h4>

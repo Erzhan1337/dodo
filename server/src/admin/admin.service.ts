@@ -5,7 +5,7 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, STATUS, UserRole } from '@prisma/client';
+import { PaymentStatus, Prisma, STATUS, UserRole } from '@prisma/client';
 import { hash } from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { normalizeKzPhone } from '../auth/lib/phone';
@@ -65,6 +65,24 @@ const adminProductInclude = {
   items: { orderBy: [{ size: 'asc' }, { pizzaType: 'asc' }, { price: 'asc' }] },
 } satisfies Prisma.ProductInclude;
 
+const adminPaymentSelect = {
+  id: true,
+  provider: true,
+  status: true,
+  amount: true,
+  currency: true,
+  checkoutUrl: true,
+  paidAt: true,
+  canceledAt: true,
+  failedAt: true,
+} satisfies Prisma.PaymentSelect;
+
+const paidOrderStatuses = new Set<STATUS>([
+  STATUS.PREPARING,
+  STATUS.DELIVERING,
+  STATUS.COMPLETED,
+]);
+
 const adminOrderSelect = {
   id: true,
   orderNumber: true,
@@ -79,6 +97,7 @@ const adminOrderSelect = {
   comment: true,
   createdAt: true,
   updatedAt: true,
+  payment: { select: adminPaymentSelect },
   user: { select: { id: true, name: true, phone: true, email: true } },
   _count: { select: { items: true } },
 } satisfies Prisma.OrderSelect;
@@ -154,18 +173,18 @@ export class AdminService {
       this.prisma.order.count({ where: { createdAt: { gte: today } } }),
       this.prisma.product.count(),
       this.prisma.user.count(),
-      this.prisma.order.count({ where: { status: STATUS.PENDING } }),
-      this.prisma.order.aggregate({
-        where: { status: STATUS.SUCCEEDED },
-        _sum: { totalPrice: true },
+      this.prisma.order.count({ where: { status: STATUS.NEW } }),
+      this.prisma.payment.aggregate({
+        where: { status: PaymentStatus.SUCCEEDED },
+        _sum: { amount: true },
       }),
-      this.prisma.order.aggregate({
-        where: { status: STATUS.SUCCEEDED, createdAt: { gte: today } },
-        _sum: { totalPrice: true },
+      this.prisma.payment.aggregate({
+        where: { status: PaymentStatus.SUCCEEDED, paidAt: { gte: today } },
+        _sum: { amount: true },
       }),
-      this.prisma.order.aggregate({
-        where: { status: STATUS.SUCCEEDED },
-        _avg: { totalPrice: true },
+      this.prisma.payment.aggregate({
+        where: { status: PaymentStatus.SUCCEEDED },
+        _avg: { amount: true },
       }),
       this.prisma.order.groupBy({
         by: ['status'],
@@ -185,9 +204,9 @@ export class AdminService {
         productsTotal,
         usersTotal,
         pendingOrders,
-        totalRevenue: succeededRevenue._sum.totalPrice ?? 0,
-        todayRevenue: revenueToday._sum.totalPrice ?? 0,
-        averageOrderValue: Math.round(averageOrderValue._avg.totalPrice ?? 0),
+        totalRevenue: succeededRevenue._sum.amount ?? 0,
+        todayRevenue: revenueToday._sum.amount ?? 0,
+        averageOrderValue: Math.round(averageOrderValue._avg.amount ?? 0),
       },
       statusBreakdown: statusBreakdown.map((item) => ({
         status: item.status,
@@ -400,7 +419,16 @@ export class AdminService {
     orderId: string,
     dto: AdminUpdateOrderStatusDto,
   ) {
-    await this.assertExists('order', orderId);
+    const existingOrder = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        payment: { select: { status: true } },
+      },
+    });
+
+    if (!existingOrder) throw new NotFoundException('Order not found');
+    this.assertOrderStatusCanBeChanged(existingOrder.payment?.status, dto.status);
 
     const order = await this.prisma.order.update({
       where: { id: orderId },
@@ -856,25 +884,25 @@ export class AdminService {
   private async getDashboardRevenueRows(
     rangeStart: Date,
   ): Promise<DashboardRevenueRow[]> {
-    const orders = await this.prisma.order.findMany({
-      where: { createdAt: { gte: rangeStart } },
-      select: { createdAt: true, status: true, totalPrice: true },
+    const payments = await this.prisma.payment.findMany({
+      where: { status: PaymentStatus.SUCCEEDED, paidAt: { gte: rangeStart } },
+      select: { paidAt: true, amount: true },
     });
 
     const rowsByDate = new Map<string, DashboardRevenueRow>();
 
-    for (const order of orders) {
-      const key = this.toDateKey(order.createdAt);
+    for (const payment of payments) {
+      if (!payment.paidAt) continue;
+
+      const key = this.toDateKey(payment.paidAt);
       const row = rowsByDate.get(key) ?? {
-        date: order.createdAt,
+        date: payment.paidAt,
         revenue: 0,
         orders: 0,
       };
 
       row.orders += 1;
-      if (order.status === STATUS.SUCCEEDED) {
-        row.revenue += order.totalPrice;
-      }
+      row.revenue += payment.amount;
 
       rowsByDate.set(key, row);
     }
@@ -886,6 +914,9 @@ export class AdminService {
 
   private async getDashboardTopProducts(): Promise<DashboardTopProductRow[]> {
     const orderItems = await this.prisma.orderItem.findMany({
+      where: {
+        order: { payment: { is: { status: PaymentStatus.SUCCEEDED } } },
+      },
       select: {
         quantity: true,
         price: true,
@@ -1014,6 +1045,20 @@ export class AdminService {
 
     if (count !== ingredientIds.length) {
       throw new BadRequestException('One or more ingredients do not exist');
+    }
+  }
+
+  private assertOrderStatusCanBeChanged(
+    paymentStatus: PaymentStatus | undefined,
+    nextStatus: STATUS,
+  ) {
+    if (
+      paidOrderStatuses.has(nextStatus) &&
+      paymentStatus !== PaymentStatus.SUCCEEDED
+    ) {
+      throw new BadRequestException(
+        'Order must be paid before it can move to fulfillment',
+      );
     }
   }
 

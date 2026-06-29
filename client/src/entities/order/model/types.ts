@@ -1,4 +1,23 @@
-export type OrderStatus = "PENDING" | "SUCCEEDED" | "CANCELED";
+export type OrderStatus =
+  | "NEW"
+  | "PREPARING"
+  | "DELIVERING"
+  | "COMPLETED"
+  | "CANCELED";
+export type PaymentStatus = "PENDING" | "SUCCEEDED" | "CANCELED" | "FAILED";
+export type PaymentProvider = "STRIPE";
+
+export interface Payment {
+  id: string;
+  provider: PaymentProvider;
+  status: PaymentStatus;
+  amount: number;
+  currency: string;
+  checkoutUrl: string | null;
+  paidAt: string | null;
+  canceledAt: string | null;
+  failedAt: string | null;
+}
 
 export interface OrderItemProductItem {
   id: string;
@@ -83,6 +102,7 @@ export interface Order {
   address: string;
   email: string | null;
   comment: string | null;
+  payment: Payment | null;
   createdAt: string;
   updatedAt: string;
   items: OrderItem[];

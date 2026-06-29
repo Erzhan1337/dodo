@@ -8,6 +8,8 @@ import { OrderEventsGateway } from './order-events.gateway';
 import { OrderEventsService } from './order-events.service';
 import { UserModule } from '../user/user.module';
 import { getJwtConfig } from '../../config/jwt.config';
+import { PaymentController } from '../payment/payment.controller';
+import { PaymentService } from '../payment/payment.service';
 
 @Module({
   imports: [
@@ -20,8 +22,13 @@ import { getJwtConfig } from '../../config/jwt.config';
       inject: [ConfigService],
     }),
   ],
-  controllers: [OrderController],
-  providers: [OrderService, OrderEventsGateway, OrderEventsService],
+  controllers: [OrderController, PaymentController],
+  providers: [
+    OrderService,
+    OrderEventsGateway,
+    OrderEventsService,
+    PaymentService,
+  ],
   exports: [OrderEventsService],
 })
 export class OrderModule {}

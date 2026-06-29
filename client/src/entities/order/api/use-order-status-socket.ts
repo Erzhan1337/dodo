@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { io, type Socket } from "socket.io-client";
-import type { Order, OrderStatus } from "@/entities/order/model/types";
+import type { Order, OrderStatus, Payment } from "@/entities/order/model/types";
 import { ORDERS_QUERY_KEY } from "./use-orders";
 
 type OrderStatusPayload = {
   id: string;
   token: string;
   status: OrderStatus;
+  payment?: Payment | null;
   updatedAt: string;
 };
 
@@ -35,6 +36,7 @@ const applyStatus = (order: Order, payload: OrderStatusPayload): Order => {
   return {
     ...order,
     status: payload.status,
+    payment: payload.payment === undefined ? order.payment : payload.payment,
     updatedAt: payload.updatedAt,
   };
 };

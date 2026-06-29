@@ -1,13 +1,38 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma, STATUS } from '@prisma/client';
+import { PaymentProvider, PaymentStatus, Prisma, STATUS } from '@prisma/client';
 import type { Server } from 'socket.io';
+
+type OrderPaymentEvent = {
+  id: string;
+  provider: PaymentProvider;
+  status: PaymentStatus;
+  amount: number;
+  currency: string;
+  checkoutUrl: string | null;
+  paidAt: Date | string | null;
+  canceledAt: Date | string | null;
+  failedAt: Date | string | null;
+};
 
 export type OrderStatusEvent = {
   id: string;
   token: string;
   status: STATUS;
   updatedAt: Date | string;
+  payment?: OrderPaymentEvent | null;
 };
+
+const eventPaymentSelect = {
+  id: true,
+  provider: true,
+  status: true,
+  amount: true,
+  currency: true,
+  checkoutUrl: true,
+  paidAt: true,
+  canceledAt: true,
+  failedAt: true,
+} satisfies Prisma.PaymentSelect;
 
 export const adminOrderEventSelect = {
   id: true,
@@ -23,6 +48,7 @@ export const adminOrderEventSelect = {
   comment: true,
   createdAt: true,
   updatedAt: true,
+  payment: { select: eventPaymentSelect },
   user: { select: { id: true, name: true, phone: true, email: true } },
   _count: { select: { items: true } },
 } satisfies Prisma.OrderSelect;
@@ -47,6 +73,10 @@ export class OrderEventsService {
       id: order.id,
       token: order.token,
       status: order.status,
+      payment:
+        order.payment === undefined
+          ? undefined
+          : this.toPaymentPayload(order.payment),
       updatedAt:
         order.updatedAt instanceof Date
           ? order.updatedAt.toISOString()
@@ -75,6 +105,7 @@ export class OrderEventsService {
   private toAdminOrderPayload(order: AdminOrderEvent) {
     return {
       ...order,
+      payment: this.toPaymentPayload(order.payment),
       createdAt:
         order.createdAt instanceof Date
           ? order.createdAt.toISOString()
@@ -82,7 +113,27 @@ export class OrderEventsService {
       updatedAt:
         order.updatedAt instanceof Date
           ? order.updatedAt.toISOString()
-          : order.updatedAt,
+      : order.updatedAt,
+    };
+  }
+
+  private toPaymentPayload(payment: OrderPaymentEvent | null) {
+    if (!payment) return payment;
+
+    return {
+      ...payment,
+      paidAt:
+        payment.paidAt instanceof Date
+          ? payment.paidAt.toISOString()
+          : payment.paidAt,
+      canceledAt:
+        payment.canceledAt instanceof Date
+          ? payment.canceledAt.toISOString()
+          : payment.canceledAt,
+      failedAt:
+        payment.failedAt instanceof Date
+          ? payment.failedAt.toISOString()
+          : payment.failedAt,
     };
   }
 }

@@ -8,18 +8,18 @@ datasource db {
 }
 
 model User {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   name         String
-  phone        String  @unique
-  email        String? @unique
+  phone        String   @unique
+  email        String?  @unique
   password     String
   address      String?
-  refreshToken String? @map("refresh_token")
+  refreshToken String?  @map("refresh_token")
   role         UserRole @default(CUSTOMER)
 
-  cart   Cart?
-  orders Order[]
-  reviews ProductReview[]
+  cart      Cart?
+  orders    Order[]
+  reviews   ProductReview[]
   favorites ProductFavorite[]
 
   createdAt DateTime @default(now()) @map("created_at")
@@ -41,14 +41,14 @@ model Category {
 }
 
 model Product {
-  id          String @id @default(cuid())
-  name        String
-  imageUrl    String
-  description String
+  id                  String  @id @default(cuid())
+  name                String
+  imageUrl            String
+  description         String
   canBuildHalfAndHalf Boolean @default(false) @map("can_build_half_and_half")
-  ratingAvg   Float @default(0) @map("rating_avg")
-  ratingSum   Int   @default(0) @map("rating_sum")
-  ratingCount Int   @default(0) @map("rating_count")
+  ratingAvg           Float   @default(0) @map("rating_avg")
+  ratingSum           Int     @default(0) @map("rating_sum")
+  ratingCount         Int     @default(0) @map("rating_count")
 
   category   Category @relation(fields: [categoryId], references: [id])
   categoryId Int      @map("category_id")
@@ -104,16 +104,17 @@ model Ingredient {
 }
 
 model Order {
-  id         String @id @default(cuid())
-  orderNumber Int  @unique @default(autoincrement()) @map("order_number")
-  totalPrice Int    @default(0) @map("total_price")
-  status     STATUS
-  token      String
+  id          String @id @default(cuid())
+  orderNumber Int    @unique @default(autoincrement()) @map("order_number")
+  totalPrice  Int    @default(0) @map("total_price")
+  status      STATUS
+  token       String
 
   user   User?   @relation(fields: [userId], references: [id])
   userId String? @map("user_id")
 
-  items OrderItem[]
+  items   OrderItem[]
+  payment Payment?
 
   name    String
   phone   String
@@ -129,6 +130,40 @@ model Order {
   @@map("orders")
 }
 
+model Payment {
+  id                      String          @id @default(cuid())
+  provider                PaymentProvider @default(STRIPE)
+  status                  PaymentStatus   @default(PENDING)
+  amount                  Int
+  currency                String
+  providerCheckoutId      String?         @unique @map("provider_checkout_id")
+  providerPaymentIntentId String?         @unique @map("provider_payment_intent_id")
+  checkoutUrl             String?         @map("checkout_url")
+  paidAt                  DateTime?       @map("paid_at")
+  canceledAt              DateTime?       @map("canceled_at")
+  failedAt                DateTime?       @map("failed_at")
+
+  order   Order  @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId String @unique @map("order_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([status, createdAt])
+  @@map("payments")
+}
+
+model PaymentWebhookEvent {
+  id              String          @id @default(cuid())
+  provider        PaymentProvider
+  providerEventId String          @unique @map("provider_event_id")
+  type            String
+  processedAt     DateTime        @default(now()) @map("processed_at")
+  createdAt       DateTime        @default(now()) @map("created_at")
+
+  @@map("payment_webhook_events")
+}
+
 model OrderItem {
   id String @id @default(cuid())
 
@@ -138,8 +173,8 @@ model OrderItem {
   order   Order  @relation(fields: [orderId], references: [id])
   orderId String @map("order_id")
 
-  quantity Int
-  price    Int
+  quantity      Int
+  price         Int
   customName    String? @map("custom_name")
   customDetails Json?   @map("custom_details")
 
@@ -211,9 +246,9 @@ model Cart {
 }
 
 model CartItem {
-  id             String @id @default(cuid())
-  quantity       Int    @default(1)
-  ingredientsKey String @default("") @map("ingredients_key")
+  id              String  @id @default(cuid())
+  quantity        Int     @default(1)
+  ingredientsKey  String  @default("") @map("ingredients_key")
   customName      String? @map("custom_name")
   customDetails   Json?   @map("custom_details")
   customUnitPrice Int?    @map("custom_unit_price")
@@ -236,12 +271,25 @@ model CartItem {
 }
 
 enum STATUS {
-  PENDING
-  SUCCEEDED
+  NEW
+  PREPARING
+  DELIVERING
+  COMPLETED
   CANCELED
 }
 
 enum UserRole {
   CUSTOMER
   ADMIN
+}
+
+enum PaymentProvider {
+  STRIPE
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  CANCELED
+  FAILED
 }

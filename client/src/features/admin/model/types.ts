@@ -1,4 +1,4 @@
-import type { OrderStatus } from "@/entities/order/model/types";
+import type { OrderStatus, Payment } from "@/entities/order/model/types";
 
 export type UserRole = "CUSTOMER" | "ADMIN";
 export type SortOrder = "asc" | "desc";
@@ -98,6 +98,7 @@ export type AdminOrder = {
   address: string;
   email: string | null;
   comment: string | null;
+  payment: Payment | null;
   createdAt: string;
   updatedAt: string;
   user: {
