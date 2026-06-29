@@ -259,24 +259,24 @@ export class ReviewsService {
     ratingDelta: number,
     countDelta: number,
   ) {
-    await tx.$executeRaw`
-      UPDATE "products"
-      SET
-        "rating_sum" = GREATEST("rating_sum" + ${ratingDelta}, 0),
-        "rating_count" = GREATEST("rating_count" + ${countDelta}, 0),
-        "rating_avg" = CASE
-          WHEN GREATEST("rating_count" + ${countDelta}, 0) = 0 THEN 0
-          ELSE ROUND(
-            (
-              GREATEST("rating_sum" + ${ratingDelta}, 0)::numeric /
-              GREATEST("rating_count" + ${countDelta}, 0)::numeric
-            ),
-            2
-          )::double precision
-        END,
-        "updated_at" = CURRENT_TIMESTAMP
-      WHERE "id" = ${productId}
-    `;
+    const product = await tx.product.update({
+      where: { id: productId },
+      data: {
+        ratingSum: { increment: ratingDelta },
+        ratingCount: { increment: countDelta },
+      },
+      select: { ratingSum: true, ratingCount: true },
+    });
+
+    const ratingSum = Math.max(product.ratingSum, 0);
+    const ratingCount = Math.max(product.ratingCount, 0);
+    const ratingAvg =
+      ratingCount === 0 ? 0 : Math.round((ratingSum / ratingCount) * 100) / 100;
+
+    await tx.product.update({
+      where: { id: productId },
+      data: { ratingSum, ratingCount, ratingAvg },
+    });
   }
 
   private normalizeComment(comment?: string) {

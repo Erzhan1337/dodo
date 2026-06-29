@@ -64,21 +64,19 @@ async function main() {
 
   console.log('Starting');
 
-  const tableNames = [
-    'cart_items',
-    'orders',
-    'product_items',
-    'products',
-    'carts',
-    'ingredients',
-    'categories',
-    'users',
-  ];
-  for (const tableName of tableNames) {
-    await prisma.$executeRawUnsafe(
-      `TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE;`,
-    );
-  }
+  await prisma.$transaction([
+    prisma.productReview.deleteMany(),
+    prisma.productFavorite.deleteMany(),
+    prisma.cartItem.deleteMany(),
+    prisma.orderItem.deleteMany(),
+    prisma.cart.deleteMany(),
+    prisma.order.deleteMany(),
+    prisma.productItem.deleteMany(),
+    prisma.product.deleteMany(),
+    prisma.ingredient.deleteMany(),
+    prisma.category.deleteMany(),
+    prisma.user.deleteMany(),
+  ]);
 
   console.log('All data is deleted');
 

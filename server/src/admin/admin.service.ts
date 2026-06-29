@@ -48,15 +48,15 @@ type AdminEntity = 'product' | 'category' | 'ingredient' | 'order' | 'user';
 
 type DashboardRevenueRow = {
   date: Date | string;
-  revenue: number | bigint;
-  orders: number | bigint;
+  revenue: number;
+  orders: number;
 };
 
 type DashboardTopProductRow = {
   productId: string;
   name: string;
-  quantity: number | bigint;
-  revenue: number | bigint;
+  quantity: number;
+  revenue: number;
 };
 
 const adminProductInclude = {
@@ -172,29 +172,8 @@ export class AdminService {
         _count: { _all: true },
         _sum: { totalPrice: true },
       }),
-      this.prisma.$queryRaw<DashboardRevenueRow[]>`
-        SELECT
-          date_trunc('day', "created_at")::date AS "date",
-          COALESCE(SUM(CASE WHEN "status" = 'SUCCEEDED' THEN "total_price" ELSE 0 END), 0)::int AS "revenue",
-          COUNT(*)::int AS "orders"
-        FROM "orders"
-        WHERE "created_at" >= ${rangeStart}
-        GROUP BY 1
-        ORDER BY 1 ASC
-      `,
-      this.prisma.$queryRaw<DashboardTopProductRow[]>`
-        SELECT
-          "products"."id" AS "productId",
-          "products"."name" AS "name",
-          COALESCE(SUM("order_items"."quantity"), 0)::int AS "quantity",
-          COALESCE(SUM("order_items"."quantity" * "order_items"."price"), 0)::int AS "revenue"
-        FROM "order_items"
-        JOIN "product_items" ON "product_items"."id" = "order_items"."product_item_id"
-        JOIN "products" ON "products"."id" = "product_items"."product_id"
-        GROUP BY "products"."id", "products"."name"
-        ORDER BY "quantity" DESC
-        LIMIT 5
-      `,
+      this.getDashboardRevenueRows(rangeStart),
+      this.getDashboardTopProducts(),
     ]);
 
     const revenueByDay = this.fillRevenueSeries(rangeStart, revenueRows);
@@ -219,8 +198,8 @@ export class AdminService {
       topProducts: topProducts.map((item) => ({
         productId: item.productId,
         name: item.name,
-        quantity: Number(item.quantity),
-        revenue: Number(item.revenue),
+        quantity: item.quantity,
+        revenue: item.revenue,
       })),
     };
   }
@@ -872,6 +851,78 @@ export class AdminService {
     return products.sort((a, b) => {
       return (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0);
     });
+  }
+
+  private async getDashboardRevenueRows(
+    rangeStart: Date,
+  ): Promise<DashboardRevenueRow[]> {
+    const orders = await this.prisma.order.findMany({
+      where: { createdAt: { gte: rangeStart } },
+      select: { createdAt: true, status: true, totalPrice: true },
+    });
+
+    const rowsByDate = new Map<string, DashboardRevenueRow>();
+
+    for (const order of orders) {
+      const key = this.toDateKey(order.createdAt);
+      const row = rowsByDate.get(key) ?? {
+        date: order.createdAt,
+        revenue: 0,
+        orders: 0,
+      };
+
+      row.orders += 1;
+      if (order.status === STATUS.SUCCEEDED) {
+        row.revenue += order.totalPrice;
+      }
+
+      rowsByDate.set(key, row);
+    }
+
+    return [...rowsByDate.values()].sort((a, b) =>
+      this.toDateKey(a.date).localeCompare(this.toDateKey(b.date)),
+    );
+  }
+
+  private async getDashboardTopProducts(): Promise<DashboardTopProductRow[]> {
+    const orderItems = await this.prisma.orderItem.findMany({
+      select: {
+        quantity: true,
+        price: true,
+        productItem: {
+          select: {
+            product: {
+              select: { id: true, name: true },
+            },
+          },
+        },
+      },
+    });
+
+    const rowsByProduct = new Map<string, DashboardTopProductRow>();
+
+    for (const orderItem of orderItems) {
+      const product = orderItem.productItem.product;
+      const row = rowsByProduct.get(product.id) ?? {
+        productId: product.id,
+        name: product.name,
+        quantity: 0,
+        revenue: 0,
+      };
+
+      row.quantity += orderItem.quantity;
+      row.revenue += orderItem.quantity * orderItem.price;
+      rowsByProduct.set(product.id, row);
+    }
+
+    return [...rowsByProduct.values()]
+      .sort(
+        (a, b) =>
+          b.quantity - a.quantity ||
+          b.revenue - a.revenue ||
+          a.name.localeCompare(b.name),
+      )
+      .slice(0, 5);
   }
 
   private withProductPriceRange<
