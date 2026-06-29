@@ -109,7 +109,7 @@ const SegmentGroup = <T extends string | number>({
     <LazyMotion features={loadMotionFeatures}>
       <div
         className={cn(
-          "grid gap-1 rounded-2xl bg-white/90 p-1 shadow-sm sm:bg-[#ECECEC]",
+          "grid gap-1 rounded-2xl bg-white/75 p-1 shadow-sm ring-1 ring-white/70 backdrop-blur-xl sm:bg-[#ECECEC] sm:ring-0 sm:backdrop-blur-none",
           options.length === 2 && "grid-cols-2",
           options.length === 3 && "grid-cols-3",
           className,
@@ -160,7 +160,7 @@ const StepTabs = ({
 
   return (
     <LazyMotion features={loadMotionFeatures}>
-      <div className="w-full overflow-x-auto rounded-2xl bg-white/90 p-1 shadow-sm [scrollbar-width:none] sm:bg-[#ECECEC] [&::-webkit-scrollbar]:hidden">
+      <div className="w-full overflow-x-auto rounded-2xl bg-white/75 p-1 shadow-sm ring-1 ring-white/70 backdrop-blur-xl [scrollbar-width:none] sm:bg-[#ECECEC] sm:ring-0 sm:backdrop-blur-none [&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-max items-center gap-1 sm:min-w-full">
           {PIZZA_BUILDER_STEPS.map((step, index) => {
             const isActive = activeStepIndex === index;
@@ -204,7 +204,7 @@ const IngredientCategoryTabs = ({
 
   return (
     <LazyMotion features={loadMotionFeatures}>
-      <div className="mb-4 w-full overflow-x-auto rounded-2xl bg-white/90 p-1 shadow-sm [scrollbar-width:none] sm:bg-[#ECECEC] [&::-webkit-scrollbar]:hidden">
+      <div className="mb-4 w-full overflow-x-auto rounded-2xl bg-white/75 p-1 shadow-sm ring-1 ring-white/70 backdrop-blur-xl [scrollbar-width:none] sm:bg-[#ECECEC] sm:ring-0 sm:backdrop-blur-none [&::-webkit-scrollbar]:hidden">
         <div className="flex min-w-max items-center gap-1">
           {INGREDIENT_CATEGORY_LABELS.map((category) => {
             const isActive = activeCategory === category;
@@ -558,7 +558,7 @@ export const PizzaBuilderPage = () => {
             calories={builder.estimatedCalories}
           />
 
-          <section className="min-w-0 rounded-[28px] bg-white/85 p-4 shadow-lg sm:bg-[#F4F1EE] md:p-6 lg:p-8">
+          <section className="relative z-20 min-w-0 overflow-hidden rounded-[28px] bg-white/72 p-4 shadow-[0_24px_70px_rgba(20,16,12,0.18)] ring-1 ring-white/70 backdrop-blur-2xl sm:bg-[#F4F1EE] sm:ring-0 sm:backdrop-blur-none md:p-6 lg:p-8">
             <div className="mb-6 flex flex-col gap-4">
               <div>
                 <h2 className="text-2xl font-extrabold lg:text-3xl">
