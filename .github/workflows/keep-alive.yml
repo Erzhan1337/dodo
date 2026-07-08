@@ -13,4 +13,4 @@ jobs:
         run: |
           curl --fail --silent --show-error --max-time 60 \
             --retry 3 --retry-delay 10 --retry-all-errors \
-            https://dodo-production.up.railway.app/health
+            dodo-production-da6b.up.railway.app/health
