@@ -387,7 +387,10 @@ export class CartService {
           select: cartResponseSelect,
         });
 
-        const updatedCart = await this.updateCartTotalAmount(assignedCart.id, tx);
+        const updatedCart = await this.updateCartTotalAmount(
+          assignedCart.id,
+          tx,
+        );
         return updatedCart ?? this.toCartResponse(assignedCart);
       }
 
@@ -738,7 +741,9 @@ export class CartService {
       throw new BadRequestException('Duplicate custom ingredients');
     }
 
-    const uniqueIngredientIds = [...new Set(normalizedLines.map(({ id }) => id))];
+    const uniqueIngredientIds = [
+      ...new Set(normalizedLines.map(({ id }) => id)),
+    ];
     if (uniqueIngredientIds.length > this.MAX_CUSTOM_INGREDIENTS) {
       throw new BadRequestException('Too many custom ingredients');
     }
@@ -784,8 +789,7 @@ export class CartService {
       throw new BadRequestException('Invalid removed ingredient');
     }
 
-    let customUnitPrice =
-      halfAndHalf?.baseUnitPrice ?? productItem.price;
+    let customUnitPrice = halfAndHalf?.baseUnitPrice ?? productItem.price;
     const detailedIngredients = normalizedLines.map((line) => {
       const ingredient = ingredientById.get(line.id);
       if (!ingredient) {

@@ -32,10 +32,7 @@ import {
   AdminUpdateIngredientDto,
 } from './dto/admin-ingredient.dto';
 import { AdminUpdateOrderStatusDto } from './dto/admin-order.dto';
-import {
-  AdminCreateUserDto,
-  AdminUpdateUserDto,
-} from './dto/admin-user.dto';
+import { AdminCreateUserDto, AdminUpdateUserDto } from './dto/admin-user.dto';
 import { ReviewsService } from '../reviews/reviews.service';
 import { AdminReviewsQueryDto } from '../reviews/dto/reviews-query.dto';
 
@@ -124,7 +121,10 @@ export class AdminController {
   }
 
   @Post('users')
-  createUser(@CurrentUser('id') adminId: string, @Body() dto: AdminCreateUserDto) {
+  createUser(
+    @CurrentUser('id') adminId: string,
+    @Body() dto: AdminCreateUserDto,
+  ) {
     return this.adminService.createUser(adminId, dto);
   }
 

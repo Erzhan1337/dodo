@@ -124,7 +124,7 @@ export class OrderEventsService {
       updatedAt:
         order.updatedAt instanceof Date
           ? order.updatedAt.toISOString()
-      : order.updatedAt,
+          : order.updatedAt,
     };
   }
 

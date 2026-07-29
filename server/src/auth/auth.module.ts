@@ -11,6 +11,7 @@ import { CartModule } from '../cart/cart.module';
 @Module({
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [AuthService],
   imports: [
     JwtModule.registerAsync({
       useFactory: getJwtConfig,

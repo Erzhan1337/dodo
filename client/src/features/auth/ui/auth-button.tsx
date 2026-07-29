@@ -1,10 +1,12 @@
 "use client";
 import { useSessionStore } from "@/entities/session/model/store";
+import { logout } from "@/shared/api";
 import { Button } from "@/shared/ui";
 import { User2 } from "lucide-react";
 import Link from "next/link";
 import { RefObject, useState } from "react";
 import { useClickOutside } from "@/shared/hooks";
+import { handleApiError } from "@/shared/lib/handle-api-error";
 
 const options = [
   { label: "Настройки", href: "/profile" },
@@ -14,12 +16,21 @@ const options = [
 
 export const AuthButton = () => {
   const [open, setOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const ref = useClickOutside(() => setOpen(false));
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
-  const logout = useSessionStore((state) => state.logout);
-  const handleLogout = () => {
-    setOpen(false);
-    logout();
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+      setOpen(false);
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -63,9 +74,10 @@ export const AuthButton = () => {
               ))}
               <button
                 onClick={handleLogout}
-                className="cursor-pointer px-2.5 py-1.5 text-start hover:bg-orange-50 hover:text-primary md:px-3"
+                disabled={isLoggingOut}
+                className="cursor-pointer px-2.5 py-1.5 text-start hover:bg-orange-50 hover:text-primary disabled:cursor-wait disabled:opacity-60 md:px-3"
               >
-                Выйти
+                {isLoggingOut ? "Выходим…" : "Выйти"}
               </button>
             </div>
           )}

@@ -1,57 +1,95 @@
 import { create } from "zustand";
-import { persist, createJSONStorage } from "zustand/middleware";
-import { $api } from "@/shared/api";
 import type { User } from "@/entities/session/model/types";
 
 export const AUTH_CHANNEL = "auth";
 export const AUTH_LOGOUT_EVENT = "auth:logout";
+export const AUTH_LOGOUT_STORAGE_KEY = "auth:logout-at";
+export const LEGACY_SESSION_STORAGE_KEY = "session-storage";
+
+export type AuthStatus =
+  | "bootstrapping"
+  | "authenticated"
+  | "anonymous"
+  | "unavailable";
 
 interface SessionState {
   user: User | null;
   accessToken: string | null;
   isAuthenticated: boolean;
+  status: AuthStatus;
   _hasHydrated: boolean;
   setAuthData: (user: User, accessToken: string) => void;
   updateUser: (user: User) => void;
-  logout: () => void;
+  clearSession: () => void;
+  setAuthUnavailable: () => void;
+  retryAuthBootstrap: () => void;
+  setHasHydrated: () => void;
 }
 
-export const useSessionStore = create<SessionState>()(
-  persist(
-    (set) => ({
+export const useSessionStore = create<SessionState>()((set) => ({
+  user: null,
+  accessToken: null,
+  isAuthenticated: false,
+  status: "bootstrapping",
+  _hasHydrated: false,
+
+  setAuthData: (user, accessToken) => {
+    set({
+      user,
+      accessToken,
+      isAuthenticated: true,
+      status: "authenticated",
+    });
+  },
+
+  updateUser: (user) => {
+    set({ user });
+  },
+
+  clearSession: () => {
+    set({
       user: null,
       accessToken: null,
-      _hasHydrated: false,
       isAuthenticated: false,
+      status: "anonymous",
+    });
+  },
 
-      setAuthData: (user, accessToken) => {
-        set({ user, accessToken, isAuthenticated: true });
-      },
+  setAuthUnavailable: () => {
+    set({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
+      status: "unavailable",
+    });
+  },
 
-      updateUser: (user) => {
-        set({ user });
-      },
+  retryAuthBootstrap: () => {
+    set({ status: "bootstrapping" });
+  },
 
-      logout: () => {
-        set({ user: null, accessToken: null, isAuthenticated: false });
-        void $api.post("auth/logout");
-        window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT));
+  setHasHydrated: () => {
+    set({ _hasHydrated: true });
+  },
+}));
 
-        const channel = new BroadcastChannel(AUTH_CHANNEL);
-        channel.postMessage("logout");
-        channel.close();
-      },
-    }),
-    {
-      name: "session-storage",
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({
-        user: state.user,
-        isAuthenticated: state.isAuthenticated,
-      }),
-      onRehydrateStorage: () => (state) => {
-        if (state) state._hasHydrated = true;
-      },
-    },
-  ),
-);
+export const clearAuthSession = () => {
+  if (typeof window === "undefined") {
+    useSessionStore.getState().clearSession();
+    return;
+  }
+
+  window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT));
+
+  if (typeof BroadcastChannel !== "undefined") {
+    const channel = new BroadcastChannel(AUTH_CHANNEL);
+    channel.postMessage("logout");
+    channel.close();
+  }
+
+  try {
+    window.localStorage.setItem(AUTH_LOGOUT_STORAGE_KEY, String(Date.now()));
+  } catch {}
+
+  useSessionStore.getState().clearSession();
+};

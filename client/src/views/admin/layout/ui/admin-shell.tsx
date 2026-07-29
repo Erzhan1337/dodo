@@ -18,8 +18,10 @@ import {
   X,
 } from "lucide-react";
 import { useSessionStore } from "@/entities/session/model/store";
+import { logout } from "@/shared/api";
 import { Button, Skeleton } from "@/shared/ui";
 import { cn } from "@/shared/lib/utils";
+import { handleApiError } from "@/shared/lib/handle-api-error";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: BarChart3 },
@@ -34,14 +36,34 @@ const navItems = [
 export const AdminShell = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
   const [isNavOpen, setIsNavOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const user = useSessionStore((state) => state.user);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const status = useSessionStore((state) => state.status);
+  const accessToken = useSessionStore((state) => state.accessToken);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
-  const logout = useSessionStore((state) => state.logout);
 
-  const isAdmin = _hasHydrated && isAuthenticated && user?.role === "ADMIN";
+  const isAdmin =
+    _hasHydrated &&
+    status === "authenticated" &&
+    isAuthenticated &&
+    Boolean(accessToken) &&
+    user?.role === "ADMIN";
 
-  if (!_hasHydrated) {
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+
+    setIsLoggingOut(true);
+    try {
+      await logout();
+    } catch (error) {
+      handleApiError(error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  if (!_hasHydrated || status === "bootstrapping" || status === "unavailable") {
     return (
       <div className="min-h-screen bg-background p-4 text-foreground">
         <div className="mx-auto max-w-7xl space-y-4">
@@ -176,7 +198,8 @@ export const AdminShell = ({ children }: { children: ReactNode }) => {
               size="icon-sm"
               variant="ghost"
               aria-label="Выйти"
-              onClick={logout}
+              disabled={isLoggingOut}
+              onClick={() => void handleLogout()}
             >
               <LogOut className="size-4" />
             </Button>

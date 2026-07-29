@@ -37,15 +37,21 @@ export const FavoritesPage = () => {
   const router = useRouter();
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const authStatus = useSessionStore((state) => state.status);
   const favoritesQuery = useFavoriteProducts();
 
   useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
+    if (_hasHydrated && authStatus === "anonymous") {
       router.replace("/login");
     }
-  }, [_hasHydrated, isAuthenticated, router]);
+  }, [_hasHydrated, authStatus, router]);
 
-  if (!_hasHydrated || favoritesQuery.isLoading) {
+  if (
+    !_hasHydrated ||
+    authStatus === "bootstrapping" ||
+    authStatus === "unavailable" ||
+    favoritesQuery.isLoading
+  ) {
     return <FavoritesPageSkeleton />;
   }
 

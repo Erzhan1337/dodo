@@ -10,6 +10,7 @@ export const PROFILE_QUERY_KEY = ["profile", "me"] as const;
 export const useProfile = () => {
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
+  const accessToken = useSessionStore((state) => state.accessToken);
 
   return useQuery<User>({
     queryKey: PROFILE_QUERY_KEY,
@@ -17,7 +18,7 @@ export const useProfile = () => {
       const { data } = await $api.get<User>("/user/me");
       return data;
     },
-    enabled: _hasHydrated && isAuthenticated,
+    enabled: _hasHydrated && isAuthenticated && Boolean(accessToken),
   });
 };
 

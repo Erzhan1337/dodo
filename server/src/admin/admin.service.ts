@@ -37,10 +37,7 @@ import {
   AdminUpdateIngredientDto,
 } from './dto/admin-ingredient.dto';
 import { AdminUpdateOrderStatusDto } from './dto/admin-order.dto';
-import {
-  AdminCreateUserDto,
-  AdminUpdateUserDto,
-} from './dto/admin-user.dto';
+import { AdminCreateUserDto, AdminUpdateUserDto } from './dto/admin-user.dto';
 import { OrderEventsService } from '../order/order-events.service';
 import { ReviewsService } from '../reviews/reviews.service';
 
@@ -309,7 +306,9 @@ export class AdminService {
         categoryId: dto.categoryId,
         canBuildHalfAndHalf: dto.canBuildHalfAndHalf ?? false,
         ingredients: { connect: ingredientIds.map((id) => ({ id })) },
-        items: { create: dto.items.map((item) => this.toProductItemData(item)) },
+        items: {
+          create: dto.items.map((item) => this.toProductItemData(item)),
+        },
       },
       include: adminProductInclude,
     });
@@ -342,8 +341,12 @@ export class AdminService {
           ...(dto.description !== undefined
             ? { description: dto.description.trim() }
             : {}),
-          ...(dto.imageUrl !== undefined ? { imageUrl: dto.imageUrl.trim() } : {}),
-          ...(dto.categoryId !== undefined ? { categoryId: dto.categoryId } : {}),
+          ...(dto.imageUrl !== undefined
+            ? { imageUrl: dto.imageUrl.trim() }
+            : {}),
+          ...(dto.categoryId !== undefined
+            ? { categoryId: dto.categoryId }
+            : {}),
           ...(dto.canBuildHalfAndHalf !== undefined
             ? { canBuildHalfAndHalf: dto.canBuildHalfAndHalf }
             : {}),
@@ -439,7 +442,10 @@ export class AdminService {
     });
 
     if (!existingOrder) throw new NotFoundException('Order not found');
-    this.assertOrderStatusCanBeChanged(existingOrder.payment?.status, dto.status);
+    this.assertOrderStatusCanBeChanged(
+      existingOrder.payment?.status,
+      dto.status,
+    );
 
     const order = await this.prisma.order.update({
       where: { id: orderId },
@@ -520,11 +526,7 @@ export class AdminService {
     }
   }
 
-  async updateUser(
-    adminId: string,
-    userId: string,
-    dto: AdminUpdateUserDto,
-  ) {
+  async updateUser(adminId: string, userId: string, dto: AdminUpdateUserDto) {
     if (adminId === userId && dto.role && dto.role !== UserRole.ADMIN) {
       throw new ForbiddenException('You cannot remove your own admin role');
     }
@@ -537,7 +539,9 @@ export class AdminService {
           ...(dto.phone !== undefined
             ? { phone: normalizeKzPhone(dto.phone) }
             : {}),
-          ...(dto.email !== undefined ? { email: dto.email?.trim() || null } : {}),
+          ...(dto.email !== undefined
+            ? { email: dto.email?.trim() || null }
+            : {}),
           ...(dto.address !== undefined
             ? { address: dto.address?.trim() || null }
             : {}),
@@ -678,7 +682,9 @@ export class AdminService {
         imageUrl: dto.imageUrl.trim(),
       },
       include: {
-        _count: { select: { products: true, cartItems: true, orderItems: true } },
+        _count: {
+          select: { products: true, cartItems: true, orderItems: true },
+        },
       },
     });
 
@@ -697,7 +703,9 @@ export class AdminService {
         data: {
           ...(dto.name !== undefined ? { name: dto.name.trim() } : {}),
           ...(dto.price !== undefined ? { price: dto.price } : {}),
-          ...(dto.imageUrl !== undefined ? { imageUrl: dto.imageUrl.trim() } : {}),
+          ...(dto.imageUrl !== undefined
+            ? { imageUrl: dto.imageUrl.trim() }
+            : {}),
         },
         include: {
           _count: {
@@ -717,7 +725,9 @@ export class AdminService {
     const ingredient = await this.prisma.ingredient.findUnique({
       where: { id: ingredientId },
       include: {
-        _count: { select: { products: true, cartItems: true, orderItems: true } },
+        _count: {
+          select: { products: true, cartItems: true, orderItems: true },
+        },
       },
     });
 
@@ -766,7 +776,9 @@ export class AdminService {
   private getProductOrderBy(
     sortBy: AdminProductsSortBy,
     sortOrder: SortOrder,
-  ): Prisma.ProductOrderByWithRelationInput | Prisma.ProductOrderByWithRelationInput[] {
+  ):
+    | Prisma.ProductOrderByWithRelationInput
+    | Prisma.ProductOrderByWithRelationInput[] {
     switch (sortBy) {
       case AdminProductsSortBy.NAME:
         return { name: sortOrder };
@@ -1002,7 +1014,9 @@ export class AdminService {
 
     for (const incomingId of incomingIds) {
       if (!existingIds.has(incomingId)) {
-        throw new BadRequestException('Product item does not belong to product');
+        throw new BadRequestException(
+          'Product item does not belong to product',
+        );
       }
     }
 
@@ -1037,7 +1051,9 @@ export class AdminService {
 
     const [cartItems, orderItems] = await Promise.all([
       this.prisma.cartItem.count({ where: { productItemId: { in: itemIds } } }),
-      this.prisma.orderItem.count({ where: { productItemId: { in: itemIds } } }),
+      this.prisma.orderItem.count({
+        where: { productItemId: { in: itemIds } },
+      }),
     ]);
 
     if (cartItems + orderItems > 0) {
@@ -1124,7 +1140,9 @@ export class AdminService {
   private handleMutationError(error: unknown, entity: AdminEntity): never {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
-        throw new BadRequestException(`${this.capitalize(entity)} already exists`);
+        throw new BadRequestException(
+          `${this.capitalize(entity)} already exists`,
+        );
       }
 
       if (error.code === 'P2003') {

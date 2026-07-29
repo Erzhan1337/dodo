@@ -1,1 +1,6 @@
-export { $api } from "./instance";
+export {
+  $api,
+  establishAuthenticatedSession,
+  logout,
+  refreshAccessToken,
+} from "./instance";

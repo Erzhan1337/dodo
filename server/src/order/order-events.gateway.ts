@@ -14,7 +14,7 @@ import {
   getOrderRoom,
   OrderEventsService,
 } from './order-events.service';
-import { UserService } from '../user/user.service';
+import { AuthService } from '../auth/auth.service';
 
 type OrderSubscriptionPayload = {
   token?: string;
@@ -26,12 +26,28 @@ type AdminOrdersSubscriptionPayload = {
 
 type AccessTokenPayload = {
   id: string;
+  sessionId: string;
   type: string;
 };
 
 @WebSocketGateway({
   cors: {
-    origin: true,
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => {
+      const trustedOrigin = process.env.CLIENT_URL;
+
+      if (
+        !origin ||
+        (trustedOrigin && origin === new URL(trustedOrigin).origin)
+      ) {
+        callback(null, true);
+        return;
+      }
+
+      callback(new Error('Untrusted WebSocket origin'));
+    },
     credentials: true,
   },
   transports: ['websocket'],
@@ -41,7 +57,7 @@ export class OrderEventsGateway implements OnGatewayInit {
     private readonly orderService: OrderService,
     private readonly orderEventsService: OrderEventsService,
     private readonly jwt: JwtService,
-    private readonly userService: UserService,
+    private readonly authService: AuthService,
   ) {}
 
   afterInit(server: Server) {
@@ -102,7 +118,9 @@ export class OrderEventsGateway implements OnGatewayInit {
     const accessToken = this.getAdminAccessToken(socket, payload);
 
     if (!accessToken) {
-      socket.emit('admin:orders:error', { message: 'Access token is required' });
+      socket.emit('admin:orders:error', {
+        message: 'Access token is required',
+      });
       return { ok: false };
     }
 
@@ -137,11 +155,14 @@ export class OrderEventsGateway implements OnGatewayInit {
 
   private async assertAdminAccess(accessToken: string) {
     const payload = await this.jwt.verifyAsync<AccessTokenPayload>(accessToken);
-    if (payload.type !== 'access') {
+    if (payload.type !== 'access' || !payload.sessionId) {
       throw new Error('Invalid access token');
     }
 
-    const user = await this.userService.getSafeUserById(payload.id);
+    const user = await this.authService.getActiveSessionUser(
+      payload.sessionId,
+      payload.id,
+    );
     if (user?.role !== UserRole.ADMIN) {
       throw new Error('Admin access required');
     }

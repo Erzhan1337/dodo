@@ -6,7 +6,7 @@ import { hash } from 'argon2';
 import { normalizeKzPhone } from '../auth/lib/phone';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 
-const safeUserSelect = {
+export const safeUserSelect = {
   id: true,
   name: true,
   phone: true,
@@ -22,11 +22,6 @@ const userWithPasswordSelect = {
   password: true,
 } satisfies Prisma.UserSelect;
 
-const userWithRefreshTokenSelect = {
-  ...safeUserSelect,
-  refreshToken: true,
-} satisfies Prisma.UserSelect;
-
 export type SafeUser = Prisma.UserGetPayload<{
   select: typeof safeUserSelect;
 }>;
@@ -39,13 +34,6 @@ export class UserService {
     return this.prisma.user.findUnique({
       where: { id: userId },
       select: safeUserSelect,
-    });
-  }
-
-  async getUserWithRefreshTokenById(userId: string) {
-    return this.prisma.user.findUnique({
-      where: { id: userId },
-      select: userWithRefreshTokenSelect,
     });
   }
 
@@ -85,13 +73,6 @@ export class UserService {
           : {}),
       },
       select: safeUserSelect,
-    });
-  }
-
-  async updateRefreshToken(userId: string, refreshToken: string | null) {
-    return this.prisma.user.update({
-      where: { id: userId },
-      data: { refreshToken },
     });
   }
 }

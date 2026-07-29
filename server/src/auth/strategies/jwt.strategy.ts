@@ -2,11 +2,12 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { Strategy, ExtractJwt } from 'passport-jwt';
-import { UserService } from '../../user/user.service';
 import { getJwtAccessSecret } from '../../../config/jwt.config';
+import { AuthService } from '../auth.service';
 
 type AccessTokenPayload = {
   id: string;
+  sessionId: string;
   type: string;
 };
 
@@ -14,7 +15,7 @@ type AccessTokenPayload = {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     private configService: ConfigService,
-    private userService: UserService,
+    private authService: AuthService,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -23,14 +24,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate({ id, type }: AccessTokenPayload) {
-    if (type !== 'access') {
+  async validate({ id, sessionId, type }: AccessTokenPayload) {
+    if (type !== 'access' || !sessionId) {
       throw new UnauthorizedException('Invalid access token');
     }
 
-    const user = await this.userService.getSafeUserById(id);
+    const user = await this.authService.getActiveSessionUser(sessionId, id);
     if (!user) {
-      throw new UnauthorizedException('User not found');
+      throw new UnauthorizedException('Session is invalid or expired');
     }
 
     return user;

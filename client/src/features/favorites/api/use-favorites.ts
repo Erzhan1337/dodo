@@ -40,6 +40,7 @@ export const useFavoriteProductIds = () => {
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const userId = useSessionStore((state) => state.user?.id);
+  const accessToken = useSessionStore((state) => state.accessToken);
 
   return useQuery({
     queryKey: favoriteKeys.ids(userId),
@@ -47,7 +48,7 @@ export const useFavoriteProductIds = () => {
       const { data } = await $api.get<FavoriteIdsResponse>("/favorites/ids");
       return data;
     },
-    enabled: _hasHydrated && isAuthenticated,
+    enabled: _hasHydrated && isAuthenticated && Boolean(accessToken),
     staleTime: 60_000,
   });
 };
@@ -56,6 +57,7 @@ export const useFavoriteProducts = () => {
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const userId = useSessionStore((state) => state.user?.id);
+  const accessToken = useSessionStore((state) => state.accessToken);
 
   return useQuery({
     queryKey: favoriteKeys.list(userId),
@@ -63,7 +65,7 @@ export const useFavoriteProducts = () => {
       const { data } = await $api.get<Product[]>("/favorites");
       return data;
     },
-    enabled: _hasHydrated && isAuthenticated,
+    enabled: _hasHydrated && isAuthenticated && Boolean(accessToken),
   });
 };
 

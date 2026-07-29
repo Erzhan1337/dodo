@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Auth } from '../auth/decorators/auth.decorator';
 import { CurrentUser } from '../auth/decorators/user.decorator';
 import { CreateProductReviewDto } from './dto/create-product-review.dto';
@@ -45,7 +54,10 @@ export class ReviewsController {
 
   @Delete(':id')
   @Auth()
-  deleteReview(@CurrentUser('id') userId: string, @Param('id') reviewId: string) {
+  deleteReview(
+    @CurrentUser('id') userId: string,
+    @Param('id') reviewId: string,
+  ) {
     return this.reviewsService.deleteReview(userId, reviewId);
   }
 }

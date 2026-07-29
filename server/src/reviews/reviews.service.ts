@@ -180,7 +180,12 @@ export class ReviewsService {
 
       const ratingDelta = nextRating - existing.rating;
       if (ratingDelta !== 0) {
-        await this.applyProductRatingDelta(tx, existing.productId, ratingDelta, 0);
+        await this.applyProductRatingDelta(
+          tx,
+          existing.productId,
+          ratingDelta,
+          0,
+        );
       }
 
       return review;
@@ -196,7 +201,9 @@ export class ReviewsService {
   async deleteReviewAsAdmin(adminId: string, reviewId: string) {
     const review = await this.getReviewTarget(reviewId);
     await this.deleteReviewWithAggregate(review);
-    this.logger.log(`admin=${adminId} action="deleted product review" target=${reviewId}`);
+    this.logger.log(
+      `admin=${adminId} action="deleted product review" target=${reviewId}`,
+    );
     return { id: reviewId };
   }
 

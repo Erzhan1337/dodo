@@ -10,8 +10,8 @@ export const getDatabaseUrl = () => {
       new URL(directUrl);
 
       return directUrl;
-    } catch {
-      // Fall through to the POSTGRES_* variables used by the local .env file.
+    } catch (error) {
+      void error;
     }
   }
 
@@ -29,8 +29,8 @@ export const getDatabaseUrl = () => {
       new URL(expandedDirectUrl);
 
       return expandedDirectUrl;
-    } catch {
-      // Fall through to the structured POSTGRES_* variables below.
+    } catch (error) {
+      void error;
     }
   }
 

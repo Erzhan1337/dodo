@@ -26,7 +26,9 @@ export class AdminCreateUserDto {
   phone: string;
 
   @IsOptional()
-  @ValidateIf((o: AdminCreateUserDto) => o.email !== '' && o.email !== undefined)
+  @ValidateIf(
+    (o: AdminCreateUserDto) => o.email !== '' && o.email !== undefined,
+  )
   @IsEmail()
   email?: string;
 

@@ -85,7 +85,12 @@ export class PromoCodesService {
     userId?: string | null,
     client: Prisma.TransactionClient = this.prisma,
   ): Promise<PromoCodeCalculation> {
-    await this.assertPromoCodeAvailable(promoCode, subtotalPrice, userId, client);
+    await this.assertPromoCodeAvailable(
+      promoCode,
+      subtotalPrice,
+      userId,
+      client,
+    );
 
     return {
       promoCode,

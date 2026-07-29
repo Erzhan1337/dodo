@@ -10,9 +10,14 @@ import Link from "next/link";
 
 export const HeaderActions = () => {
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
+  const authStatus = useSessionStore((state) => state.status);
   const user = useSessionStore((state) => state.user);
 
-  if (!_hasHydrated) {
+  if (
+    !_hasHydrated ||
+    authStatus === "bootstrapping" ||
+    authStatus === "unavailable"
+  ) {
     return (
       <div className="flex items-center gap-2 md:gap-3">
         <Skeleton className="h-7 w-16 md:h-9 md:w-20 lg:h-11 lg:w-28" />

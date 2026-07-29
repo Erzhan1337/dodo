@@ -14,6 +14,7 @@ export const useOrders = () => {
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
   const userId = useSessionStore((state) => state.user?.id);
+  const accessToken = useSessionStore((state) => state.accessToken);
 
   return useQuery<Order[]>({
     queryKey: getOrdersQueryKey(userId),
@@ -21,6 +22,6 @@ export const useOrders = () => {
       const { data } = await $api.get<Order[]>("/order/my");
       return data;
     },
-    enabled: _hasHydrated && isAuthenticated,
+    enabled: _hasHydrated && isAuthenticated && Boolean(accessToken),
   });
 };

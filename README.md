@@ -48,7 +48,8 @@ Full-stack приложение для онлайн-заказа пиццы: к�
 - Оформление заказа для гостя или авторизованного пользователя.
 - Страница заказа с realtime-обновлением статуса через Socket.IO.
 - Личный кабинет с профилем, адресом и историей заказов.
-- JWT-аутентификация с access token на клиенте и refresh token в httpOnly cookie.
+- JWT access token в памяти клиента и отдельная серверная сессия в защищённой
+  httpOnly cookie.
 - Админ-панель:
   - dashboard с выручкой, заказами, пользователями и топом товаров;
   - CRUD товаров, категорий, ингредиентов и пользователей;
@@ -115,7 +116,9 @@ dodo/
 
 ### Основные сущности БД
 
-- `User` - пользователь, профиль, роль, refresh token.
+- `User` - пользователь, профиль и роль.
+- `AuthSession` - отдельная отзываемая сессия браузера/устройства; в БД
+  хранится только HMAC-хеш cookie token.
 - `Category` - категория товаров.
 - `Product` - пицца или продукт каталога.
 - `ProductItem` - конкретный вариант продукта: размер, тип теста, цена.
@@ -214,14 +217,32 @@ DATABASE_URL="postgresql://dodo:dodo@localhost:5433/dodo?schema=public"
 
 CLIENT_URL="http://localhost:3000"
 PRODUCTION="false"
+SESSION_TOKEN_PEPPER="replace-with-at-least-32-random-bytes"
+AUTH_COOKIE_SAME_SITE="lax"
 ```
 
-Для production-cookie дополнительно нужен домен сервера:
+Для production обязательно задайте отдельный случайный секрет сессий. Если
+frontend и API находятся на разных сайтах, используйте `none`; для одного сайта
+и поддоменов используйте `lax`:
 
 ```env
-SERVER_DOMAIN="example.com"
 PRODUCTION="true"
+CLIENT_URL="https://app.example.com"
+SESSION_TOKEN_PEPPER="<at-least-32-random-bytes>"
+AUTH_COOKIE_SAME_SITE="lax"
+
+SERVER_DOMAIN="example.com"
 ```
+
+Перед запуском новой версии сервера примените production-миграции:
+
+```bash
+cd server
+yarn prisma migrate deploy
+```
+
+Auth cookie имеет префикс `__Host-`, поэтому production API обязан работать по
+HTTPS. `CLIENT_URL` должен точно совпадать с origin клиентского приложения.
 
 Если меняете `POSTGRES_PORT`, синхронно обновите порт в `DATABASE_URL`.
 
@@ -230,21 +251,20 @@ PRODUCTION="true"
 ### Client
 
 ```bash
-bun run dev      # dev server Next.js
-bun run build    # production build
-bun run start    # запуск production build
-bun run lint     # ESLint
+bun run dev
+bun run build
+bun run start
+bun run lint
 ```
 
 ### Server
 
 ```bash
-yarn start       # запуск NestJS
-yarn start:dev   # dev server with watch
-yarn build       # prisma generate + nest build
-yarn start:prod  # запуск dist/main
-yarn lint        # ESLint с --fix
-yarn test        # Jest unit tests
+yarn start
+yarn start:dev
+yarn build
+yarn start:prod
+yarn lint
 ```
 
 Полезные Prisma-команды:
@@ -308,7 +328,7 @@ http://localhost:4000
 | --- | --- | --- |
 | `POST` | `/auth/login` | Вход по телефону и паролю. |
 | `POST` | `/auth/register` | Регистрация пользователя. |
-| `POST` | `/auth/login/access-token` | Обновление access token через refresh cookie. |
+| `POST` | `/auth/login/access-token` | Выпуск нового access token через серверную session cookie. |
 | `POST` | `/auth/logout` | Выход и очистка refresh cookie. |
 
 ### Catalog
@@ -455,7 +475,8 @@ http://localhost:4000
 ## Troubleshooting
 
 - Если frontend не видит API, проверьте `NEXT_PUBLIC_SERVER_URL` в `client/.env`.
-- Если CORS или cookie не работают, проверьте `CLIENT_URL` в `server/.env`.
+- Если CORS или auth cookie не работают, проверьте точный `CLIENT_URL`,
+  `AUTH_COOKIE_SAME_SITE`, HTTPS и наличие `withCredentials`.
 - Если PostgreSQL не стартует из-за занятого порта, измените `POSTGRES_PORT` и порт в `DATABASE_URL`.
 - Если seed отказывается запускаться, убедитесь, что окружение не production-like и команда содержит `ALLOW_DESTRUCTIVE_SEED=true`.
 - Если админ-панель возвращает `403`, войдите под пользователем с ролью `ADMIN`. Демо-админ создаётся seed-скриптом.

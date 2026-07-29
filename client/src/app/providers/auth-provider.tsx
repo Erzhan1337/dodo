@@ -1,11 +1,14 @@
 "use client";
-import { ReactNode, useEffect } from "react";
+
+import { ReactNode, useEffect, useRef } from "react";
 import {
-  useSessionStore,
   AUTH_CHANNEL,
   AUTH_LOGOUT_EVENT,
+  AUTH_LOGOUT_STORAGE_KEY,
+  LEGACY_SESSION_STORAGE_KEY,
+  useSessionStore,
 } from "@/entities/session/model/store";
-import { $api } from "@/shared/api";
+import { refreshAccessToken } from "@/shared/api";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   EMPTY_CART_RESPONSE,
@@ -13,33 +16,59 @@ import {
 } from "@/entities/cart/model/query-key";
 import { favoriteKeys } from "@/features/favorites";
 
+const AUTH_RETRY_BASE_DELAY_MS = 2_000;
+const AUTH_RETRY_MAX_DELAY_MS = 30_000;
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const queryClient = useQueryClient();
-  const setAuthData = useSessionStore((state) => state.setAuthData);
-  const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
-  const logout = useSessionStore((state) => state.logout);
+  const retryAttemptRef = useRef(0);
+  const clearSession = useSessionStore((state) => state.clearSession);
+  const setHasHydrated = useSessionStore((state) => state.setHasHydrated);
+  const retryAuthBootstrap = useSessionStore(
+    (state) => state.retryAuthBootstrap,
+  );
+  const status = useSessionStore((state) => state.status);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
-  const accessToken = useSessionStore((state) => state.accessToken);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      if (!_hasHydrated) return;
-      if (!isAuthenticated) return;
+    try {
+      window.localStorage.removeItem(LEGACY_SESSION_STORAGE_KEY);
+    } catch {}
 
-      if (accessToken) return;
-
-      try {
-        const { data } = await $api.post("auth/login/access-token");
-        setAuthData(data.user, data.accessToken);
-      } catch {
-        logout();
-      }
-    };
-    void checkAuth();
-  }, [setAuthData, isAuthenticated, logout, _hasHydrated, accessToken]);
+    setHasHydrated();
+  }, [setHasHydrated]);
 
   useEffect(() => {
-    const clearSession = () => {
+    if (!_hasHydrated || status !== "bootstrapping") return;
+
+    void refreshAccessToken().catch(() => undefined);
+  }, [_hasHydrated, status]);
+
+  useEffect(() => {
+    if (!_hasHydrated || status !== "unavailable") return;
+
+    const exponentialDelay = Math.min(
+      AUTH_RETRY_BASE_DELAY_MS * 2 ** retryAttemptRef.current,
+      AUTH_RETRY_MAX_DELAY_MS,
+    );
+    const jitter = Math.floor(Math.random() * 500);
+    retryAttemptRef.current += 1;
+    const timer = window.setTimeout(
+      retryAuthBootstrap,
+      exponentialDelay + jitter,
+    );
+
+    return () => window.clearTimeout(timer);
+  }, [_hasHydrated, retryAuthBootstrap, status]);
+
+  useEffect(() => {
+    if (status === "authenticated" || status === "anonymous") {
+      retryAttemptRef.current = 0;
+    }
+  }, [status]);
+
+  useEffect(() => {
+    const clearSessionData = () => {
       const userId = useSessionStore.getState().user?.id;
 
       if (userId) {
@@ -51,30 +80,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       queryClient.setQueryData(getCartQueryKey(null), EMPTY_CART_RESPONSE);
       queryClient.removeQueries({ queryKey: favoriteKeys.root });
-      useSessionStore.setState({
-        user: null,
-        accessToken: null,
-        isAuthenticated: false,
-      });
+      queryClient.removeQueries({ queryKey: ["admin"] });
+      clearSession();
       void queryClient.invalidateQueries({
         queryKey: getCartQueryKey(null),
         exact: true,
       });
     };
 
-    const channel = new BroadcastChannel(AUTH_CHANNEL);
-    channel.onmessage = (e: MessageEvent<string>) => {
-      if (e.data === "logout") {
-        clearSession();
-      }
+    const channel =
+      typeof BroadcastChannel === "undefined"
+        ? null
+        : new BroadcastChannel(AUTH_CHANNEL);
+    if (channel) {
+      channel.onmessage = (event: MessageEvent<string>) => {
+        if (event.data === "logout") clearSessionData();
+      };
+    }
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_LOGOUT_STORAGE_KEY) clearSessionData();
     };
-    window.addEventListener(AUTH_LOGOUT_EVENT, clearSession);
+    window.addEventListener(AUTH_LOGOUT_EVENT, clearSessionData);
+    window.addEventListener("storage", handleStorage);
 
     return () => {
-      channel.close();
-      window.removeEventListener(AUTH_LOGOUT_EVENT, clearSession);
+      channel?.close();
+      window.removeEventListener(AUTH_LOGOUT_EVENT, clearSessionData);
+      window.removeEventListener("storage", handleStorage);
     };
-  }, [queryClient]);
+  }, [clearSession, queryClient]);
 
   return <>{children}</>;
 };

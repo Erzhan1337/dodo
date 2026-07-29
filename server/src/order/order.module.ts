@@ -11,11 +11,13 @@ import { getJwtConfig } from '../../config/jwt.config';
 import { PaymentController } from '../payment/payment.controller';
 import { PaymentService } from '../payment/payment.service';
 import { PromoCodesModule } from '../promo-codes/promo-codes.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [
     CartModule,
     PromoCodesModule,
+    AuthModule,
     UserModule,
     ConfigModule,
     JwtModule.registerAsync({

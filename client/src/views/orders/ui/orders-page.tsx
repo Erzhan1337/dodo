@@ -218,17 +218,23 @@ export const OrdersPage = () => {
   const [reviewItem, setReviewItem] = useState<OrderItem | null>(null);
   const _hasHydrated = useSessionStore((state) => state._hasHydrated);
   const isAuthenticated = useSessionStore((state) => state.isAuthenticated);
+  const authStatus = useSessionStore((state) => state.status);
   const { data: orders, isLoading, isError, isFetching, refetch } = useOrders();
 
   useRealtimeOrdersStatus(orders);
 
   useEffect(() => {
-    if (_hasHydrated && !isAuthenticated) {
+    if (_hasHydrated && authStatus === "anonymous") {
       router.replace("/login");
     }
-  }, [_hasHydrated, isAuthenticated, router]);
+  }, [_hasHydrated, authStatus, router]);
 
-  if (!_hasHydrated || isLoading) {
+  if (
+    !_hasHydrated ||
+    authStatus === "bootstrapping" ||
+    authStatus === "unavailable" ||
+    isLoading
+  ) {
     return <OrdersPageSkeleton />;
   }
 
