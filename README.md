@@ -182,8 +182,8 @@ password: admin12345
 ```bash
 cd client
 cp .env.example .env
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Клиент будет доступен на:
@@ -230,10 +230,10 @@ PRODUCTION="true"
 ### Client
 
 ```bash
-npm run dev      # dev server Next.js
-npm run build    # production build
-npm run start    # запуск production build
-npm run lint     # ESLint
+bun run dev      # dev server Next.js
+bun run build    # production build
+bun run start    # запуск production build
+bun run lint     # ESLint
 ```
 
 ### Server
@@ -260,8 +260,8 @@ ALLOW_DESTRUCTIVE_SEED=true npx prisma db seed
 
 ```bash
 cd client
-npm run lint
-npm run build
+bun run lint
+bun run build
 
 cd ../server
 yarn build
