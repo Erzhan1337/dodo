@@ -40,36 +40,39 @@ export const ProductModal = ({ product }: Props) => {
       <ProductForm
         product={product}
         onSubmit={handleClose}
-        className="h-full max-h-full overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] lg:overflow-hidden [&::-webkit-scrollbar]:hidden"
+        variant="modal"
+        className="h-full max-h-full overflow-hidden"
         rightHeader={
           <LazyMotion features={loadMotionFeatures}>
-            <div className="grid w-full grid-cols-2 rounded-xl bg-[#ECECEC] p-0.5 shadow-sm">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.value}
-                  type="button"
-                  onClick={() => setActiveTab(tab.value)}
-                  className={cn(
-                    "relative min-h-8 rounded-lg px-3 text-xs font-bold transition-colors sm:text-sm",
-                    activeTab === tab.value
-                      ? "text-primary"
-                      : "text-gray-500 hover:text-gray-900",
-                  )}
-                >
-                  {activeTab === tab.value && (
-                    <m.div
-                      layoutId={tabLayoutId}
-                      className="absolute inset-0 rounded-lg bg-white shadow-sm"
-                      transition={{
-                        type: "spring",
-                        stiffness: 300,
-                        damping: 30,
-                      }}
-                    />
-                  )}
-                  <span className="relative z-10">{tab.label}</span>
-                </button>
-              ))}
+            <div className="pr-8 lg:pr-0">
+              <div className="grid w-full grid-cols-2 rounded-xl bg-[#ECECEC] p-0.5 shadow-sm">
+                {tabs.map((tab) => (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    onClick={() => setActiveTab(tab.value)}
+                    className={cn(
+                      "relative min-h-8 rounded-lg px-3 text-xs font-bold transition-colors sm:text-sm",
+                      activeTab === tab.value
+                        ? "text-primary"
+                        : "text-gray-500 hover:text-gray-900",
+                    )}
+                  >
+                    {activeTab === tab.value && (
+                      <m.div
+                        layoutId={tabLayoutId}
+                        className="absolute inset-0 rounded-lg bg-white shadow-sm"
+                        transition={{
+                          type: "spring",
+                          stiffness: 300,
+                          damping: 30,
+                        }}
+                      />
+                    )}
+                    <span className="relative z-10">{tab.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </LazyMotion>
         }

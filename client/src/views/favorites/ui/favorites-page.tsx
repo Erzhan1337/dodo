@@ -19,7 +19,6 @@ import {
 const FavoritesPageSkeleton = () => (
   <Container className="mt-10 pb-20">
     <Skeleton className="mb-5 h-5 w-44" />
-    <Skeleton className="mb-8 h-9 w-52" />
     <div className="grid grid-cols-1 gap-10 md:grid-cols-2 lg:grid-cols-3">
       {Array.from({ length: 6 }, (_, index) => (
         <div key={index}>
@@ -65,18 +64,6 @@ export const FavoritesPage = () => {
         items={[{ label: "Главная", href: "/" }, { label: "Избранное" }]}
         className="mb-5"
       />
-
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Title text="Избранное" className="text-2xl lg:text-3xl" />
-          <p className="mt-2 text-gray-500">
-            Быстрый доступ к пиццам, которые хочется заказать снова.
-          </p>
-        </div>
-        <Button asChild size="lg" className="px-5">
-          <Link href="/">В меню</Link>
-        </Button>
-      </div>
 
       {favoritesQuery.isError ? (
         <div className="rounded-[30px] bg-white shadow-lg">

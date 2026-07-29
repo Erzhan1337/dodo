@@ -25,6 +25,7 @@ interface Props {
   className?: string;
   rightHeader?: ReactNode;
   rightContent?: ReactNode;
+  variant?: "page" | "modal";
 }
 
 export const ProductForm = ({
@@ -33,6 +34,7 @@ export const ProductForm = ({
   className,
   rightHeader,
   rightContent,
+  variant = "page",
 }: Props) => {
   const { data: ingredients = [], isLoading } = useIngredients();
   const hasProductItems = product.items.length > 0;
@@ -53,6 +55,7 @@ export const ProductForm = ({
 
   const { total } = totalPrice();
   const hasRightContent = rightContent !== undefined && rightContent !== null;
+  const isModal = variant === "modal";
   const [loadedImage, setLoadedImage] = useState(currentImage);
   const isImageLoading = loadedImage !== currentImage;
   const productImageUrls = useMemo(
@@ -94,9 +97,28 @@ export const ProductForm = ({
   };
 
   return (
-    <div className={cn("flex min-h-0 flex-1 flex-col lg:flex-row", className)}>
-      <div className="flex w-full items-center justify-center rounded-t-3xl bg-white py-5 lg:w-[50%] lg:rounded-bl-3xl lg:rounded-tr-none lg:py-0">
-        <div className="relative size-56 sm:size-70 lg:size-85">
+    <div
+      className={cn(
+        "flex min-h-0 flex-1 flex-col lg:flex-row",
+        isModal && "overflow-hidden",
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "flex w-full items-center justify-center rounded-t-3xl bg-white py-5 lg:w-[50%] lg:rounded-bl-3xl lg:rounded-tr-none lg:py-0",
+          isModal &&
+            "shrink-0 py-2 sm:py-3 lg:flex lg:py-0 [@media(max-height:560px)]:hidden",
+          isModal && hasRightContent && "hidden lg:flex",
+        )}
+      >
+        <div
+          className={cn(
+            "relative size-56 sm:size-70 lg:size-85",
+            isModal &&
+              "size-40 sm:size-48 lg:size-85 [@media(max-height:700px)]:size-36",
+          )}
+        >
           <NextImage
             src={currentImage}
             alt={product.name}
@@ -128,107 +150,165 @@ export const ProductForm = ({
         className={cn(
           "flex min-h-0 w-full flex-col rounded-br-3xl bg-[#F4F1EE] px-4 sm:px-6 lg:w-[50%] lg:rounded-br-3xl lg:rounded-tl-none lg:rounded-tr-3xl lg:px-10",
           rightHeader ? "overflow-hidden py-5" : "py-5",
+          isModal && "flex-1 py-3 sm:py-4 lg:py-5",
         )}
       >
         {rightHeader ? (
-          <div className="mb-3 shrink-0">{rightHeader}</div>
+          <div className={cn("mb-3 shrink-0", isModal && "mb-2 lg:mb-3")}>
+            {rightHeader}
+          </div>
         ) : null}
 
         {hasRightContent ? (
           <div className="min-h-0 flex-1 overflow-hidden">{rightContent}</div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col">
-            <div>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div className="min-w-0">
-                  <h2 className="text-xl font-semibold sm:text-2xl">
-                    {product.name}
-                  </h2>
-                  <ProductRatingSummary
-                    ratingAvg={product.ratingAvg}
-                    ratingCount={product.ratingCount}
-                    className="mt-1"
-                  />
-                </div>
-                <FavoriteButton
-                  product={product}
-                  productId={product.id}
-                  productName={product.name}
-                  showLabel
-                  className="w-fit shrink-0"
-                />
-              </div>
-              <p className="mt-2 text-sm text-gray-600">{product.description}</p>
-            </div>
-            {hasProductItems ? (
-              <>
-                <div className="flex flex-col gap-3 mt-3">
-                  <GroupVariants
-                    items={PIZZA_SIZES.map((item) => ({
-                      name: item.name,
-                      value: item.value,
-                      disabled: !product.items.some(
-                        (pizza) => pizza.size === item.value,
-                      ),
-                    }))}
-                    value={size}
-                    onClick={(val) => setSize(val)}
-                  />
-                  <GroupVariants
-                    items={PIZZA_TYPES.map((item) => ({
-                      name: item.name,
-                      value: item.value,
-                      disabled: !product.items.some(
-                        (pizza) =>
-                          pizza.size === size && pizza.pizzaType === item.value,
-                      ),
-                    }))}
-                    value={type}
-                    onClick={(val) => setType(val)}
-                  />
-                </div>
-
-                {isLoading ? (
-                  <IngredientGridSkeleton />
-                ) : (
-                  <div className="mt-5">
-                    <p className="text-lg font-semibold mb-2">
-                      Добавить по вкусу
-                    </p>
-                    <div className="pb-2 w-full overflow-y-auto h-45 lg:h-78 gap-2 grid grid-cols-3 md:grid-cols-4 lg:grid-cols-3 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-                      {ingredients.map((ingredient) => (
-                        <IngredientCard
-                          key={ingredient.id}
-                          ingredient={ingredient}
-                          onClick={() => toggleIngredient(ingredient.id)}
-                          active={selectedIngredients.has(ingredient.id)}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="mt-5 rounded-2xl bg-white p-5 text-center text-muted-foreground">
-                Этот продукт сейчас недоступен для заказа.
-              </div>
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col",
+              isModal && "overflow-hidden",
             )}
-
-            <button
-              onClick={handleSubmit}
-              disabled={!isAvailable || isPending}
+          >
+            <div
               className={cn(
-                "font-semibold w-full bg-primary py-3 cursor-pointer rounded-2xl text-white text-lg hover:scale-95 transition-transform duration-300",
-                rightHeader ? "mt-auto" : "mt-3 md:mt-5",
-                (!isAvailable || isPending) && "opacity-50 cursor-not-allowed",
+                isModal &&
+                  "min-h-0 flex-1 overflow-y-auto pr-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
               )}
             >
-              {!hasProductItems
-                ? "Нет в наличии"
-                : isPending
-                  ? "Добавляем..."
-                  : `Добавить в корзину за ${formatPrice(total)}`}
-            </button>
+              <div>
+                <div
+                  className={cn(
+                    "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
+                    isModal && "flex-row items-start justify-between gap-2",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <h2 className="text-xl font-semibold sm:text-2xl">
+                      {product.name}
+                    </h2>
+                    <ProductRatingSummary
+                      ratingAvg={product.ratingAvg}
+                      ratingCount={product.ratingCount}
+                      className="mt-1"
+                    />
+                  </div>
+                  <FavoriteButton
+                    product={product}
+                    productId={product.id}
+                    productName={product.name}
+                    showLabel={!isModal}
+                    className={cn(
+                      "shrink-0",
+                      isModal ? "size-9 rounded-full" : "w-fit",
+                    )}
+                  />
+                </div>
+                <p
+                  className={cn(
+                    "mt-2 text-sm text-gray-600",
+                    isModal && "line-clamp-2 text-xs leading-4 sm:text-sm",
+                  )}
+                >
+                  {product.description}
+                </p>
+              </div>
+
+              {hasProductItems ? (
+                <>
+                  <div
+                    className={cn(
+                      "mt-3 flex flex-col gap-3",
+                      isModal && "mt-2 gap-2 lg:mt-3 lg:gap-3",
+                    )}
+                  >
+                    <GroupVariants
+                      items={PIZZA_SIZES.map((item) => ({
+                        name: item.name,
+                        value: item.value,
+                        disabled: !product.items.some(
+                          (pizza) => pizza.size === item.value,
+                        ),
+                      }))}
+                      value={size}
+                      compact={isModal}
+                      onClick={(val) => setSize(val)}
+                    />
+                    <GroupVariants
+                      items={PIZZA_TYPES.map((item) => ({
+                        name: item.name,
+                        value: item.value,
+                        disabled: !product.items.some(
+                          (pizza) =>
+                            pizza.size === size && pizza.pizzaType === item.value,
+                        ),
+                      }))}
+                      value={type}
+                      compact={isModal}
+                      onClick={(val) => setType(val)}
+                    />
+                  </div>
+
+                  {isLoading ? (
+                    <IngredientGridSkeleton compact={isModal} />
+                  ) : (
+                    <div className={cn("mt-5", isModal && "mt-3 lg:mt-5")}>
+                      <p
+                        className={cn(
+                          "mb-2 text-lg font-semibold",
+                          isModal && "text-base lg:text-lg",
+                        )}
+                      >
+                        Добавить по вкусу
+                      </p>
+                      <div
+                        className={cn(
+                          "grid h-45 w-full grid-cols-3 gap-2 overflow-y-auto pb-2 md:grid-cols-4 lg:h-78 lg:grid-cols-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+                          isModal &&
+                            "h-auto overflow-visible md:h-auto lg:h-78 lg:overflow-y-auto",
+                        )}
+                      >
+                        {ingredients.map((ingredient) => (
+                          <IngredientCard
+                            key={ingredient.id}
+                            ingredient={ingredient}
+                            onClick={() => toggleIngredient(ingredient.id)}
+                            active={selectedIngredients.has(ingredient.id)}
+                            compact={isModal}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="mt-5 rounded-2xl bg-white p-5 text-center text-muted-foreground">
+                  Этот продукт сейчас недоступен для заказа.
+                </div>
+              )}
+            </div>
+
+            <div
+              className={cn(
+                isModal &&
+                  "shrink-0 border-t border-black/5 bg-[#F4F1EE] pt-3 pb-[env(safe-area-inset-bottom)]",
+              )}
+            >
+              <button
+                onClick={handleSubmit}
+                disabled={!isAvailable || isPending}
+                className={cn(
+                  "w-full cursor-pointer rounded-2xl bg-primary py-3 text-lg font-semibold text-white transition-transform duration-300 hover:scale-95",
+                  !isModal && (rightHeader ? "mt-auto" : "mt-3 md:mt-5"),
+                  (!isAvailable || isPending) &&
+                    "cursor-not-allowed opacity-50",
+                )}
+              >
+                {!hasProductItems
+                  ? "Нет в наличии"
+                  : isPending
+                    ? "Добавляем..."
+                    : `Добавить в корзину за ${formatPrice(total)}`}
+              </button>
+            </div>
           </div>
         )}
       </div>
