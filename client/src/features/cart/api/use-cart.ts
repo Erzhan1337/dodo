@@ -11,6 +11,8 @@ import { handleApiError } from "@/shared/lib/handle-api-error";
 
 const getCurrentUserId = () => useSessionStore.getState().user?.id ?? null;
 const PROMO_CODES_QUERY_KEY = ["promo-codes"] as const;
+const CART_ITEM_MUTATION_KEY = ["cart-item-mutation"] as const;
+const CART_ITEM_MUTATION_SCOPE = { id: "cart-item-mutation" } as const;
 
 const setCurrentUserCartQueryData = (
   queryClient: ReturnType<typeof useQueryClient>,
@@ -21,6 +23,29 @@ const setCurrentUserCartQueryData = (
 
   queryClient.setQueryData(getCartQueryKey(userId), cart);
 };
+
+const updateCurrentCartOptimistically = async (
+  queryClient: ReturnType<typeof useQueryClient>,
+  updateCart: (cart: CartResponse) => CartResponse,
+) => {
+  const userId = getCurrentUserId();
+  const queryKey = getCartQueryKey(userId);
+
+  await queryClient.cancelQueries({ queryKey });
+
+  const previousCart = queryClient.getQueryData<CartResponse>(queryKey);
+
+  if (previousCart && getCurrentUserId() === userId) {
+    queryClient.setQueryData(queryKey, updateCart(previousCart));
+  }
+
+  return { previousCart, queryKey, userId };
+};
+
+const isLatestCartItemMutation = (
+  queryClient: ReturnType<typeof useQueryClient>,
+) =>
+  queryClient.isMutating({ mutationKey: CART_ITEM_MUTATION_KEY }) === 1;
 
 const calculateCartSubtotal = (items: CartResponse["items"]) =>
   items.reduce((subtotal, item) => {
@@ -40,7 +65,11 @@ const calculatePromoDiscount = (
 ) => {
   const promoCode = cart.promoCode;
 
-  if (!promoCode || subtotalPrice < promoCode.minOrderAmount) {
+  if (
+    !promoCode ||
+    subtotalPrice <= 0 ||
+    subtotalPrice < promoCode.minOrderAmount
+  ) {
     return { discountAmount: 0, promoCode: null };
   }
 
@@ -60,6 +89,63 @@ const calculatePromoDiscount = (
     ),
     promoCode,
   };
+};
+
+const updateCartPricing = (
+  cart: CartResponse,
+  items: CartResponse["items"],
+) => {
+  const subtotalPrice = calculateCartSubtotal(items);
+  const { discountAmount, promoCode } = calculatePromoDiscount(
+    cart,
+    subtotalPrice,
+  );
+  const totalPrice = Math.max(subtotalPrice - discountAmount, 0);
+
+  return {
+    ...cart,
+    items,
+    subtotalPrice,
+    discountAmount,
+    totalPrice,
+    totalAmount: totalPrice,
+    promoCodeId: promoCode?.id ?? null,
+    promoCode,
+  };
+};
+
+const updateCartItemQuantityOptimistically = (
+  cart: CartResponse,
+  itemId: string,
+  quantity: number,
+) => {
+  if (
+    quantity < 1 ||
+    !cart.items.some((cartItem) => cartItem.id === itemId)
+  ) {
+    return cart;
+  }
+
+  return updateCartPricing(
+    cart,
+    cart.items.map((cartItem) =>
+      cartItem.id === itemId ? { ...cartItem, quantity } : cartItem,
+    ),
+  );
+};
+
+const removeCartItemOptimistically = (
+  cart: CartResponse,
+  itemId: string,
+) => {
+  if (!cart.items.some((cartItem) => cartItem.id === itemId)) {
+    return cart;
+  }
+
+  return updateCartPricing(
+    cart,
+    cart.items.filter((cartItem) => cartItem.id !== itemId),
+  );
 };
 
 const removeCartItemIngredientOptimistically = (
@@ -110,23 +196,7 @@ const removeCartItemIngredientOptimistically = (
     : cart.items.map((cartItem) =>
         cartItem.id === itemId ? { ...cartItem, ingredients } : cartItem,
       );
-  const subtotalPrice = calculateCartSubtotal(items);
-  const { discountAmount, promoCode } = calculatePromoDiscount(
-    cart,
-    subtotalPrice,
-  );
-  const totalPrice = Math.max(subtotalPrice - discountAmount, 0);
-
-  return {
-    ...cart,
-    items,
-    subtotalPrice,
-    discountAmount,
-    totalPrice,
-    totalAmount: totalPrice,
-    promoCodeId: promoCode?.id ?? null,
-    promoCode,
-  };
+  return updateCartPricing(cart, items);
 };
 
 export const useCart = () => {
@@ -177,6 +247,8 @@ export const useUpdateItemQuantity = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: CART_ITEM_MUTATION_KEY,
+    scope: CART_ITEM_MUTATION_SCOPE,
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
       const userId = getCurrentUserId();
       const { data } = await $api.patch<CartResponse>("/cart/" + id, {
@@ -184,8 +256,35 @@ export const useUpdateItemQuantity = () => {
       });
       return { cart: data, userId };
     },
+    onMutate: ({ id, quantity }) =>
+      updateCurrentCartOptimistically(queryClient, (cart) =>
+        updateCartItemQuantityOptimistically(cart, id, quantity),
+      ),
+    onError: (error, _variables, context) => {
+      if (
+        isLatestCartItemMutation(queryClient) &&
+        context?.previousCart &&
+        getCurrentUserId() === context.userId
+      ) {
+        queryClient.setQueryData(context.queryKey, context.previousCart);
+      }
+
+      handleApiError(error);
+    },
     onSuccess: ({ cart, userId }) => {
-      setCurrentUserCartQueryData(queryClient, userId, cart);
+      if (isLatestCartItemMutation(queryClient)) {
+        setCurrentUserCartQueryData(queryClient, userId, cart);
+      }
+    },
+    onSettled: (_data, error, _variables, context) => {
+      if (
+        error &&
+        isLatestCartItemMutation(queryClient) &&
+        context &&
+        getCurrentUserId() === context.userId
+      ) {
+        return queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     },
   });
 };
@@ -194,13 +293,42 @@ export const useRemoveCartItem = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: CART_ITEM_MUTATION_KEY,
+    scope: CART_ITEM_MUTATION_SCOPE,
     mutationFn: async (id: string) => {
       const userId = getCurrentUserId();
       const { data } = await $api.delete<CartResponse>("/cart/" + id);
       return { cart: data, userId };
     },
+    onMutate: (id) =>
+      updateCurrentCartOptimistically(queryClient, (cart) =>
+        removeCartItemOptimistically(cart, id),
+      ),
+    onError: (error, _variables, context) => {
+      if (
+        isLatestCartItemMutation(queryClient) &&
+        context?.previousCart &&
+        getCurrentUserId() === context.userId
+      ) {
+        queryClient.setQueryData(context.queryKey, context.previousCart);
+      }
+
+      handleApiError(error);
+    },
     onSuccess: ({ cart, userId }) => {
-      setCurrentUserCartQueryData(queryClient, userId, cart);
+      if (isLatestCartItemMutation(queryClient)) {
+        setCurrentUserCartQueryData(queryClient, userId, cart);
+      }
+    },
+    onSettled: (_data, error, _variables, context) => {
+      if (
+        error &&
+        isLatestCartItemMutation(queryClient) &&
+        context &&
+        getCurrentUserId() === context.userId
+      ) {
+        return queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     },
   });
 };
@@ -209,6 +337,8 @@ export const useRemoveCartItemIngredient = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: CART_ITEM_MUTATION_KEY,
+    scope: CART_ITEM_MUTATION_SCOPE,
     mutationFn: async ({
       itemId,
       ingredientId,
@@ -222,36 +352,35 @@ export const useRemoveCartItemIngredient = () => {
       );
       return { cart: data, userId };
     },
-    onMutate: async ({ itemId, ingredientId }) => {
-      const userId = getCurrentUserId();
-      const queryKey = getCartQueryKey(userId);
-
-      await queryClient.cancelQueries({ queryKey });
-
-      const previousCart = queryClient.getQueryData<CartResponse>(queryKey);
-
-      if (previousCart && getCurrentUserId() === userId) {
-        queryClient.setQueryData(
-          queryKey,
-          removeCartItemIngredientOptimistically(
-            previousCart,
-            itemId,
-            ingredientId,
-          ),
-        );
-      }
-
-      return { previousCart, queryKey, userId };
-    },
+    onMutate: ({ itemId, ingredientId }) =>
+      updateCurrentCartOptimistically(queryClient, (cart) =>
+        removeCartItemIngredientOptimistically(cart, itemId, ingredientId),
+      ),
     onError: (error, _variables, context) => {
-      if (context?.previousCart && getCurrentUserId() === context.userId) {
+      if (
+        isLatestCartItemMutation(queryClient) &&
+        context?.previousCart &&
+        getCurrentUserId() === context.userId
+      ) {
         queryClient.setQueryData(context.queryKey, context.previousCart);
       }
 
       handleApiError(error);
     },
     onSuccess: ({ cart, userId }) => {
-      setCurrentUserCartQueryData(queryClient, userId, cart);
+      if (isLatestCartItemMutation(queryClient)) {
+        setCurrentUserCartQueryData(queryClient, userId, cart);
+      }
+    },
+    onSettled: (_data, error, _variables, context) => {
+      if (
+        error &&
+        isLatestCartItemMutation(queryClient) &&
+        context &&
+        getCurrentUserId() === context.userId
+      ) {
+        return queryClient.invalidateQueries({ queryKey: context.queryKey });
+      }
     },
   });
 };
