@@ -1,6 +1,6 @@
 import { Order } from "@/entities/order/model/types";
 
-const API_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+const API_URL = process.env.SERVER_URL;
 
 export async function fetchOrder(token: string): Promise<Order | null> {
   const res = await fetch(`${API_URL}/order/${token}`, { cache: "no-store" });

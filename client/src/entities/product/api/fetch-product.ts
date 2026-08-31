@@ -1,6 +1,6 @@
 import type { Product } from "@/entities/product/model/types";
 
-const API_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+const API_URL = process.env.SERVER_URL;
 
 export class ProductNotFoundError extends Error {
   constructor(productId: string) {
@@ -11,7 +11,7 @@ export class ProductNotFoundError extends Error {
 
 export async function fetchProduct(id: string): Promise<Product> {
   if (!API_URL) {
-    throw new Error("NEXT_PUBLIC_SERVER_URL is not configured");
+    throw new Error("SERVER_URL is not configured");
   }
 
   const res = await fetch(`${API_URL}/product/${encodeURIComponent(id)}`);

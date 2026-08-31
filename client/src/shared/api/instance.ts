@@ -18,7 +18,7 @@ let refreshPromise: Promise<string> | null = null;
 let authGeneration = 0;
 
 export const $api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_SERVER_URL,
+  baseURL: process.env.SERVER_URL,
   withCredentials: true,
   headers: { "Content-Type": "application/json" },
 });

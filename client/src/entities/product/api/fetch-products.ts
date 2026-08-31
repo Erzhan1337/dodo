@@ -1,6 +1,6 @@
 import { Product } from "@/entities/product/model/types";
 
-const API_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+const API_URL = process.env.SERVER_URL;
 
 export interface ProductQueryParams {
   from: string | null;

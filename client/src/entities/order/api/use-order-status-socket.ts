@@ -14,7 +14,7 @@ type OrderStatusPayload = {
   updatedAt: string;
 };
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+const SOCKET_URL = process.env.SERVER_URL;
 
 const createOrderSocket = (): Socket | null => {
   if (!SOCKET_URL) return null;

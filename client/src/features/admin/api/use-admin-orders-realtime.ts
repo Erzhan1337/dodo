@@ -15,7 +15,7 @@ import { useSessionStore } from "@/entities/session/model/store";
 type RealtimeState = "idle" | "connecting" | "connected" | "error";
 type AdminOrderDeletedEvent = { id: string };
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+const SOCKET_URL = process.env.SERVER_URL;
 const ordersQueryRoot = [...adminKeys.root, "orders"] as const;
 
 const normalize = (value: string | null | undefined) =>
